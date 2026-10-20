@@ -89,6 +89,18 @@
     - **The 2004 CDs/DVD** carry `base/pak000`–`pak004` and `d3xp/pak000`. The rest comes from the official 1.3.1 patch; the dhewm3 FAQ shows how to extract it from the Linux patch.
   - **Checking it:** compare the MD5 sums against the dhewm3 FAQ's list (https://github.com/dhewm/dhewm3/wiki/FAQ).
   - **Free demo:** dhewm3 1.5.1 and newer can run the free 2004 demo's data, so d3es (1.5.3 WIP) should too. It could serve for the first start-up tests, but its maps and demos differ, so the `demo1` measurements need the full game.
+    - **Download:** `doom3-linux-1.1.1286-demo.x86.run` (485,257,318 bytes; SHA256 `b42260fd08feb13c2f035a3746f8c1e3472151f0f781b8a2d1da231dae818083`), for example from the GWDG mirror of id's FTP: https://ftp.gwdg.de/pub/misc/ftp.idsoftware.com/idstuff/doom3/linux/
+    - **Extracting it:** `sh doom3-linux-1.1.1286-demo.x86.run --tar xf demo/` in WSL gives `demo/demo00.pk4` (dhewm3.org).
+    - **Where it goes:** d3es looks in `demo/` by itself when `base/` has no `default.cfg` (`FileSystem.cpp`). The full game's 1.3.1 pk4s must not be added; dhewm3 warns that they break the demo.
+    - **Contents of `demo00.pk4`** (483,535,485 bytes, MD5 `70c2c63ef1190158f1ebd6c255b22d8e`):
+      - 12,234 files;
+      - three maps (`game/demo_mars_city1`, `demo_mars_city2`, `demo_mc_underground`);
+      - 4,079 `dds/` textures (so the precompressed path can be tested), 3,771 TGAs;
+      - `default.cfg`;
+      - **no recorded demos.**
+
+      Until the full game is here, a demo recorded on the host build (`recordDemo`) can serve as the benchmark.
+- **Data locations:** WSL: `~/doom3-data/demo/` (and later `base/`, `d3xp/`); the downloaded installer stays in `~/downloads/doom3-demo/`. Amiga: next to the executable, copied in phase 3. amictl's `put` takes at most 64 MB per file, so a pk4 goes up in pieces joined with `Join` there, or is copied by hand.
 
 ## 5. Platform facts the plan relies on
 
@@ -354,6 +366,12 @@ None yet. Requests go here only with a measurement behind them; the developer de
   - ogles2's SDL2 patch covers that makefile.
 
 **Done (2026-10-20): repository.** This folder is the private GitHub repository `ladislawv/doom3-amiga` (branch `main`, LF line ends by `.gitattributes`; game data, builds and screenshots ignored).
+
+**Done (2026-10-20): demo data in WSL.**
+- `doom3-linux-1.1.1286-demo.x86.run` came from the GWDG mirror; its SHA256 matched, and so did the payload's MD5 in the installer header.
+- The installer script was not run: the gzip tar after its 373-line header was unpacked with `tar`.
+- `demo/demo00.pk4` is in `~/doom3-data/demo/` (§4).
+- Not yet on the Amiga: the station did not answer.
 
 **Next, in order:**
 1. `sources.sh` pinning d3es, dhewm3 1.5.5 and SDL2_68k.
