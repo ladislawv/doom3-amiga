@@ -1,0 +1,28 @@
+diff --git a/neo/framework/Session.cpp b/neo/framework/Session.cpp
+index d9c4fbb9..33f88319 100644
+--- a/neo/framework/Session.cpp
++++ b/neo/framework/Session.cpp
+@@ -2363,11 +2363,23 @@ void	idSessionLocal::DrawWipeModel() {
+ idSessionLocal::AdvanceRenderDemo
+ ===============
+ */
++static idCVar com_timeDemoSeconds( "com_timeDemoSeconds", "0", CVAR_SYSTEM | CVAR_INTEGER,
++	"end a timeDemo after this many seconds (0: play it to the end); the frames rendered by then are reported" );
++
+ void idSessionLocal::AdvanceRenderDemo( bool singleFrameOnly ) {
+ 	if ( lastDemoTic == -1 ) {
+ 		lastDemoTic = latchedTicNumber - 1;
+ 	}
+ 
++	// a timeDemo with a time limit ends as if the demo had ended here
++	if ( timeDemo && numDemoFrames > 1 && com_timeDemoSeconds.GetInteger() > 0
++		&& Sys_Milliseconds() - timeDemoStartTime >= com_timeDemoSeconds.GetInteger() * 1000 ) {
++		common->Printf( "timeDemo: time limit of %d seconds reached\n", com_timeDemoSeconds.GetInteger() );
++		Stop();
++		StartMenu();
++		return;
++	}
++
+ 	int skipFrames = 0;
+ 
+ 	if ( !aviCaptureMode && !timeDemo && !singleFrameOnly ) {

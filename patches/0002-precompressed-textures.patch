@@ -1,0 +1,343 @@
+diff --git a/neo/renderer/Image.h b/neo/renderer/Image.h
+index a3181ece..cf4d8d33 100644
+--- a/neo/renderer/Image.h
++++ b/neo/renderer/Image.h
+@@ -209,6 +209,8 @@ public:
+ 	void		UploadCompressedNormalMap( int width, int height, const byte *rgba, int mipLevel );
+ 	void		ImageProgramStringToCompressedFileName( const char *imageProg, char *fileName ) const;
+ 	int			NumLevelsForImageSize( int width, int height ) const;
++	bool		CheckPrecompressedImage();	// loads dds/<name>.dds as S3TC if there is one
++	void		UploadPrecompressedImage( byte *data, int len );
+ 
+ 	// data commonly accessed is grouped here
+ 	static const int TEXTURE_NOT_LOADED = -1;
+@@ -234,6 +236,7 @@ public:
+ 	bool				referencedOutsideLevelLoad;
+ 	bool				levelLoadReferenced;	// for determining if it needs to be purged
+ 	bool				defaulted;				// true if the default image was generated because a file couldn't be loaded
++	bool				precompressedFile;		// true when it was loaded from a .dds file
+ 	ID_TIME_T				timestamp;				// the most recent of all images used in creation, for reloadImages command
+ 
+ 	int					imageHash;				// for identical-image checking
+@@ -279,6 +282,7 @@ ID_INLINE idImage::idImage() {
+ 	referencedOutsideLevelLoad = false;
+ 	levelLoadReferenced = false;
+ 	defaulted = false;
++	precompressedFile = false;
+ 	timestamp = 0;
+ 	bindCount = 0;
+ 	uploadWidth = uploadHeight = uploadDepth = 0;
+@@ -379,6 +383,7 @@ public:
+ 	static idCVar		image_downSizeBump;			// downsize bump maps
+ 	static idCVar		image_downSizeBumpLimit;	// downsize bump limit
+ 	static idCVar		image_downSizeLimit;		// downsize diffuse limit
++	static idCVar		image_usePrecompressedTextures;	// use .dds files (S3TC) if present
+ 
+ 	// built-in images
+ 	idImage *			defaultImage;
+diff --git a/neo/renderer/Image_init.cpp b/neo/renderer/Image_init.cpp
+index 7d2b338a..d949f613 100644
+--- a/neo/renderer/Image_init.cpp
++++ b/neo/renderer/Image_init.cpp
+@@ -61,6 +61,8 @@ idCVar idImageManager::image_downSizeBump( "image_downSizeBump", "0", CVAR_RENDE
+ idCVar idImageManager::image_downSizeSpecularLimit( "image_downSizeSpecularLimit", "64", CVAR_RENDERER | CVAR_ROM, "controls specular downsampled limit" );
+ idCVar idImageManager::image_downSizeBumpLimit( "image_downSizeBumpLimit", "128", CVAR_RENDERER | CVAR_ROM, "controls normal map downsample limit" );
+ idCVar idImageManager::image_downSizeLimit( "image_downSizeLimit", "256", CVAR_RENDERER | CVAR_ROM, "controls diffuse map downsample limit" );
++idCVar idImageManager::image_usePrecompressedTextures( "image_usePrecompressedTextures", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL,
++	"use .dds files (DXT1/3/5, RXGB) if present and the GPU has S3TC; 0 = always load the source images" );
+ // do this with a pointer, in case we want to make the actual manager
+ // a private virtual subclass
+ idImageManager	imageManager;
+diff --git a/neo/renderer/Image_load.cpp b/neo/renderer/Image_load.cpp
+index e3a3cfd8..703bc7c3 100644
+--- a/neo/renderer/Image_load.cpp
++++ b/neo/renderer/Image_load.cpp
+@@ -33,6 +33,21 @@ If you have questions concerning this license or the applicable additional terms
+ 
+ #include "renderer/Image.h"
+ 
++// S3TC formats (GL_EXT_texture_compression_s3tc; gl2ext.h has them under that
++// name or as the DXT1/ANGLE extensions)
++#ifndef GL_COMPRESSED_RGB_S3TC_DXT1_EXT
++#define GL_COMPRESSED_RGB_S3TC_DXT1_EXT		0x83F0
++#endif
++#ifndef GL_COMPRESSED_RGBA_S3TC_DXT1_EXT
++#define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT	0x83F1
++#endif
++#ifndef GL_COMPRESSED_RGBA_S3TC_DXT3_EXT
++#define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT	0x83F2
++#endif
++#ifndef GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
++#define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT	0x83F3
++#endif
++
+ 
+ int MakePowerOfTwo( int num ) {
+ 	int		pot;
+@@ -59,6 +74,12 @@ int idImage::BitsForInternalFormat( int internalFormat ) const {
+ 		return 16;
+ 	case GL_RGB5_A1:
+ 		return 16;
++	case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
++	case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
++		return 4;
++	case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
++	case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
++		return 8;
+ 	default:
+ 		common->Error( "R_BitsForInternalFormat: BAD FORMAT:%i", internalFormat );
+ 	}
+@@ -835,6 +856,187 @@ int	idImage::NumLevelsForImageSize( int width, int height ) const {
+ 	return numLevels;
+ }
+ 
++/*
++================
++CheckPrecompressedImage
++
++Loads the precompressed version of this image (dds/<image name>.dds in the
++game data), from dhewm3 1.5.5 with what GL ES 2.0 cannot use left out: only
++S3TC (DXT1, DXT3, DXT5 and RXGB, which is DXT5 with the normal's x in alpha,
++the layout d3es's interaction shader reads with .agb). Uncompressed,
++palettized and BC7 files fall back to the source image.
++================
++*/
++bool idImage::CheckPrecompressedImage() {
++	// the reasons for not using a .dds go to the developer console (developer 1)
++	if ( !glConfig.isInitialized || !glConfig.textureCompressionAvailable ) {
++		common->DPrintf( "precompressed %s: no GL yet or no S3TC\n", imgName.c_str() );
++		return false;
++	}
++
++	// if we are doing a copyFiles, make sure the original images are referenced
++	if ( fileSystem->PerformingCopyFiles() ) {
++		return false;
++	}
++
++	// id's last minute hack, kept: projected light images look better uncompressed
++	if ( com_machineSpec.GetInteger() >= 1 && imgName.Icmpn( "lights/", 7 ) == 0 ) {
++		common->DPrintf( "precompressed %s: light image, com_machineSpec >= 1\n", imgName.c_str() );
++		return false;
++	}
++
++	char filename[MAX_IMAGE_NAME];
++	ImageProgramStringToCompressedFileName( imgName, filename );
++
++	ID_TIME_T precompTimestamp;
++	fileSystem->ReadFile( filename, NULL, &precompTimestamp );
++	if ( precompTimestamp == FILE_NOT_FOUND_TIMESTAMP ) {
++		common->DPrintf( "precompressed %s: no %s\n", imgName.c_str(), filename );
++		return false;
++	}
++	if ( !generatorFunction && timestamp != FILE_NOT_FOUND_TIMESTAMP && precompTimestamp < timestamp ) {
++		common->DPrintf( "precompressed %s: %s is older than the source (%d < %d)\n", imgName.c_str(), filename,
++			(int)precompTimestamp, (int)timestamp );
++		return false;	// the source changed after it was compressed
++	}
++
++	idFile *f = fileSystem->OpenFileRead( filename );
++	if ( !f ) {
++		return false;
++	}
++	int len = f->Length();
++	if ( len < (int)sizeof( ddsFileHeader_t ) + 4 ) {	// +4: the 'DDS ' magic
++		fileSystem->CloseFile( f );
++		return false;
++	}
++	byte *data = (byte *)R_StaticAlloc( len );
++	f->Read( data, len );
++	fileSystem->CloseFile( f );
++
++	unsigned int magic = LittleInt( *(unsigned int *)data );
++	ddsFileHeader_t *header = (ddsFileHeader_t *)( data + 4 );
++	unsigned int flags = LittleInt( header->ddspf.dwFlags );
++	unsigned int fourCC = LittleInt( header->ddspf.dwFourCC );
++
++	if ( magic != DDS_MAKEFOURCC( 'D', 'D', 'S', ' ' ) ) {
++		common->Printf( "CheckPrecompressedImage( %s ): magic != 'DDS '\n", imgName.c_str() );
++		R_StaticFree( data );
++		return false;
++	}
++
++	bool usable = false;
++	if ( flags & DDSF_FOURCC ) {
++		switch ( fourCC ) {
++		case DDS_MAKEFOURCC( 'D', 'X', 'T', '1' ):
++		case DDS_MAKEFOURCC( 'D', 'X', 'T', '3' ):
++		case DDS_MAKEFOURCC( 'D', 'X', 'T', '5' ):
++			// a normal map must be RXGB: the shader takes x from alpha
++			usable = ( depth != TD_BUMP );
++			break;
++		case DDS_MAKEFOURCC( 'R', 'X', 'G', 'B' ):
++			usable = true;
++			break;
++		}
++	}
++	if ( !usable ) {
++		common->DPrintf( "precompressed %s: format %08x (flags %08x), depth %d not used\n", imgName.c_str(), fourCC, flags, (int)depth );
++		R_StaticFree( data );
++		return false;
++	}
++
++	timestamp = precompTimestamp;
++	UploadPrecompressedImage( data, len );
++	R_StaticFree( data );
++	return precompressedFile;
++}
++
++/*
++===================
++UploadPrecompressedImage
++
++Uploads every mip level of an S3TC .dds file checked by
++CheckPrecompressedImage. The blocks go to GL as they are in the file
++(little-endian, as the GPU reads them); only the header is swapped.
++===================
++*/
++void idImage::UploadPrecompressedImage( byte *data, int len ) {
++	ddsFileHeader_t	*header = (ddsFileHeader_t *)( data + 4 );
++	int flags = LittleInt( header->dwFlags );
++	int width = LittleInt( header->dwWidth );
++	int height = LittleInt( header->dwHeight );
++	int mipCount = LittleInt( header->dwMipMapCount );
++	unsigned int pfFlags = LittleInt( header->ddspf.dwFlags );
++	unsigned int fourCC = LittleInt( header->ddspf.dwFourCC );
++
++	switch ( fourCC ) {
++	case DDS_MAKEFOURCC( 'D', 'X', 'T', '1' ):
++		internalFormat = ( pfFlags & DDSF_ALPHAPIXELS ) ? GL_COMPRESSED_RGBA_S3TC_DXT1_EXT : GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
++		break;
++	case DDS_MAKEFOURCC( 'D', 'X', 'T', '3' ):
++		internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
++		break;
++	default:	// DXT5, RXGB
++		internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
++		break;
++	}
++	int blockBytes = ( internalFormat == GL_COMPRESSED_RGB_S3TC_DXT1_EXT
++		|| internalFormat == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT ) ? 8 : 16;
++
++	PurgeImage();
++	qglGenTextures( 1, &texnum );
++	precompressedFile = false;
++	type = TT_2D;	// no precompressed cube maps
++
++	uploadWidth = width;
++	uploadHeight = height;
++	GetDownsize( uploadWidth, uploadHeight );	// levels above it are skipped
++
++	Bind();
++
++	int numMipmaps = ( flags & DDSF_MIPMAPCOUNT ) ? mipCount : 1;
++	if ( numMipmaps < 1 ) {
++		numMipmaps = 1;
++	}
++	const byte *imagedata = data + 4 + sizeof( ddsFileHeader_t );
++	const byte *end = data + len;
++	int uw = width, uh = height;
++	int lastUW = uw, lastUH = uh;
++	int skipMip = 0, uploaded = 0;
++
++	for ( int i = 0; i < numMipmaps; i++ ) {
++		int size = ( ( uw + 3 ) / 4 ) * ( ( uh + 3 ) / 4 ) * blockBytes;
++		if ( imagedata + size > end ) {
++			common->Warning( "UploadPrecompressedImage( %s ): file ends in mip level %d", imgName.c_str(), i );
++			break;
++		}
++		if ( uw > uploadWidth || uh > uploadHeight ) {
++			skipMip++;
++		} else {
++			qglCompressedTexImage2D( GL_TEXTURE_2D, i - skipMip, internalFormat, uw, uh, 0, size, imagedata );
++			uploaded++;
++		}
++		lastUW = uw;
++		lastUH = uh;
++		imagedata += size;
++		uw = uw > 1 ? uw / 2 : 1;
++		uh = uh > 1 ? uh / 2 : 1;
++	}
++	if ( !uploaded ) {
++		PurgeImage();
++		return;		// precompressedFile stays false: the caller loads the source image
++	}
++
++	// GL ES 2.0 has no GL_TEXTURE_MAX_LEVEL: a mip chain that stops above 1x1
++	// leaves the texture incomplete under a mipmapping filter, so use level 0 only
++	if ( ( lastUW > 1 || lastUH > 1 ) && filter == TF_DEFAULT ) {
++		filter = TF_LINEAR;
++	}
++
++	precompressedFile = true;
++	SetImageFilterAndRepeat();
++	GL_CheckErrors();
++}
++
+ /*
+ ===============
+ ActuallyLoadImage
+@@ -904,6 +1106,9 @@ void	idImage::ActuallyLoadImage( bool fromBind ) {
+ 	} else {
+ 		// see if we have a pre-generated image file that is
+ 		// already image processed and compressed
++		if ( globalImages->image_usePrecompressedTextures.GetBool() && CheckPrecompressedImage() ) {
++			return;
++		}
+ 
+ 		R_LoadImageProgram( imgName, &pic, &width, &height, &timestamp, &depth );
+ 
+@@ -914,6 +1119,7 @@ void	idImage::ActuallyLoadImage( bool fromBind ) {
+ 		}
+ 
+ 		GenerateImage( pic, width, height, filter, allowDownSize, repeat, depth );
++		precompressedFile = false;
+ 
+ 		R_StaticFree( pic );
+ 	}
+@@ -1281,6 +1487,16 @@ void idImage::Print() const {
+ 	case GL_RGB5_A1:
+ 		common->Printf( "RGB5_A1  " );
+ 		break;
++	case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
++	case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
++		common->Printf( "DXT1  " );
++		break;
++	case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
++		common->Printf( "DXT3  " );
++		break;
++	case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
++		common->Printf( "DXT5  " );
++		break;
+ 	case 0:
+ 		common->Printf( "      " );
+ 		break;
+diff --git a/neo/renderer/RenderSystem.h b/neo/renderer/RenderSystem.h
+index 130a2cce..4fe07bd0 100644
+--- a/neo/renderer/RenderSystem.h
++++ b/neo/renderer/RenderSystem.h
+@@ -62,6 +62,8 @@ typedef struct glconfig_s {
+ 
+ 	bool				depthStencilAvailable;
+ 
++	bool				textureCompressionAvailable;	// S3TC (DXT1, DXT3, DXT5): precompressed .dds images
++
+ 	int					vidWidth, vidHeight;	// passed to R_BeginFrame
+ 
+ 	int					vidWidthReal, vidHeightReal; // The real resolution of the screen, uses framebuffer if not the same as vidWidth
+diff --git a/neo/renderer/RenderSystem_init.cpp b/neo/renderer/RenderSystem_init.cpp
+index ada3081e..6a2c765d 100644
+--- a/neo/renderer/RenderSystem_init.cpp
++++ b/neo/renderer/RenderSystem_init.cpp
+@@ -254,6 +254,13 @@ static void R_CheckPortableExtensions( void ) {
+ 	glConfig.depthStencilAvailable = R_CheckExtension( "GL_OES_packed_depth_stencil" );
+ 	common->Printf(" depthStencilAvailable: %d\n", glConfig.npotAvailable);
+ 
++	// all three DXT formats, as one extension or as the DXT1 + ANGLE DXT3/DXT5 trio
++	glConfig.textureCompressionAvailable = R_CheckExtension( "GL_EXT_texture_compression_s3tc" )
++		|| ( R_CheckExtension( "GL_EXT_texture_compression_dxt1" )
++			&& R_CheckExtension( "GL_ANGLE_texture_compression_dxt3" )
++			&& R_CheckExtension( "GL_ANGLE_texture_compression_dxt5" ) );
++	common->Printf(" textureCompressionAvailable: %d\n", glConfig.textureCompressionAvailable);
++
+ 
+ 	if ( glConfig.anisotropicAvailable ) {
+ 		qglGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &glConfig.maxTextureAnisotropy);

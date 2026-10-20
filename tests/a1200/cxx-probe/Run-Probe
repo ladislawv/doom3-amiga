@@ -1,0 +1,30 @@
+; Run-Probe - Doom 3 port, phase 2: what the port needs from GCC 16.2,
+; libnix and SDL2 (PLAN.md section 8). Watch the screen: a small window shows
+; red, green and blue for a second each, then a quiet tone plays for a second.
+;   CD to this directory, then:   Execute Run-Probe
+;   With a large file to time:     Execute Run-Probe FILE=<path of a pk4>
+; Output goes to results/probe.txt.
+.key FILE/K
+.def FILE ""
+.bra {
+.ket }
+
+FailAt 21
+If NOT EXISTS cxx_probe
+  Echo "Please CD into the cxx-probe directory first, then run:  Execute Run-Probe"
+  Quit 20
+EndIf
+MakeDir results >NIL:
+Avail FLUSH >NIL:
+Avail >results/avail-before.txt
+List LIBS:ogles2#? LIBS:v3dglslc >results/libs.txt
+Echo "cxx_probe: C++, stack, memory, files, then a GL window (red, green, blue) and a tone"
+If "{FILE}" EQ ""
+  cxx_probe >results/probe.txt
+Else
+  cxx_probe --file "{FILE}" >results/probe.txt
+EndIf
+Echo "exit code $RC" >>results/probe.txt
+Type results/probe.txt
+Avail FLUSH >NIL:
+Avail >results/avail-after.txt

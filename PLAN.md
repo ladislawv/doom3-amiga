@@ -137,10 +137,10 @@ Checked for this plan (2026-10-20) or taken from ogles2's documentation:
 | System layer | `sys/posix`, `sys/linux`; also `sys/aros` (Kalamatee's AROS port, about 1,500 lines on `dos.library` and `exec.library`) | `src/sys/amigaos3/` from the AROS files, with `sys/glimp.cpp`, `sys/events.cpp` and `sys/threads.cpp` kept (SDL2) |
 | Sound | OpenAL 1.1 with optional EFX: about 25 core `al*`/`alc*` calls (sources, buffers, streaming queues, listener, gain and pitch), EFX through `alGetProcAddress` | Own small OpenAL subset (D7) |
 | Textures | TGA to RGBA8 or RGBA4444, optional ETC1 encoding on the CPU; no DDS path | dhewm3's `CheckPrecompressedImage`/`UploadPrecompressedImage` restored for `dds/` images as S3TC (D6). The interaction shader already reads the normal's x from alpha (`.agb`), as Doom 3's RXGB normal maps store it, so no shader change |
-| Vertex upload | Per-frame temporary buffers (2 MB each), filled on the CPU and sent with `glBufferData(..., GL_STATIC_DRAW)` (`renderer/VertexCache.cpp`) | `GL_STREAM_DRAW` for the temporary buffers (§10.1) |
+| Vertex upload | Per-frame temporary buffers (2 MB each), filled on the CPU and sent once a frame in `BeginBackEnd` with `glBufferData(..., GL_STREAM_DRAW)`, only the bytes used. Static model data goes through `Position()` with `GL_STATIC_DRAW` (`renderer/VertexCache.cpp`) | Nothing at first: ogles2 converts stream buffers per draw for the vertices read and static ones once per layout. Measured in phase 4 (§10.1) |
 | Alignment | `ALIGN16` on about 270 declarations | 8-byte alignment (§5) |
-| Debug drawing | `tr_rendertools.cpp` uses desktop GL calls (`qglBegin` and others) | Stubbed out |
-| Depth copy | `CopyDepthbuffer` calls `glCopyTexImage2D(GL_DEPTH_COMPONENT)`, which ES 2.0 does not allow | Check whether any shipped material uses it; disable if not |
+| Debug drawing | `tr_rendertools.cpp`'s desktop GL calls (`qglBegin` and others) | Nothing: they are inside `#if 0` (checked) |
+| Depth copy | `CopyDepthbuffer` calls `glCopyTexImage2D(GL_DEPTH_COMPONENT)`, which ES 2.0 does not allow | Nothing: nothing calls it (checked) |
 | Machine spec | `com_machineSpec` from RAM size: 1.9 GB gives "Ultra" | Fixed defaults in the port's `autoexec.cfg` (§10.4) |
 
 ## 7. Decisions
@@ -168,16 +168,18 @@ Effort: S (days), M (one to two weeks), L (longer). Each phase ends with its exi
    - `HARDLINK_GAME`, `BASE` only, `r_multithread` off;
    - the async tic in the main loop;
    - SDL2 from Ubuntu, an ES 2.0 context on Mesa's llvmpipe (`~/mesa-install`, or Ubuntu's Mesa).
+   - The build machine's WSL is version 1 on Windows 10, with no display. The host build therefore runs under `xvfb-run`, and its pictures come from Doom 3's `screenshot` command.
+   - Packages: `xvfb libsdl2-dev libopenal-dev` (OpenAL Soft only for the host reference sound).
 
    This is the build the port's patches are written against first.
 3. Patches made and tested here:
-   - the main-loop async tic;
-   - the `GL_STREAM_DRAW` temporary buffers;
+   - `0001-single-task`: the async tics from the main loop, no render or download thread, CMake option `SINGLE_TASK`;
    - the DDS loader;
-   - `ALIGN16`;
-   - the stubs (rendertools, depth copy, download thread).
+   - the stubs (rendertools, depth copy).
+
+   `ALIGN16` is an Amiga-only change and comes with the platform patch in phase 3.
 4. **Exit:**
-   - `timedemo demo1` runs to the end on the host;
+   - `timedemo demo1` runs to the end on the host, or, with the demo data only, a demo recorded on the host;
    - screenshots at fixed demo frames are saved as the reference set (`tests/reference/`, not committed if they are large; their place noted);
    - the DDS path is shown working (`listImages` names `dds/` sources).
 
@@ -287,10 +289,12 @@ The work of §10, each change measured alone with `timedemo demo1` and kept only
 
 ### 10.1 Vertex data
 
-- d3es fills each frame's dynamic geometry (skinned models, deforms, GUI surfaces, shadow volumes) into 2 MB temporary buffers and sends them with `glBufferData(..., GL_STATIC_DRAW)`.
-- For a static buffer, ogles2 converts the whole buffer once per attribute layout. An interaction draw reads up to six attributes of `idDrawVert`: position, texture coordinates, normal, two tangents and colour. So one frame can swap the same 2 MB several times.
-- **First change:** the temporary buffers use `GL_STREAM_DRAW`, so each draw converts only the vertices it reads. Static model data stays `GL_STATIC_DRAW` and is converted once.
-- **Then measure:**
+- d3es fills each frame's dynamic geometry (skinned models, deforms, GUI surfaces, shadow volumes) into 2 MB temporary buffers and sends them once a frame with `glBufferData(..., GL_STREAM_DRAW)`, only the bytes used (`idVertexCache::BeginBackEnd`).
+  - ogles2 keeps no converted copy of a stream buffer: each draw converts only the vertices it reads.
+  - Static model data (`Alloc`, uploaded in `Position()` with `GL_STATIC_DRAW`) is converted once per attribute layout and kept.
+  - (The first version of this plan read the static path as the per-frame one and planned a patch; reading `BeginBackEnd` showed it is not needed.)
+- An interaction draw reads up to six attributes of `idDrawVert`: position, texture coordinates, normal, two tangents and colour.
+- **Measure:**
   - client arrays (`r_useVertexBuffers 0`) against both;
   - how often the same vertices are converted twice (the interaction pass reads a surface once per light).
 
@@ -373,8 +377,73 @@ None yet. Requests go here only with a measurement behind them; the developer de
 - `demo/demo00.pk4` is in `~/doom3-data/demo/` (§4).
 - Not yet on the Amiga: the station did not answer.
 
+**Done (2026-10-20): implementation started; phase 1 written, phase 2 built.**
+- **Scripts:**
+  - `sources.sh`: d3es `be1fa3f`, dhewm3 1.5.5 `455b88e`, SDL2_68k `3632f48`;
+  - `build_host.sh`, `run_host.sh` (xvfb-run, llvmpipe);
+  - `build_sdl2.sh`;
+  - `tests/a1200/build_cxx_probe.sh`.
+- **The clones are reset with `git reset --hard` and patched in order.** Each finished patch is staged in the clone, so `git diff` shows only the next one.
+- **`patches/0001-single-task.patch`** (CMake option `SINGLE_TASK`, `D3_SINGLE_TASK`):
+  - `Async()` is called from `Frame()` and `GUIFrame()`, with no `SDL_AddTimer`;
+  - the session's wait for the next tic (`Session.cpp`, which waited on `TRIGGER_EVENT_ONE`) runs `Async()` itself;
+  - no background download thread (only multiplayer pak downloads use it), and its `Sys_DestroyThread` is guarded;
+  - `multithreadActive` is always false.
+- **`patches/0002-precompressed-textures.patch`:**
+  - `CheckPrecompressedImage`/`UploadPrecompressedImage` come from dhewm3 1.5.5, reduced to S3TC: DXT1/3/5, and RXGB for normal maps. A non-RXGB normal map, an uncompressed, palettized or BC7 file, or a GPU without S3TC falls back to the TGA.
+  - Also added:
+    - `glConfig.textureCompressionAvailable` (`GL_EXT_texture_compression_s3tc`, or DXT1 plus ANGLE's DXT3/DXT5);
+    - the cvar `image_usePrecompressedTextures` (1);
+    - DXT sizes in `StorageSize`, DXT names in `listImages`.
+  - ES 2.0 has no `GL_TEXTURE_MAX_LEVEL`, so a mip chain that stops above 1x1 uses level 0 only.
+  - Not compiled yet (no SDL2 development files in Ubuntu-24.04). Every changed file except `Common.cpp` passes `g++ -fsyntax-only`.
+- **Corrections to this plan from reading the code:**
+  - the per-frame vertex buffers are already `GL_STREAM_DRAW` (§10.1);
+  - the depth copy and the desktop GL debug drawing need no stubs (§6).
+- **SDL2 for libnix** (`build_sdl2.sh`): `libSDL2.a` (1 MB) built with GCC 16.2.
+  - `sdl2/` holds copies of ogles2's two patches and its backend (`sdl2/PROVENANCE.md`, ogles2 `7f4b91d`), plus this port's `0100-gcc16-libnix.patch`. SDL2_68k's libnix makefile had not been built with GCC 14 or later. The patch:
+    - defines `HAVE_STDLIB_H` (calls to undeclared stdlib functions are errors now, and an implicit `malloc` would be wrong code on 68k);
+    - guards the `u_int32_t` typedef in `libm/math_private.h` against newlib's;
+    - adds `<clib/alib_protos.h>` (`BeginIO`) and `SDL_timer.h` (`SDL_GetTicks`).
+  - The GCC 16.2 toolchain has no AHI or CyberGraphX headers. The script copies them from the GCC 6.5 toolchain into the build's include folder, without changing either toolchain.
+  - The remaining warnings are `printf` formats given `long` for `int` (`int32_t` is `long` on this toolchain; both are 32 bits).
+- **C++ probe** (`tests/a1200/cxx-probe`, package in `~/doom3-build/m68k/pkg/cxx-probe`):
+  - Checks: C++ runtime, FPU, byte order, the 8 MB stack and a 1 MB `alloca`, `new`/`delete` timing, a 256 MB `malloc`, large-file reads, an SDL2 ES window clearing red, green and blue for a second each, and a one-second AHI tone.
+  - Found while building it:
+    - libstdc++ needs `__xpg_strerror_r`, which libnix lacks (`src/amiga/libnix_shims.c`);
+    - libnix's `swapstack.o`, which honours `__stack`, is linked only with `-Wl,-u,___stkinit`. Without it `__stack` silently does nothing.
+  - **Run in vamos** (`-C 68040`; `-C 68020` stops at libnix's FPU alert): static constructors, an exception through three frames with destructors, `dynamic_cast`/`typeid`, STL, float-to-int truncation, maths, byte order and sizes all pass. The stack, SDL and GL checks need the A1200: vamos leaves `tc_SPLower`/`tc_SPUpper` at 0, which is also why the stack swap crashes there, and has no `CreateNewProc`.
+- **Waiting on:**
+  - `xvfb libsdl2-dev libopenal-dev` in Ubuntu-24.04 (they went into Ubuntu-22.04, WSL's default);
+  - the A1200 station, for the probe;
+  - a wrapper for `amictl.py` (used read only), so that Doom 3 packages' results land in this repository rather than ogles2's.
+
+**Done (2026-10-20): the host build runs, with seven patches.**
+- **Unpatched d3es** (`NOPATCH=1`) builds and draws `demo_mars_city1` on llvmpipe under Xvfb.
+  - Trap: WSL 1 passes the Windows `PATH` through, and CMake found curl in `C:\- CPP\vcpkg-master`. `build_host.sh` now drops `/mnt/*` from `PATH` and disables curl.
+  - d3es writes screenshots as RGBA data under a 24-bit TGA header. `tools/tga2png.py` reads both that and the fixed layout.
+- **The patches:**
+
+  | Patch | What it does |
+  |---|---|
+  | `0001-single-task` | One task: no timer, render or download thread. Checked: the opening's monitor screen advances, so game time runs from the main loop |
+  | `0002-precompressed-textures` | The DDS loader (described above), now also reporting with `developer 1` why it declines an image |
+  | `0003-screenshot-tga` | Screenshots packed into the 24-bit BGR their header says; d3es's row-stride formula was wrong for odd widths |
+  | `0004-image-formats` | `GL_RGBA` (what d3es stores for TGA images) and `GL_RGB` (framebuffer copies) known to `StorageSize`/`listImages`; framebuffer copies and cinematics record their format; a texture name with nothing uploaded counts 0 bytes. Without it `listImages` stopped with "BAD FORMAT" |
+  | `0005-demo-data-loading-gui` | The free demo's data has no `guis/map/loading.gui`: demo playback crashed on a NULL pointer |
+  | `0006-timedemo-time-limit` | `com_timeDemoSeconds N` ends a timedemo after N seconds and reports the frames rendered by then (for the retail `demo1`) |
+  | `0007-benchmark-seconds` | `com_benchmarkSeconds N`: from the first frame after a map has loaded, count frames for N seconds, print `benchmark: F frames rendered in S seconds = X fps`, quit. Needs no demo file; `bench_host.sh` runs it |
+- **Precompressed textures are switched off by Doom 3's "Ultra" preset.** `com_machineSpec` 3, which any machine with 1 GB or more gets (and the Amiga's 1.9 GB would too), sets `image_usePrecompressedTextures 0` (`Common.cpp`). The port's `autoexec.cfg` must set it to 1 (§10.4). With it on:
+  - `demo_mars_city1`: 2,147 images, 2,062 from DDS (998 DXT1, 611 DXT3, 453 DXT5);
+  - `demo_mc_underground`: **106.2 MB of textures against 458.0 MB** from TGAs, a factor of 4.3. The two pictures look the same, so the RXGB normal maps are read correctly.
+- **Host benchmark** (`bench_host.sh`, 30 s of `demo_mars_city1`'s opening, 640x480, llvmpipe on 32 threads): **1,269 frames in 30.0 s = 42.3 fps.** Map load 1.7 s; 34 s in all.
+- **Open: d3es's render demos do not play back.**
+  - A demo recorded by this build (`recordDemo`) stops at once with "demo hash index out of range", in `playDemo` and `timeDemo` alike.
+  - The demo code is dhewm3's apart from the version-5 "nospecular" header that d3es lacks, so the fault is more likely in what d3es's split front end and back end write.
+  - Whether id's retail `demo1` plays is not known until the full data is here. Until then `com_benchmarkSeconds` measures instead.
+
 **Next, in order:**
-1. `sources.sh` pinning d3es, dhewm3 1.5.5 and SDL2_68k.
-2. The developer gets the 1.3.1 data (§4: GOG, Steam or CD plus the patch), checks the MD5 sums, and copies `base/` and `d3xp/` to WSL and to the Amiga.
-3. Phase 1 (§8): the host build and the reference set.
-4. Phase 2: libnix SDL2, zlib, the C++ probe on the A1200.
+1. The C++ probe on the A1200 (when the station is up).
+2. The amictl wrapper; zlib for libnix.
+3. The developer gets the 1.3.1 data (§4: GOG, Steam or CD plus the patch), checks the MD5 sums, and copies `base/` and `d3xp/` to WSL and to the Amiga.
+4. Phase 3 (§8): the 68k build of the game.

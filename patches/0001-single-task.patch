@@ -1,0 +1,146 @@
+diff --git a/neo/CMakeLists.txt b/neo/CMakeLists.txt
+index ab2acbcf..6316bd3b 100644
+--- a/neo/CMakeLists.txt
++++ b/neo/CMakeLists.txt
+@@ -59,6 +59,10 @@ option(SDL2			"Use SDL2 instead of SDL1.2" ON)
+ option(REPRODUCIBLE_BUILD "Replace __DATE__ and __TIME__ by hardcoded values for reproducible builds" OFF)
+ 
+ option(HARDLINK_GAME "Compile gamecode into executable (no game DLLs)" OFF)
++option(SINGLE_TASK "Run everything in the main thread: async tics from the main loop, no render or download thread" OFF)
++if(SINGLE_TASK)
++	add_definitions(-DD3_SINGLE_TASK)
++endif()
+ 
+ if(NOT MSVC) # GCC/clang or compatible, hopefully
+ 	option(FORCE_COLORED_OUTPUT "Always produce ANSI-colored compiler warnings/errors (GCC/Clang only; esp. useful with ninja)." OFF)
+diff --git a/neo/framework/Common.cpp b/neo/framework/Common.cpp
+index adc81102..b1ddb6f1 100644
+--- a/neo/framework/Common.cpp
++++ b/neo/framework/Common.cpp
+@@ -2426,6 +2426,11 @@ void idCommonLocal::Frame( void ) {
+ 
+ 		eventLoop->RunEventLoop();
+ 
++#ifdef D3_SINGLE_TASK
++		// no async timer task: run the 60 Hz tics that are due from the main loop
++		Async();
++#endif
++
+ 		com_frameTime = com_ticNumber * USERCMD_MSEC;
+ 
+ 		idAsyncNetwork::RunFrame();
+@@ -2472,6 +2477,9 @@ idCommonLocal::GUIFrame
+ void idCommonLocal::GUIFrame( bool execCmd, bool network ) {
+ 	Sys_GenerateEvents();
+ 	eventLoop->RunEventLoop( execCmd );	// and execute any commands
++#ifdef D3_SINGLE_TASK
++	Async();
++#endif
+ 	com_frameTime = com_ticNumber * USERCMD_MSEC;
+ 	if ( network ) {
+ 		idAsyncNetwork::RunFrame();
+@@ -2774,6 +2782,7 @@ void idCommonLocal::SetMachineSpec( void ) {
+ 	}
+ }
+ 
++#ifndef D3_SINGLE_TASK
+ static unsigned int AsyncTimer(unsigned int interval, void *) {
+ 	common->Async();
+ 	Sys_TriggerEvent(TRIGGER_EVENT_ONE);
+@@ -2790,6 +2799,7 @@ static unsigned int AsyncTimer(unsigned int interval, void *) {
+ 
+ 	return tick - now;
+ }
++#endif
+ 
+ #ifdef _WIN32
+ #include "../sys/win32/win_local.h" // for Conbuf_AppendText()
+@@ -3041,10 +3051,12 @@ void idCommonLocal::Init( int argc, char **argv ) {
+ 		Sys_Error( "Error during initialization" );
+ 	}
+ 
++#ifndef D3_SINGLE_TASK
+ 	async_timer = SDL_AddTimer(USERCMD_MSEC, AsyncTimer, NULL);
+ 
+ 	if (!async_timer)
+ 		Sys_Error("Error while starting the async timer: %s", SDL_GetError());
++#endif
+ }
+ 
+ 
+diff --git a/neo/framework/FileSystem.cpp b/neo/framework/FileSystem.cpp
+index 83738e6a..da0c82ae 100644
+--- a/neo/framework/FileSystem.cpp
++++ b/neo/framework/FileSystem.cpp
+@@ -2741,7 +2741,9 @@ void idFileSystemLocal::Shutdown( bool reloading ) {
+ 
+ 	backgroundThread_exit = true;
+ 	Sys_TriggerEvent();
+-	Sys_DestroyThread(backgroundThread);
++	if ( backgroundThread.threadHandle ) {	// none in a D3_SINGLE_TASK build
++		Sys_DestroyThread(backgroundThread);
++	}
+ 	backgroundThread_exit = false;
+ 
+ 	gameFolder.Clear();
+@@ -3545,6 +3547,10 @@ idFileSystemLocal::StartBackgroundReadThread
+ =================
+ */
+ void idFileSystemLocal::StartBackgroundDownloadThread() {
++#ifdef D3_SINGLE_TASK
++	// only multiplayer pak downloads use it (AsyncClient.cpp), which this build leaves out
++	return;
++#endif
+ 	if ( !backgroundThread.threadHandle ) {
+ 		Sys_CreateThread( BackgroundDownloadThread, &backgroundThread_exit, backgroundThread, "backgroundDownload" );
+ 	} else {
+diff --git a/neo/framework/Session.cpp b/neo/framework/Session.cpp
+index cf188548..7a719434 100644
+--- a/neo/framework/Session.cpp
++++ b/neo/framework/Session.cpp
+@@ -2712,7 +2712,12 @@ void idSessionLocal::Frame() {
+ 		if ( latchedTicNumber >= minTic ) {
+ 			break;
+ 		}
++#ifdef D3_SINGLE_TASK
++		// nobody else runs the tics: run the next one when it is due
++		common->Async();
++#else
+ 		Sys_WaitForEvent( TRIGGER_EVENT_ONE );
++#endif
+ 	}
+ 
+ 	if ( authEmitTimeout ) {
+diff --git a/neo/renderer/RenderSystem.cpp b/neo/renderer/RenderSystem.cpp
+index ea986579..e2f879a8 100644
+--- a/neo/renderer/RenderSystem.cpp
++++ b/neo/renderer/RenderSystem.cpp
+@@ -761,10 +761,12 @@ void idRenderSystemLocal::RenderCommands(renderCrop_t *pc, byte *pix)
+ 		BackendThreadShutdown();
+ 		multithreadActive = false;
+ 	}
++#ifndef D3_SINGLE_TASK
+ 	else if( !multithreadActive && r_multithread.GetBool() )
+ 	{
+ 		multithreadActive = true;
+ 	}
++#endif
+ 
+ 	//Save the current vertexs and framedata to use for next render
+ 	vertListToRender = vertexCache.GetListNum();
+diff --git a/neo/renderer/RenderSystem_init.cpp b/neo/renderer/RenderSystem_init.cpp
+index ab7acafa..ada3081e 100644
+--- a/neo/renderer/RenderSystem_init.cpp
++++ b/neo/renderer/RenderSystem_init.cpp
+@@ -1561,7 +1561,11 @@ void idRenderSystemLocal::Init( void ) {
+ 	// we used to memset tr, but now that it is a class, we can't, so
+ 	// there may be other state we need to reset
+ 
++#ifdef D3_SINGLE_TASK
++	multithreadActive = false;	// the back end always runs in the main task
++#else
+ 	multithreadActive = r_multithread.GetBool();
++#endif
+ 	useSpinLock = false;
+ 	spinLockDelay = 500;
+ 

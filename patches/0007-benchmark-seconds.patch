@@ -1,0 +1,52 @@
+diff --git a/neo/framework/Session.cpp b/neo/framework/Session.cpp
+index 33f88319..d3571331 100644
+--- a/neo/framework/Session.cpp
++++ b/neo/framework/Session.cpp
+@@ -2649,8 +2649,47 @@ idSessionLocal::Frame
+ ===============
+ */
+ extern bool CheckOpenALDeviceAndRecoverIfNeeded();
++
++/*
++===============
++BenchmarkFrame
++
++com_benchmarkSeconds N: from the first frame after a map has been loaded,
++count the frames for N seconds, report them and quit. Needs no demo file:
++a map's scripted opening (game/demo_mars_city1's, for one) shows the same
++scene on every machine, at whatever frame rate it reaches.
++===============
++*/
++static idCVar com_benchmarkSeconds( "com_benchmarkSeconds", "0", CVAR_SYSTEM | CVAR_INTEGER,
++	"after a map has loaded, count the frames for this many seconds, print them and quit (0: off)" );
++
++static void BenchmarkFrame( bool mapRunning ) {
++	static int startMsec = 0, frames = 0;
++	static bool done = false;
++	int seconds = com_benchmarkSeconds.GetInteger();
++	if ( seconds <= 0 || done || !mapRunning ) {
++		return;
++	}
++	int now = Sys_Milliseconds();
++	if ( !startMsec ) {
++		startMsec = now;	// the first frame of the running map starts the clock
++		frames = 0;
++		common->Printf( "benchmark: counting frames for %d seconds\n", seconds );
++		return;
++	}
++	frames++;
++	if ( now - startMsec >= seconds * 1000 ) {
++		float secs = ( now - startMsec ) * 0.001f;
++		common->Printf( "benchmark: %i frames rendered in %3.1f seconds = %3.1f fps\n", frames, secs, frames / secs );
++		done = true;
++		cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "quit\n" );
++	}
++}
++
+ void idSessionLocal::Frame() {
+ 
++	BenchmarkFrame( mapSpawned && !insideExecuteMapChange && !readDemo );
++
+ 	if ( com_asyncSound.GetInteger() == 0 ) {
+ 		soundSystem->AsyncUpdateWrite( Sys_Milliseconds() );
+ 	}

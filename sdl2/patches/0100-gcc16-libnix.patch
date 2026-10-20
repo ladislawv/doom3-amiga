@@ -1,0 +1,49 @@
+diff --git a/libSDL2-amigaos3-main/include/SDL_config_amigaos3.h b/libSDL2-amigaos3-main/include/SDL_config_amigaos3.h
+index 87d41a7e..bf382768 100644
+--- a/libSDL2-amigaos3-main/include/SDL_config_amigaos3.h
++++ b/libSDL2-amigaos3-main/include/SDL_config_amigaos3.h
+@@ -39,6 +39,7 @@
+ 
+ /* C library features available in bebbo-gcc libnix */
+ #define HAVE_STDARG_H   1
++#define HAVE_STDLIB_H   1 /* libnix and clib2 both have it; GCC 14+ refuses the implicit declarations without it */
+ #define HAVE_STDDEF_H   1
+ #define HAVE_STDINT_H   1
+ 
+diff --git a/libSDL2-amigaos3-main/src/audio/amigaos3/SDL_os3paula.c b/libSDL2-amigaos3-main/src/audio/amigaos3/SDL_os3paula.c
+index a5d2a9cb..5a9c724c 100644
+--- a/libSDL2-amigaos3-main/src/audio/amigaos3/SDL_os3paula.c
++++ b/libSDL2-amigaos3-main/src/audio/amigaos3/SDL_os3paula.c
+@@ -34,6 +34,7 @@
+ #pragma pack(push,2)
+ #endif
+ #include <proto/exec.h>
++#include <clib/alib_protos.h> /* BeginIO */
+ #include <proto/dos.h>
+ #include <proto/graphics.h>
+ #include <graphics/gfxbase.h>
+diff --git a/libSDL2-amigaos3-main/src/libm/math_private.h b/libSDL2-amigaos3-main/src/libm/math_private.h
+index ee67c444..2c40a827 100644
+--- a/libSDL2-amigaos3-main/src/libm/math_private.h
++++ b/libSDL2-amigaos3-main/src/libm/math_private.h
+@@ -27,7 +27,7 @@
+ #define libm_hidden_def(x)
+ #define strong_alias(x, y)
+ 
+-#if !defined(__HAIKU__) && !defined(__PSP__) && !defined(__3DS__) && !defined(__PS2__) /* already defined in a system header. */
++#if !defined(__HAIKU__) && !defined(__PSP__) && !defined(__3DS__) && !defined(__PS2__) && !(defined(__AMIGAOS3__) && defined(_SYS_TYPES_H)) /* already defined in a system header (libnix: newlib's sys/types.h) */
+ typedef unsigned int u_int32_t;
+ #endif
+ 
+diff --git a/libSDL2-amigaos3-main/src/thread/amigaos3/SDL_syssem.c b/libSDL2-amigaos3-main/src/thread/amigaos3/SDL_syssem.c
+index 0bd19c6b..13d2a2a9 100644
+--- a/libSDL2-amigaos3-main/src/thread/amigaos3/SDL_syssem.c
++++ b/libSDL2-amigaos3-main/src/thread/amigaos3/SDL_syssem.c
+@@ -12,6 +12,7 @@
+ #if SDL_THREAD_AMIGAOS3
+ 
+ #include "SDL_mutex.h"
++#include "SDL_timer.h" /* SDL_GetTicks, SDL_Delay */
+ 
+ #ifdef WARPUP
+ #pragma pack(push,2)

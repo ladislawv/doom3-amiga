@@ -1,0 +1,62 @@
+diff --git a/neo/renderer/Image_load.cpp b/neo/renderer/Image_load.cpp
+index 703bc7c3..b77aa75a 100644
+--- a/neo/renderer/Image_load.cpp
++++ b/neo/renderer/Image_load.cpp
+@@ -69,7 +69,10 @@ int idImage::BitsForInternalFormat( int internalFormat ) const {
+ 	case 2:
+ 	case 3:
+ 	case 4:
++	case GL_RGBA:	// what GenerateImage stores (d3es); listImages stopped at it
+ 		return 32;
++	case GL_RGB:	// framebuffer copies
++		return 24;
+ 	case GL_RGBA4:
+ 		return 16;
+ 	case GL_RGB5_A1:
+@@ -1232,6 +1235,7 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight, bo
+ 		|| ( !useOversizedBuffer && ( uploadWidth != potWidth || uploadHeight != potHeight ) ) ) {
+ 		uploadWidth = potWidth;
+ 		uploadHeight = potHeight;
++		internalFormat = GL_RGB;	// for StorageSize and listImages
+ 		if ( potWidth == imageWidth && potHeight == imageHeight ) {
+ 			qglCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, x, y, imageWidth, imageHeight, 0 );
+ 		} else {
+@@ -1334,6 +1338,7 @@ void idImage::UploadScratch( const byte *data, int cols, int rows ) {
+ 		if ( cols != uploadWidth || rows != uploadHeight ) {
+ 			uploadWidth = cols;
+ 			uploadHeight = rows;
++			internalFormat = GL_RGBA;	// for StorageSize and listImages
+ 
+ 			// upload the base level
+ 			for ( i = 0 ; i < 6 ; i++ ) {
+@@ -1366,6 +1371,7 @@ void idImage::UploadScratch( const byte *data, int cols, int rows ) {
+ 		if ( cols != uploadWidth || rows != uploadHeight ) {
+ 			uploadWidth = cols;
+ 			uploadHeight = rows;
++			internalFormat = GL_RGBA;	// for StorageSize and listImages
+ 			qglTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, cols, rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
+ 		} else {
+ 			// otherwise, just subimage upload it so that drivers can tell we are going to be changing
+@@ -1409,6 +1415,9 @@ int idImage::StorageSize() const {
+ 	if ( texnum == TEXTURE_NOT_LOADED ) {
+ 		return 0;
+ 	}
++	if ( internalFormat == 0 ) {	// a texture name with nothing uploaded yet
++		return 0;
++	}
+ 
+ 	switch ( type ) {
+ 	default:
+@@ -1479,8 +1488,12 @@ void idImage::Print() const {
+ 	case 2:
+ 	case 3:
+ 	case 4:
++	case GL_RGBA:
+ 		common->Printf( "RGBA  " );
+ 		break;
++	case GL_RGB:
++		common->Printf( "RGB   " );
++		break;
+ 	case GL_RGBA4:
+ 		common->Printf( "RGBA4 " );
+ 		break;

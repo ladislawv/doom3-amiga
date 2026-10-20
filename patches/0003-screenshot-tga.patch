@@ -1,0 +1,38 @@
+diff --git a/neo/renderer/RenderSystem_init.cpp b/neo/renderer/RenderSystem_init.cpp
+index 6a2c765d..87e5bdc1 100644
+--- a/neo/renderer/RenderSystem_init.cpp
++++ b/neo/renderer/RenderSystem_init.cpp
+@@ -912,7 +912,7 @@ void R_ReadTiledPixels( int width, int height, byte *buffer, renderView_t *ref =
+ 			
+ 			qglReadPixels( 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, temp );
+ 
+-			int	row = ( w * 4 + 4 ) & ~4;		// OpenGL pads to dword boundaries
++			int	row = w * 4;		// RGBA rows are always a multiple of 4 bytes (the default pack alignment)
+ 
+ 			for ( int y = 0 ; y < h ; y++ ) {
+ 				memcpy( buffer + ( ( yo + y )* width + xo ) * 4,
+@@ -991,14 +991,17 @@ void idRenderSystemLocal::TakeScreenshot( int width, int height, const char *fil
+ 	buffer[15] = height >> 8;
+ 	buffer[16] = 24;	// pixel size
+ 
+-	// swap rgb to bgr
+-	c = 18 + width * height * 4;
+-	
+-	for (i=18 ; i<c ; i+=4) {
+-		temp = buffer[i];
+-		buffer[i] = buffer[i+2];
+-		buffer[i+2] = temp;
++	// the pixels were read as RGBA (GL ES 2.0 has no GL_RGB readback): pack them
++	// into the 24-bit BGR the header says, in place (the output never passes the input)
++	for ( i = 0 ; i < pix ; i++ ) {
++		const byte *in = buffer + 18 + i * 4;
++		byte *out = buffer + 18 + i * 3;
++		byte r = in[0], g = in[1], b = in[2];
++		out[0] = b;
++		out[1] = g;
++		out[2] = r;
+ 	}
++	c = 18 + pix * 3;
+ 
+ 	// _D3XP adds viewnote screenie save to cdpath
+ 	if ( strstr( fileName, "viewnote" ) ) {
