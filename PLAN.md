@@ -82,7 +82,13 @@
 - **Game data:** `base/pak000.pk4` to `pak008.pk4` from Doom 3 1.3.1 (the version GOG and Steam sell), and `d3xp/pak000.pk4`, `pak001.pk4`.
   - The developer copies them to the Amiga and to WSL (for the reference build) once.
   - They are never committed or put into packages.
-  - The 2019 re-release and the BFG Edition use different data and are not supported.
+  - The BFG Edition uses different archive and data formats and is not supported.
+  - **Where to get it:**
+    - **GOG's "DOOM 3"** (DRM-free) includes the original 2004 game with Resurrection of Evil, besides the BFG Edition. Use the original's `base/` and `d3xp/` folders.
+    - **Steam's original "DOOM 3"** comes fully patched (dhewm3 FAQ). Its data can be copied from a Windows install or fetched with SteamCMD.
+    - **The 2004 CDs/DVD** carry `base/pak000`–`pak004` and `d3xp/pak000`. The rest comes from the official 1.3.1 patch; the dhewm3 FAQ shows how to extract it from the Linux patch.
+  - **Checking it:** compare the MD5 sums against the dhewm3 FAQ's list (https://github.com/dhewm/dhewm3/wiki/FAQ).
+  - **Free demo:** dhewm3 1.5.1 and newer can run the free 2004 demo's data, so d3es (1.5.3 WIP) should too. It could serve for the first start-up tests, but its maps and demos differ, so the `demo1` measurements need the full game.
 
 ## 5. Platform facts the plan relies on
 
@@ -347,8 +353,10 @@ None yet. Requests go here only with a measurement behind them; the developer de
   - SDL2_68k's endian header and `Makefile.libnix`;
   - ogles2's SDL2 patch covers that makefile.
 
+**Done (2026-10-20): repository.** This folder is the private GitHub repository `ladislawv/doom3-amiga` (branch `main`, LF line ends by `.gitattributes`; game data, builds and screenshots ignored).
+
 **Next, in order:**
-1. Put this folder under git (a private GitHub repository) with `sources.sh` pinning d3es, dhewm3 1.5.5 and SDL2_68k.
-2. The developer copies the 1.3.1 data (`base/`, `d3xp/`) to WSL and to the Amiga.
+1. `sources.sh` pinning d3es, dhewm3 1.5.5 and SDL2_68k.
+2. The developer gets the 1.3.1 data (§4: GOG, Steam or CD plus the patch), checks the MD5 sums, and copies `base/` and `d3xp/` to WSL and to the Amiga.
 3. Phase 1 (§8): the host build and the reference set.
 4. Phase 2: libnix SDL2, zlib, the C++ probe on the A1200.
