@@ -1,0 +1,20 @@
+# Builds and clones live in WSL (~/doom3-build, ~/d3es, ~/d3es-ref, ~/d3-sdl2), not here.
+*.o
+*.a
+/build/
+tests/a1200/out/
+
+# Doom 3 game data is never committed
+*.pk4
+base/
+d3xp/
+
+# The test station's token
+station.local
+
+# Screenshots and reference pictures stay local
+tests/reference/
+tests/a1200/results/**/shots/
+tests/a1200/results/**/*.png
+tests/a1200/results/**/*.jpg
+tests/a1200/results/**/*.tga

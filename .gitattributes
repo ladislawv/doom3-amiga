@@ -1,0 +1,7 @@
+# LF everywhere: Amiga scripts need it, patches apply to LF clones in WSL, and
+# ogles2's shader records hash shader text byte for byte.
+* text=auto eol=lf
+*.patch -text
+*.lha binary
+*.zip binary
+*.pk4 binary
