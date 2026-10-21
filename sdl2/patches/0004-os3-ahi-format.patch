@@ -11,7 +11,7 @@ index 04398daf..cdb7396c 100644
 +       test_format was the next format in SDL's list, not the one matched
 +       (AUDIO_S16LSB after AUDIO_S16MSB): SDL converted the application's
 +       big-endian samples to little-endian and AHI, told AHIST_S16S, played
-+       them byte-swapped (noise at every level; the Doom 3 port, 2026-10-21). */
++       them byte-swapped (noise at every level; found 2026-10-21). */
      for (test_format = SDL_FirstAudioFormat(_this->spec.format);
 -         test_format && !found;
 +         test_format;
