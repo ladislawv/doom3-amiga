@@ -10,9 +10,9 @@ set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
 SDL2_SRC=${SDL2_SRC:-$HOME/d3-sdl2}
 TC16=${TC16:-$HOME/amiga-gcc162-install}
-OGLES2_REPO=${OGLES2_REPO:-/mnt/c/- CPP/ogles2}
+OGLES2_REPO=${OGLES2_REPO:-$HERE/../ogles2}	# next to this repository, as tools/a1200.py expects
 OGLES2_BUILD=${OGLES2_BUILD:-$HOME/ogles2-build/m68k}
-PISTORM3D_SDK=${PISTORM3D_SDK:-/mnt/c/- CPP/pistorm3d/SDK}
+PISTORM3D_SDK=${PISTORM3D_SDK:-$HERE/../pistorm3d/SDK}
 O=${O:-$HOME/doom3-build/m68k/sdl2}
 export PATH="$TC16/bin:$PATH"	# the Makefile calls m68k-amigaos-gcc and vasmm68k_mot
 

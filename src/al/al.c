@@ -428,13 +428,11 @@ static void WriteDump( void ) {
 		fwrite( al.dump, sizeof( Sint16 ) * 2, al.dumpFrames, f );
 		fclose( f );
 	}
-	printf( "OpenAL subset: %d frames of output %s %s
-", al.dumpFrames, f ? "written to" : "NOT written to", path );
+	printf( "OpenAL subset: %d frames of output %s %s\n", al.dumpFrames, f ? "written to" : "NOT written to", path );
 	SDL_snprintf( path, sizeof( path ), "%s.txt", al.dumpPrefix );
 	f = fopen( path, "wb" );
 	if ( f ) {
-		fprintf( f, "rate %d, %d frames of output, %d sources
-", al.rate, al.dumpFrames, al.maxSources );
+		fprintf( f, "rate %d, %d frames of output, %d sources\n", al.rate, al.dumpFrames, al.maxSources );
 		fwrite( al.dumpLog, 1, al.dumpLogLen, f );
 		fclose( f );
 	}
