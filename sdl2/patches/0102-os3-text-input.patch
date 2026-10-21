@@ -1,0 +1,96 @@
+diff --git a/libSDL2-amigaos3-main/src/video/amigaos3/SDL_os3events.c b/libSDL2-amigaos3-main/src/video/amigaos3/SDL_os3events.c
+index 0d567b06..8efce795 100644
+--- a/libSDL2-amigaos3-main/src/video/amigaos3/SDL_os3events.c
++++ b/libSDL2-amigaos3-main/src/video/amigaos3/SDL_os3events.c
+@@ -28,6 +28,12 @@
+ #include "SDL_keyboard.h"
+ #include "SDL_mouse.h"
+ 
++#include <devices/inputevent.h>
++#include <proto/keymap.h>
++
++/* keymap.library, for text input (OS3_HandleText); opened when first needed */
++struct Library *KeymapBase = NULL;
++
+ /* Amiga raw key release flag */
+ #define AMIGA_KEY_UP  0x80
+ 
+@@ -196,6 +202,50 @@ static void OS3_HandleRawKey(SDL_Window *sdlwin, UWORD code)
+     SDL_SendKeyboardKey(state, scancode);
+ }
+ 
++/* Text input: SDL sends no SDL_TEXTINPUT on this driver otherwise, and SDL2
++   programs take typed text only from it (Doom 3's console, a game's name
++   entry). A key's press goes through the user's keymap (MapRawKey, with the
++   qualifiers and the previous keys for dead keys); its printable characters
++   (ISO 8859-1, as the Amiga's keymaps give them) go to SDL as UTF-8. Control
++   characters (Return, Tab, Backspace, Esc, Del, cursor keys) stay key events. */
++static void OS3_HandleText(UWORD code, UWORD qualifier, APTR prevkeys)
++{
++    struct InputEvent ie;
++    UBYTE  buf[16];
++    char   utf8[33];
++    LONG   n, i;
++    int    o = 0;
++
++    if ((code & AMIGA_KEY_UP) || !SDL_IsTextInputActive()) {
++        return;
++    }
++    if (!KeymapBase && !(KeymapBase = OpenLibrary((CONST_STRPTR)"keymap.library", 37))) {
++        return;
++    }
++    SDL_zero(ie);
++    ie.ie_Class        = IECLASS_RAWKEY;
++    ie.ie_Code         = code;
++    ie.ie_Qualifier    = qualifier;
++    ie.ie_EventAddress = prevkeys;
++    n = MapRawKey(&ie, (STRPTR)buf, sizeof(buf), NULL);
++    for (i = 0; i < n; i++) {
++        UBYTE c = buf[i];
++        if (c < 0x20 || c == 0x7f || (c >= 0x80 && c < 0xa0)) {
++            continue;
++        }
++        if (c < 0x80) {
++            utf8[o++] = (char)c;
++        } else {
++            utf8[o++] = (char)(0xc0 | (c >> 6));
++            utf8[o++] = (char)(0x80 | (c & 0x3f));
++        }
++    }
++    if (o > 0) {
++        utf8[o] = '\0';
++        SDL_SendKeyboardText(utf8);
++    }
++}
++
+ /* Translate IDCMP_MOUSEBUTTONS code to SDL mouse button event. */
+ static void OS3_HandleMouseButton(SDL_Window *sdlwin, UWORD code)
+ {
+@@ -227,7 +277,8 @@ void OS3_PumpEvents(_THIS)
+     OS3_WindowData  *data;
+     struct IntuiMessage *imsg;
+     ULONG  class;
+-    UWORD  code;
++    UWORD  code, qualifier;
++    APTR   prevkeys;
+     WORD   mousex, mousey;
+     struct Window *intuiwin;
+     ULONG  idcmp;
+@@ -258,6 +309,9 @@ void OS3_PumpEvents(_THIS)
+             /* Copy fields BEFORE ReplyMsg -- message memory is Intuition's */
+             class  = imsg->Class;
+             code   = imsg->Code;
++            qualifier = imsg->Qualifier;
++            /* RAWKEY: IAddress points to the previous keys (dead keys), valid until the reply */
++            prevkeys = (class == IDCMP_RAWKEY && imsg->IAddress) ? *(APTR *)imsg->IAddress : NULL;
+             mousex = imsg->MouseX;
+             mousey = imsg->MouseY;
+ 
+@@ -268,6 +322,7 @@ void OS3_PumpEvents(_THIS)
+             switch (class) {
+             case IDCMP_RAWKEY:
+                 OS3_HandleRawKey(sdlwin, code);
++                OS3_HandleText(code, qualifier, prevkeys);
+                 break;
+ 
+             case IDCMP_MOUSEBUTTONS:

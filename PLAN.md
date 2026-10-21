@@ -921,9 +921,88 @@ Requests go here only with a measurement behind them; the developer decides whet
   - Also: on this machine `~/ogles2-build/m68k` was rebuilt on 2026-10-21 at 14:05 from `C:\GitHub\ogles3.1` (its `ogles3-make.log`), which shares that folder; `tools/bench_pkg.sh` packages from it.
   - **All of 2026-10-21's A1200 numbers above (the cost of sound included) are with the copy**; to be measured again with the change.
 
+- **Done (2026-10-21): the swap without the copy here.** ogles2 committed it (`f3704e2`), and took this port's SDL fixes (its patches 0003 and 0004, in place of this port's 0101 and 0103; doom3 `8ff7bb2`); synced here, ogles2 `33b96b1` built (`ogles2.library` 240,312 bytes, as the developer's), SDL and the game rebuilt. **Silent: 16.4 fps, swap 1.3 ms** (`bench-20261021-170203`), against 16.7 fps and 1.3 ms on 2026-10-20; the other stages as then.
+  - `tests/a1200/build_pkg.sh` (the `play` package) still takes ogles2's 1.3 release (`~/ogles2-build/release`), which has the copy: play packages need `OGLES2_RELEASE=~/ogles2-build/direct-libs` (what `tools/bench_pkg.sh` copies) until ogles2 makes a release.
+
+- **The cost of sound, with the no-copy swap** (`bench-20261021-170547`, the same three builds and settings as above):
+
+  | build | fps | frame | game | front end | back end | swap |
+  |---|---|---|---|---|---|---|
+  | silent | **16.2** | 62 ms | 16.5 | 9.6 | 32.6 | 1.4 |
+  | Paula (SDL's driver, 8-bit) | **11.1** | 90 ms | 27.1 | 11.4 | 40.8 | 1.5 |
+  | AHI (unit 0, the USB device) | **4.6** | 216 ms | 105.3 | 18.5 | 75.7 | 1.6 |
+
+  - As a share of the CPU (another task taking a share f stretches every frame by 1/(1−f)): **sound with Paula about 32%** (the subset's mixer, OGG streams decoded while playing, d3es's sound updates, SDL's 16-to-8-bit conversion), **sound through AHI and USB about 71%**; AHI's part alone, above Paula's, about 39 points.
+  - The earlier table (with the copy) put the same order on it; its milliseconds were stretched by the 53 ms swap.
+
+- **Paula only: the mixer in the device's format, and the cheap cuts** (`bench-20261021-172212`, 1920x1080, `low.cfg`, demo_mc_underground, Paula, cumulative from left to right):
+  - **The mixer writes what the device plays.** SDL2_68k's Paula driver is 8-bit mono, so SDL converted the subset's 16-bit stereo through float on every sample. `src/al/al.c` now opens the device with `SDL_AUDIO_ALLOW_FORMAT_CHANGE | SDL_AUDIO_ALLOW_CHANNELS_CHANGE` and mixes into its format (`AUDIO_S16SYS` or `AUDIO_S8`, stereo or mono; mono without panning). AHI and the host keep 16-bit stereo: the host's dump is the same as before (loudness per second identical, 99.8% of the samples alike, the rest real-time jitter).
+
+    | build | fps | game | front end | back end |
+    |---|---|---|---|---|
+    | the mixer in 8-bit mono (`base`) | 11.1 | 27.0 | 11.4 | 40.4 |
+    | + `s_useOcclusion 0`, `s_maxSoundsPerShader 1` (`cvars`) | 10.8 | 28.5 | 11.4 | 41.3 |
+    | + `s_decompressionLimit 60`: nothing decoded while playing (`decomp`) | 11.7 | 26.6 | 11.8 | 41.5 |
+    | + 16 voices (`D3AL_VOICES`, `v16`) | 12.4 | 24.4 | 11.5 | 40.1 |
+    | + 11,025 Hz output in place of 16 voices (`D3AL_RATE`, `r11k`, 32 voices) | 13.1 | 22.0 | 11.0 | 38.8 |
+
+    (silent 16.2 fps, `bench-20261021-170547`). SDL's conversion was not the cost (`base` is no faster than 11.1 before), and occlusion and the sounds per shader cost nothing measurable. The game's time grows with sound, 16.5 to 27 ms a frame: d3es's sound work in the game's own process, not the mixer's. `bench-one` takes `<build>.env` (`SetEnv` lines) for the subset's settings per build.
+  - **The PC sampler on SDL's audio process hung the A1200** (a second `pc_sample` on `SDL_SDLAudioP2`, beside the one on the game; the station stopped answering during the run). The sampler stays on the game's own process.
+
+- **The cost of sound, split** (Paula, the `decomp` settings):
+  - **The mixer times itself** now (`src/al/al.c`: time in the callback, printed when the device closes): **2.96–3.17 ms a 46.4 ms block, 6.4–6.8% of the CPU** while sounds play (`bench-20261021-180937`, `-181715`).
+  - **The PC sampler on the game's process** (`bench-20261021-180937`, silent against Paula): d3es's sound code 2.2% of the game's samples (`AddChannelContribution`, `MixLoop`, `ALStop`, `cexpf`), OGG decoding still 1.2% (`idSampleDecoderLocal::ClearDecoder`'s span, stb_vorbis); the rest grows with the game's work: collision, physics, game logic.
+  - **With sound the level plays differently:** scripts wait for sounds that `s_noSound 1` makes zero-length, so the counted 30 s hold more (691 light surfaces against 605, 144 interactions against 130). `D3AL_NOMIX=1` (new: the subset outputs silence and mixes nothing) separates it (`bench-20261021-181715`):
+
+    | build | fps | frame | game | front end | back end |
+    |---|---|---|---|---|---|
+    | silent (`s_noSound 1`) | 16.4 | 61 ms | 16.5 | 9.6 | 31.9 |
+    | sound, mixer idle (`D3AL_NOMIX 1`) | 12.8 | 78 ms | 22.8 | 11.3 | 39.3 |
+    | sound, mixed (Paula) | 11.7 | 85 ms | 26.3 | 12.0 | 41.9 |
+
+    **The mixer and Paula: 7 ms a frame (8%).** The 17 ms between silent and the idle mixer are the other scene (its back end alone 7 ms more) and d3es's sound work; **sound is not 30% of the CPU, and silent fps do not compare with fps with sound.** Benchmarks of sound changes compare against `D3AL_NOMIX` or each other.
+- **Play's defaults for Paula:** `low.cfg` adds `s_maxSoundsPerShader 1` (Doom 3's Low preset's) and `s_decompressionLimit 60` (nothing decoded while playing; 8 s more load: 94.6 to 102.9 s). `Run-Play` takes `AUDIO=` (default **paula**), `VOICES=` (default **32**) and `RATE=` (default 22050; 11025 gave +1.4 fps, the sound duller), set as global variables for the run. Occlusion stays on (off gained nothing measurable).
+  - **16 voices lost the voice lines** (the developer, `demo_mars_city1`'s intro, `play-20261021-192254`): d3es keeps 8 of the voices for stereo sounds, so only 8 were left for the rest of a busy scene. With 32 they play (`play-20261021-193114`), and the mixer then cost 3.0% of the CPU in that scene (1.38 ms a 46.4 ms block, against 1.33 with 16): the voices' +0.7 fps in `bench-20261021-172212` was mc_underground's busier sound. **32 is the default again.**
+
+- **Done (2026-10-21): typing in the console.** SDL2_68k's AmigaOS 3 driver sent no `SDL_TEXTINPUT` at all, and d3es on SDL2 takes typed characters only from it: the console saw Return (empty `]` lines in the log) but no letters. **`sdl2/patches/0102-os3-text-input`**: each key press also goes through the user's keymap (`MapRawKey`, with the qualifiers and the previous keys for dead keys); its printable characters (ISO 8859-1) go to SDL as UTF-8, while SDL's text input is active. The developer typed in the console with it.
+- **Open (2026-10-21): starting a second map hangs the A1200.** Twice: `demo_mc_underground` played, then New Game (which loads `demo_mars_city1`): the log ends at "Game Map Shutdown", the station stops answering, a reset is needed (the logs fetched after the reset: `play-20261021-182700-hang`). `demo_mars_city1` as the first map loads and plays (all the dump runs). On the host, `+map A +wait 20 +map B` never reached the second `map` within 4 minutes (the first map loaded in 5 s), so the host test says nothing yet. Until it is found: start the map wanted directly (`Run-Play`'s `MAP`, edited in the package's copy: amictl's `-a` takes no `/`).
+
+- **1280x720 against 1920x1080, as played** (`bench-20261021-194746`: Paula, 32 voices, `low.cfg` with its sound settings, demo_mc_underground, 30 Hz): **12.5 fps against 12.2**; back end 40.8 against 41.1 ms, its draw stages the same (interactions 29.4 ms both), swap 1.1 against 1.5 ms. The back end's time is the CPU's (ogles2's per-draw work, §13), not the pixels: the resolution costs almost nothing.
+
+- **`patches/0026-max-lights`: the Vita port's `r_maxLights`** (ldhewm3-rearmed `7f43e0d`; §14 "the Vita port reviewed", group 2). At most `r_maxLights` lights in a view (0, the default: all); ambient and fog lights first, the others by their distance from the view against their volume and brightness, the rest dropped from the view's list and marked out of view (no interactions made for them). Changed from the Vita's: each score computed once and sorted (its sort recomputed them), no fixed array of 1,024, a light coloured by its material (shader parameters 0) counts as bright 1, not as dark. Host (`demo_mc_underground`'s benchmark view): light surfaces 340, 138 with 8, 53 with 4. **A1200** (`bench-20261021-195908`, 1920x1080, `low.cfg`, silent):
+
+  | `r_maxLights` | fps | game | front end | back end | light surfaces |
+  |---|---|---|---|---|---|
+  | 0 (all) | **16.5** | 16.1 | 9.6 | 32.0 | 605 |
+  | 12 | **20.3** | 13.8 | 8.4 | 24.3 | 358 |
+  | 8 | **23.3** | 12.3 | 8.0 | 19.7 | 247 |
+  | 6 | **26.1** | 11.0 | 7.2 | 17.5 | 136 |
+
+  The back end (ogles2's cost per draw) falls with the light surfaces, and the game's time per frame with the frames' rate (more frames, fewer tics each). The picture: fewer lights, the dropped ones' surfaces dark, lights changing as the view moves; to be judged by the developer playing.
+
+- **Played (the developer): lights missing or popping, at 8 and at 12.** The ranking reworked in patch 0026:
+  - the distance from the view to the light's volume (`frustumTris`' bounds; 0 inside it) in place of its centre's, so a light the player stands in is kept;
+  - the size from the same bounds: the Vita's took `lightRadius`, which projected lights do not have, so they counted as size 0 and went first;
+  - hysteresis: a light kept in the last frame ranks `r_maxLightsKeep` (2) times better, against lights flickering at the limit (`idRenderLightLocal::maxLightsFrame`).
+
+  **A1200** (`bench-20261021-203817`, `-204421`; 1920x1080, `low.cfg`, silent): all lights 16.4 fps; **`r_maxLights 12` 21.2 fps** (back end 23.0 ms, 298 light surfaces); **`r_maxLights 8` 24.0 fps** (back end 18.9 ms, 229 light surfaces).
+- **`tests/a1200/play/high.cfg`** (`Run-Play QUALITY=high`): Doom 3's High preset (`com_machineSpec 2`, `execMachineSpec`: full-size textures, 8x anisotropy, precompressed textures) with shadows, post-processing, interaction scissors, decals, blood, projectile lights, double vision, muzzle flashes and shells on; sound as `low.cfg`. Played by the developer (`play-20261021-205847`, loads in 96 s against about 90). **A1200, `r_maxLights 12`** (`bench-20261021-210656`, 1920x1080, silent; high's settings on the command line after `low.cfg`):
+
+  | settings | fps | game | front end | back end | swap | shadow surfaces |
+  |---|---|---|---|---|---|---|
+  | low | **21.3** | 13.2 | 8.0 | 23.1 | 3.5 | 0 |
+  | high | **15.0** | 17.7 | 13.1 | 32.9 | 9.6 | 92 |
+
+  High's cost is mostly the shadows: their front-end work (interactions culled and scissored, 3.0 ms) and draws, and a swap that now waits for the GPU (9.6 ms: the stencil shadows and the full-size, anisotropic textures are the first load here the V3D notices).
+- **640x480 with `r_maxLights 12`** (`bench-20261021-222858`, low, silent): **24.4 fps** against 21.3 at 1920x1080; back end 19.0 against 23.1 ms (interactions 10.4 against 11.2, swap 0.5 against 3.5). With fewer draws the size starts to count a little (15%; it was 4% with all lights, 2026-10-20): the swap at 1920x1080 now waits for the GPU.
+- **Open: the A1200 froze after typing in the console** (`r_maxLights 8` typed during a play session, 2026-10-21 ~20:20; the first session with patch 0102 hung too, typing and New Game). The benchmarks, which type nothing, run. Patch 0102 (text input) is suspected; not to be typed in until found.
+
 **Next, in order:**
-1. **ogles2's swap without the copy on this machine:** committed in ogles2 on the developer's other machine and pulled here (ogles2 changes in its own repository, by its own rules), its library built and packaged; then the benchmarks of 2026-10-21 again.
-2. **The cost of sound, split:** the PC sampler on the Paula build (which of the mixer, OGG decoding, d3es's sound updates), then the cheap cuts: fewer voices (`D3AL_VOICES`), an 11,025 Hz output (`D3AL_RATE`), long sounds decoded at load (`s_decompressionLimit`), or decoded on the PC (above). And AHI on a Paula unit at 22,050 Hz against the USB unit, to see how much is the USB path.
+1. **The console's freeze** (patch 0102 suspected): where it stops (a key, or Return), then the patch checked against the RKM's `MapRawKey` use.
+2. **`r_maxLights` with the new ranking judged by playing** (12, 8), then a default in `low.cfg`.
+2. **The map switch's hang:** reproduced on the host from the console (`map game/demo_mars_city1` typed after a first map) or with a config file (`exec`), then on the A1200 with the log flushed per line.
+2. **The developer listens** to `RATE=11025` (Paula's defaults, 32 voices at 22 kHz, sound fine: `play-20261021-193114`).
+2. **The cost of sound, split (older note):** the PC sampler on the Paula build (which of the mixer, OGG decoding, d3es's sound updates), then the cheap cuts: fewer voices (`D3AL_VOICES`), an 11,025 Hz output (`D3AL_RATE`), long sounds decoded at load (`s_decompressionLimit`), or decoded on the PC (above). And AHI on a Paula unit at 22,050 Hz against the USB unit, to see how much is the USB path.
 2. A PC sample with the wider stacks: collision's callers.
 2. `r_maxLights` from the Vita port (a setting that drops the least important lights), for the port's lower settings.
 3. Collision (10% of the frame): who makes the expensive queries (the swinging light's AF, the player).

@@ -22,6 +22,8 @@
  *   D3AL_VOICES   sources alGenSources gives (default 32; Doom 3 keeps 8 of them for stereo sounds)
  *   D3AL_RATE     output rate in Hz (default 22050)
  *   D3AL_SAMPLES  samples per audio callback (default 1024)
+ *   D3AL_NOMIX    1: output silence and mix nothing (a measurement: the game's
+ *                 sound work and scripts as with sound, without the mixer's)
  *   SDL_AUDIODRIVER  SDL's audio driver (default "ahi" on AmigaOS)
  *   (on AmigaOS read with GetVar, local then global: libnix's getenv sees only
  *   the shell's local variables (Set), not ENV: (SetEnv), and SDL2_68k's
@@ -79,8 +81,16 @@ static struct {
 	SDL_AudioDeviceID	dev;
 	int		rate;
 	int		maxSources;
-	int		*acc;		/* the callback's sum, 2 ints a frame */
+	int		*acc;		/* the callback's sum, an int a sample (channels a frame) */
 	int		accFrames;
+	Uint64	mixTicks;	/* time in the callback, in performance counter ticks */
+	Uint64	openTicks;	/* when the device opened */
+	int		mixCalls;
+	Uint64	busyTicks;	/* the same, for the callbacks that mixed a source */
+	int		busyCalls;
+	int		noMix;		/* D3AL_NOMIX: silence, nothing mixed (a measurement) */
+	int		channels;	/* the device's: 2, or 1 (SDL2_68k's Paula driver) */
+	int		sampleBytes;	/* 2 (AUDIO_S16SYS) or 1 (AUDIO_S8, Paula) */
 	ALenum	error;
 	ALCenum	alcError;
 	float	gain;
@@ -179,6 +189,11 @@ static void SourceGains( const alSrc_t *s, int channels, int *gl, int *gr ) {
 	}
 	if ( g <= 0.0f ) {
 		*gl = *gr = 0;
+		return;
+	}
+	if ( al.channels == 1 ) {
+		/* a mono device: no panning */
+		*gl = *gr = (int)( g * 32768.0f );
 		return;
 	}
 	if ( channels == 2 ) {
@@ -313,9 +328,14 @@ static void MixSource( alSrc_t *s, int *acc, int frames ) {
 				}
 			}
 		}
-		acc[0] += ( sl * ( l >> 15 ) ) >> 15;
-		acc[1] += ( sr * ( r >> 15 ) ) >> 15;
-		acc += 2;
+		if ( al.channels == 1 ) {
+			acc[0] += ( ( ( sl + sr ) >> 1 ) * ( l >> 15 ) ) >> 15;
+			acc += 1;
+		} else {
+			acc[0] += ( sl * ( l >> 15 ) ) >> 15;
+			acc[1] += ( sr * ( r >> 15 ) ) >> 15;
+			acc += 2;
+		}
 		l += dl;
 		r += dr;
 		frac += step;
@@ -327,40 +347,63 @@ static void MixSource( alSrc_t *s, int *acc, int frames ) {
 }
 
 static void SDLCALL MixCallback( void *user, Uint8 *stream, int len ) {
-	Sint16 *out = (Sint16 *)stream;
-	int frames = len / 4, i, n;
+	const int ch = al.channels;
+	int frames = len / ( ch * al.sampleBytes ), i, n, k, busy = 0;
+	Uint64 t0 = SDL_GetPerformanceCounter(), dt;
 	(void)user;
 
+	if ( al.noMix ) {
+		memset( stream, 0, len );
+		return;
+	}
 	while ( frames > 0 ) {
 		n = frames < al.accFrames ? frames : al.accFrames;
-		memset( al.acc, 0, n * 2 * sizeof( int ) );
+		k = n * ch;
+		memset( al.acc, 0, k * sizeof( int ) );
 		for ( i = 0; i < al.maxSources; i++ ) {
 			if ( al.src[i].used && al.src[i].state == AL_PLAYING ) {
 				MixSource( &al.src[i], al.acc, n );
+				busy = 1;
 			}
 		}
-		for ( i = 0; i < n * 2; i++ ) {
-			int v = al.acc[i];
-			out[i] = (Sint16)( v > 32767 ? 32767 : v < -32768 ? -32768 : v );
+		/* the device's format, so that SDL converts nothing (Paula: 8-bit mono) */
+		if ( al.sampleBytes == 1 ) {
+			Sint8 *out = (Sint8 *)stream;
+			for ( i = 0; i < k; i++ ) {
+				int v = al.acc[i];
+				out[i] = (Sint8)( ( v > 32767 ? 32767 : v < -32768 ? -32768 : v ) >> 8 );
+			}
+		} else {
+			Sint16 *out = (Sint16 *)stream;
+			for ( i = 0; i < k; i++ ) {
+				int v = al.acc[i];
+				out[i] = (Sint16)( v > 32767 ? 32767 : v < -32768 ? -32768 : v );
+			}
 		}
-		if ( al.dump && al.dumpFrames == 0 ) {
+		if ( al.dump ) {
 			/* the window starts with the first sound, not at the device's
 			   opening: the A1200 spends minutes loading the map in silence */
-			for ( i = 0; i < n * 2 && out[i] == 0; i++ ) {
+			for ( i = 0; al.dumpFrames == 0 && i < k && al.acc[i] == 0; i++ ) {
 			}
-			if ( i == n * 2 ) {
-				out += n * 2;
-				frames -= n;
-				continue;
+			if ( ( al.dumpFrames > 0 || i < k ) && al.dumpFrames < al.dumpMax ) {
+				int m = al.dumpMax - al.dumpFrames < n ? al.dumpMax - al.dumpFrames : n;
+				Sint16 *d = al.dump + al.dumpFrames * ch;
+				for ( i = 0; i < m * ch; i++ ) {
+					int v = al.acc[i];
+					d[i] = (Sint16)( v > 32767 ? 32767 : v < -32768 ? -32768 : v );
+				}
+				al.dumpFrames += m;
 			}
 		}
-		if ( al.dump && al.dumpFrames < al.dumpMax ) {
-			int m = al.dumpMax - al.dumpFrames < n ? al.dumpMax - al.dumpFrames : n;
-			memcpy( al.dump + al.dumpFrames * 2, out, m * 2 * sizeof( Sint16 ) );
-			al.dumpFrames += m;
-		}
-		out += n * 2;
+		stream += k * al.sampleBytes;
 		frames -= n;
+	}
+	dt = SDL_GetPerformanceCounter() - t0;
+	al.mixTicks += dt;
+	al.mixCalls++;
+	if ( busy ) {
+		al.busyTicks += dt;
+		al.busyCalls++;
 	}
 }
 
@@ -384,6 +427,7 @@ ALC_API ALCdevice *ALC_APIENTRY alcOpenDevice( const ALCchar *devicename ) {
 	al.at[2] = -1.0f;
 	al.up[1] = 1.0f;
 	al.maxSources = EnvInt( "D3AL_VOICES", 32, 1, AL_MAX_SOURCES );
+	al.noMix = EnvInt( "D3AL_NOMIX", 0, 0, 1 );
 
 	driver = Env( "SDL_AUDIODRIVER" );
 #ifdef __amigaos3__
@@ -405,13 +449,22 @@ ALC_API ALCdevice *ALC_APIENTRY alcOpenDevice( const ALCchar *devicename ) {
 	want.channels = 2;
 	want.samples = (Uint16)EnvInt( "D3AL_SAMPLES", 1024, 256, 8192 );
 	want.callback = MixCallback;
-	al.dev = SDL_OpenAudioDevice( NULL, 0, &want, &have, 0 );
+	/* the device's own format and channels if the mixer writes them (16 or
+	   8-bit, stereo or mono): SDL's conversion (through float, per sample)
+	   costs the 68k more than the mixing; SDL2_68k's Paula driver is 8-bit mono */
+	al.dev = SDL_OpenAudioDevice( NULL, 0, &want, &have, SDL_AUDIO_ALLOW_FORMAT_CHANGE | SDL_AUDIO_ALLOW_CHANNELS_CHANGE );
+	if ( al.dev != 0 && ( ( have.format != AUDIO_S16SYS && have.format != AUDIO_S8 ) || have.channels < 1 || have.channels > 2 ) ) {
+		SDL_CloseAudioDevice( al.dev );
+		al.dev = SDL_OpenAudioDevice( NULL, 0, &want, &have, 0 );
+	}
 	if ( al.dev == 0 ) {
 		SDL_AudioQuit();
 		al.alcError = ALC_INVALID_DEVICE;
 		return NULL;
 	}
 	al.rate = have.freq;
+	al.channels = have.channels;
+	al.sampleBytes = have.format == AUDIO_S8 ? 1 : 2;
 	al.accFrames = have.samples > 0 ? have.samples : 1024;
 	al.acc = (int *)malloc( al.accFrames * 2 * sizeof( int ) );
 	if ( !al.acc ) {
@@ -422,6 +475,7 @@ ALC_API ALCdevice *ALC_APIENTRY alcOpenDevice( const ALCchar *devicename ) {
 		return NULL;
 	}
 	al.opened = 1;
+	al.openTicks = SDL_GetPerformanceCounter();
 	{
 		const char *dump = Env( "D3AL_DUMP" );
 		if ( dump && *dump && strlen( dump ) < sizeof( al.dumpPrefix ) - 8 ) {
@@ -455,14 +509,14 @@ static void WriteDump( void ) {
 	SDL_snprintf( path, sizeof( path ), "%s.raw", al.dumpPrefix );
 	f = fopen( path, "wb" );
 	if ( f ) {
-		fwrite( al.dump, sizeof( Sint16 ) * 2, al.dumpFrames, f );
+		fwrite( al.dump, sizeof( Sint16 ) * al.channels, al.dumpFrames, f );
 		fclose( f );
 	}
 	printf( "OpenAL subset: %d frames of output %s %s\n", al.dumpFrames, f ? "written to" : "NOT written to", path );
 	SDL_snprintf( path, sizeof( path ), "%s.txt", al.dumpPrefix );
 	f = fopen( path, "wb" );
 	if ( f ) {
-		fprintf( f, "rate %d, %d frames of output, %d sources\n", al.rate, al.dumpFrames, al.maxSources );
+		fprintf( f, "rate %d, %d channels, %d frames of output, %d sources\n", al.rate, al.channels, al.dumpFrames, al.maxSources );
 		fwrite( al.dumpLog, 1, al.dumpLogLen, f );
 		fclose( f );
 	}
@@ -499,6 +553,18 @@ ALC_API ALCboolean ALC_APIENTRY alcCloseDevice( ALCdevice *device ) {
 	SDL_CloseAudioDevice( al.dev );
 	SDL_AudioQuit();
 	al.dev = 0;
+	{
+		/* the mixer's cost: its share of the time the device was open */
+		double f = (double)SDL_GetPerformanceFrequency();
+		double open = ( SDL_GetPerformanceCounter() - al.openTicks ) / f * 1000.0;
+		double mix = al.mixTicks / f * 1000.0;
+		double busy = al.busyTicks / f * 1000.0, block = 1000.0 * al.accFrames / al.rate;
+		printf( "OpenAL subset: mixing took %.0f ms in %d callbacks, %.1f%% of the %.0f ms the device was open; "
+			"%d callbacks mixed sound, %.2f ms each, %.1f%% of their %.1f ms of output\n",
+			mix, al.mixCalls, open > 0.0 ? 100.0 * mix / open : 0.0, open,
+			al.busyCalls, al.busyCalls ? busy / al.busyCalls : 0.0,
+			al.busyCalls ? 100.0 * busy / al.busyCalls / block : 0.0, block );
+	}
 	WriteDump();
 	for ( i = 0; i < al.numBufs; i++ ) {
 		free( al.buf[i].data );

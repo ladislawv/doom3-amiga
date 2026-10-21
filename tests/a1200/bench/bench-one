@@ -23,6 +23,11 @@ EndIf
 If EXISTS {EXE}.audio
   SetEnv SDL_AUDIODRIVER `Type {EXE}.audio`
 EndIf
+; a <EXE>.env file next to it: SetEnv lines for this build only (the OpenAL
+; subset's D3AL_VOICES, D3AL_RATE, D3AL_SAMPLES, D3AL_NOMIX; unset again after the run)
+If EXISTS {EXE}.env
+  Execute {EXE}.env
+EndIf
 ; a bench.cfg in the package (e.g. tests/a1200/play/low.cfg) is run first by
 ; every build: the game finds it in its save directory
 If EXISTS bench.cfg
@@ -43,6 +48,10 @@ EndIf
 Echo "exit code $RC" >>results/{EXE}.txt
 UnSetEnv D3AL_DUMP
 UnSetEnv SDL_AUDIODRIVER
+UnSetEnv D3AL_VOICES
+UnSetEnv D3AL_RATE
+UnSetEnv D3AL_SAMPLES
+UnSetEnv D3AL_NOMIX
 Copy save/dhewm3log.txt results/{EXE}.log QUIET
 Avail FLUSH >NIL:
 Avail >results/{EXE}-avail-after.txt

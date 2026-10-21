@@ -1,0 +1,154 @@
+diff --git a/neo/renderer/RenderEntity.cpp b/neo/renderer/RenderEntity.cpp
+index a37de664..69af75a0 100644
+--- a/neo/renderer/RenderEntity.cpp
++++ b/neo/renderer/RenderEntity.cpp
+@@ -97,6 +97,7 @@ idRenderLightLocal::idRenderLightLocal() {
+ 	numShadowFrustums		= 0;
+ 	viewCount				= 0;
+ 	viewLight				= NULL;
++	maxLightsFrame			= -1;
+ 	references				= NULL;
+ 	foggedPortals			= NULL;
+ 	firstInteraction		= NULL;
+diff --git a/neo/renderer/RenderSystem_init.cpp b/neo/renderer/RenderSystem_init.cpp
+index b6eef61d..134b1327 100644
+--- a/neo/renderer/RenderSystem_init.cpp
++++ b/neo/renderer/RenderSystem_init.cpp
+@@ -57,6 +57,10 @@ idCVar r_customWidth( "r_customWidth", "720", CVAR_RENDERER | CVAR_ARCHIVE | CVA
+ idCVar r_customHeight( "r_customHeight", "486", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "custom screen height. set r_mode to -1 to activate" );
+ idCVar r_framebufferWidth( "r_framebufferWidth", "0", CVAR_RENDERER | CVAR_INTEGER, "Maintain window resolution but render into a Framebuffer of this width" );
+ idCVar r_framebufferHeight( "r_framebufferHeight", "0", CVAR_RENDERER | CVAR_INTEGER, "Maintain window resolution but render into a Framebuffer of this height" );
++// port (patch 0026, after ldhewm3-rearmed's 7f43e0d): at most this many lights in a view, the rest dropped by
++// importance (ambient and fog lights first, then near, large and bright); fewer lights, fewer draws
++idCVar r_maxLights( "r_maxLights", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "the most lights drawn in a view, the least important dropped (0: all)" );
++idCVar r_maxLightsKeep( "r_maxLightsKeep", "2", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_FLOAT, "r_maxLights: a light kept in the last frame ranks this many times better (against flicker; 1: none)" );
+ idCVar r_checkBounds( "r_checkBounds", "0", CVAR_RENDERER | CVAR_BOOL, "compare all surface bounds with precalculated ones" );
+ 
+ idCVar r_usePhong("r_usePhong", "1", CVAR_RENDERER | CVAR_BOOL, "use phong instead of blinn-phong shader for interactions" );
+diff --git a/neo/renderer/tr_light.cpp b/neo/renderer/tr_light.cpp
+index bfc40e97..f123367b 100644
+--- a/neo/renderer/tr_light.cpp
++++ b/neo/renderer/tr_light.cpp
+@@ -748,12 +748,101 @@ Create any new interactions needed between the viewLights
+ and the viewEntitys due to game movement
+ =================
+ */
++/*
++=================
++R_CapViewLights
++
++Port (patch 0026, after ldhewm3-rearmed's 7f43e0d): keeps the r_maxLights most
++important of the view's lights. Ambient and fog lights come first; the others
++are ranked by the distance from the view to the light's volume (0 inside it)
++against the volume's size and the light's brightness (a light whose colour
++comes from its material counts as bright 1). The Vita's ranking took the
++centre's distance and lightRadius, which projected lights do not have: they
++counted as size 0 and went first. A light kept in the last frame scores
++r_maxLightsKeep times better, so lights near the limit do not flicker. The
++dropped ones leave the view's list and are marked out of view, so no
++interactions are made for them this frame.
++=================
++*/
++static void R_CapViewLights( int maxLights ) {
++	struct scored_t { float score; viewLight_t *vLight; };
++	idList<scored_t> lights;
++	viewLight_t *vLight;
++	const float keep = r_maxLightsKeep.GetFloat() > 1.0f ? r_maxLightsKeep.GetFloat() : 1.0f;
++
++	for ( vLight = tr.viewDef->viewLights; vLight; vLight = vLight->next ) {
++		scored_t s;
++		s.vLight = vLight;
++		if ( vLight->lightShader->IsAmbientLight() || vLight->lightShader->IsFogLight() ) {
++			s.score = -1.0f;
++		} else {
++			const idRenderLightLocal *light = vLight->lightDef;
++			const renderLight_t &parms = light->parms;
++			const idVec3 &view = tr.viewDef->renderView.vieworg;
++			idBounds b;
++			if ( light->frustumTris ) {
++				b = light->frustumTris->bounds;
++			} else {
++				b[0] = light->globalLightOrigin - parms.lightRadius;
++				b[1] = light->globalLightOrigin + parms.lightRadius;
++			}
++			// the squared distance from the view to the box, 0 inside it
++			float distSq = 0.0f;
++			for ( int k = 0; k < 3; k++ ) {
++				float d = view[k] < b[0][k] ? b[0][k] - view[k] : view[k] > b[1][k] ? view[k] - b[1][k] : 0.0f;
++				distSq += d * d;
++			}
++			idVec3 size = b[1] - b[0];
++			float volume = idMath::Fabs( size.x * size.y * size.z );
++			float brightness = parms.shaderParms[0] + parms.shaderParms[1] + parms.shaderParms[2];
++			if ( brightness <= 0.0f ) {
++				brightness = 1.0f;
++			}
++			s.score = ( distSq + 1.0f ) / ( volume * brightness + 1.0f );
++			if ( light->maxLightsFrame == tr.frameCount - 1 || light->maxLightsFrame == tr.frameCount ) {
++				s.score /= keep;	// kept last frame (or by an earlier view of this frame)
++			}
++		}
++		lights.Append( s );
++	}
++	if ( lights.Num() <= maxLights ) {
++		for ( int i = 0; i < lights.Num(); i++ ) {
++			lights[i].vLight->lightDef->maxLightsFrame = tr.frameCount;
++		}
++		return;
++	}
++	// insertion sort, lowest score (most important) first: a view has tens of lights
++	for ( int i = 1; i < lights.Num(); i++ ) {
++		scored_t s = lights[i];
++		int j = i - 1;
++		while ( j >= 0 && lights[j].score > s.score ) {
++			lights[j + 1] = lights[j];
++			j--;
++		}
++		lights[j + 1] = s;
++	}
++	tr.viewDef->viewLights = NULL;
++	for ( int i = lights.Num() - 1; i >= 0; i-- ) {
++		if ( i < maxLights ) {
++			lights[i].vLight->next = tr.viewDef->viewLights;
++			tr.viewDef->viewLights = lights[i].vLight;
++			lights[i].vLight->lightDef->maxLightsFrame = tr.frameCount;
++		} else {
++			lights[i].vLight->lightDef->viewCount = -1;
++		}
++	}
++}
++
+ void R_AddLightSurfaces( void ) {
+ 	viewLight_t		*vLight;
+ 	idRenderLightLocal *light;
+ 	viewLight_t		**ptr;
+ 
+ 	// go through each visible light, possibly removing some from the list
++	if ( r_maxLights.GetInteger() > 0 ) {
++		R_CapViewLights( r_maxLights.GetInteger() );	// patch 0026
++	}
++
+ 	ptr = &tr.viewDef->viewLights;
+ 	while ( *ptr ) {
+ 		vLight = *ptr;
+diff --git a/neo/renderer/tr_local.h b/neo/renderer/tr_local.h
+index 6f2a55d6..990956b4 100644
+--- a/neo/renderer/tr_local.h
++++ b/neo/renderer/tr_local.h
+@@ -236,6 +236,7 @@ public:
+ 
+ 	int						viewCount;				// if == tr.viewCount, the light is on the viewDef->viewLights list
+ 	struct viewLight_s *	viewLight;
++	int						maxLightsFrame;			// patch 0026: the last frame r_maxLights kept it
+ 
+ 	areaReference_t *		references;				// each area the light is present in will have a lightRef
+ 	idInteraction *			firstInteraction;		// doubly linked list
+@@ -994,6 +995,8 @@ extern idCVar r_materialOverride;		// override all materials
+ extern idCVar r_debugRenderToTexture;
+ 
+ 
++extern idCVar r_maxLights;			// patch 0026
++extern idCVar r_maxLightsKeep;
+ extern idCVar r_multithread;			// enable multithread
+ extern idCVar r_noLight;				// no lighting
+ extern idCVar r_useETC1;				// ETC1 compression

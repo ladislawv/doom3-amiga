@@ -1,0 +1,336 @@
+dhewm3 1.5.3pre.1305 amigaos-m68k Oct 21 2026 18:45:51 using SDL v2.33.0
+SDL video driver: amigaos3
+1768 MB System Memory (1705 MB free)
+stack: 9000000 bytes
+no networking on this platform (single player only)
+----- Initializing File System -----
+Current search path:
+Stuff:amictld/work/play/save/base
+Stuff:doom3/base
+Addon pk4s:
+WARNING: Couldn't find default.cfg in base/, trying again with demo/
+
+----- Initializing File System -----
+Loaded pk4 Stuff:doom3/demo/demo00.pk4 with checksum 0xfe75bbef
+Current search path:
+Stuff:amictld/work/play/save/demo
+Stuff:doom3/demo
+Stuff:doom3/demo/demo00.pk4 (12234 files)
+Stuff:amictld/work/play/save/base
+Stuff:doom3/base
+Addon pk4s:
+----- Initializing Decls -----
+Detected
+	1768 MB of System memory
+
+This system qualifies for Ultra quality!
+5151 strings read from strings/english.lang
+Couldn't open journal files
+couldn't exec editor.cfg
+execing default.cfg
+couldn't exec dhewm.cfg
+couldn't exec autoexec.cfg
+5151 strings read from strings/english.lang
+Running the game at com_gameHz = 20Hz, frametime 50ms
+----- Initializing OpenAL -----
+Setup OpenAL device and context
+OpenAL vendor: Doom 3 AmigaOS port
+OpenAL renderer: OpenAL subset on SDL audio
+OpenAL version: 1.1
+OpenAL: EFX extension not found
+OpenAL: found 16 hardware voices
+----- Initializing OpenGL -----
+Initializing OpenGL subsystem
+Will create a fullscreen-window with resolution 1920x1080 (r_mode = -1)
+SDL detected 1 displays: 
+ 0: 640x480 at (0, 0) to (640, 480)
+Will use display 0 because mouse cursor is at (0, 0).
+Requested 8 color bits per chan, 8 alpha 24 depth, 8 stencil
+Got 8 stencil bits, 24 depth bits, color bits: r8 g8 b8 a8
+Detected keyboard layout as "english"
+OpenGL vendor: ogles2.library
+OpenGL renderer: V3D 4.2.14 (PiStorm), 8 QPUs, 64 KB VPM
+OpenGL version: OpenGL ES 2.0 ogles2.library 1.3
+...using GL_EXT_texture_filter_anisotropic
+...using GL_OES_texture_npot
+ npotAvailable: 1
+...using GL_OES_packed_depth_stencil
+ depthStencilAvailable: 1
+...using GL_EXT_texture_compression_s3tc
+ textureCompressionAvailable: 1
+   maxTextureAnisotropy: 16.000000
+----- R_ReloadGLSLPrograms -----
+Loading main interaction shader
+Loading main interaction shader (Phong) 
+Loading default diffuse shader
+Loading skybox cubemap shader
+Loading reflection cubemap shader
+Loading diffuse cubemap shader
+Loading Zfill shader
+Loading Zfill shader (Clip plane version)
+Loading Fog shader
+Loading BlendLight shader
+Loading Stencil shadow shader
+-------------------------------
+Init Vertex Cache
+using GLSL renderSystem
+----- OpenGL Initialization complete-----
+R_InitFrameBuffer Real[1920, 1080] -> Framebuffer[1920,1080]
+Not using framebuffer
+----- Initializing Game -----
+gamename: baseDOOM-1
+gamedate: Oct 21 2026
+Initializing event system
+...474 event definitions
+Initializing class hierarchy
+...142 classes, 382992 bytes for event callbacks
+Initializing scripts
+Compiled 'script/doom_main.script': 6185 ms
+----- Compile stats -----
+Memory usage:
+     Strings: 79, 9648 bytes
+  Statements: 67881, 1357620 bytes
+   Functions: 2109, 250532 bytes
+   Variables: 147288 bytes
+    Mem used: 2575852 bytes
+ Static data: 2477552 bytes
+   Allocated: 3480988 bytes
+ Thread size: 13210 bytes
+...6 aas types
+----- Initializing Session -----
+WARNING: Couldn't load gui: 'guis/mainmenu.gui'
+Couldn't read doomkey.
+Couldn't read xpkey.
+Detected
+	1768 MB of System memory
+
+This system qualifies for Ultra quality!
+Shutting down sound hardware
+----- Warnings -----
+during dhewm 3 initialization...
+WARNING: Couldn't find default.cfg in base/, trying again with demo/
+
+WARNING: Couldn't load gui: 'guis/mainmenu.gui'
+2 warnings
+in_grabKeyboard: Will *not* grab the keyboard if mouse is grabbed, so global keyboard-shortcuts (like Alt-Tab) will still work
+execing low.cfg
+----- Game Map Shutdown -----
+reloading guis/demo_mainmenu.gui.
+reloading guis/restart.gui.
+reloading guis/gameover.gui.
+reloading guis/msg.gui.
+reloading guis/takeNotes.gui.
+reloading guis/intro.gui.
+----- Map Initialization -----
+Map: game/demo_mars_city1
+----- Game Map Init -----
+collision data:
+   421 models
+ 30823 vertices (722 KB)
+ 54551 edges (1917 KB)
+ 22257 polygons (1564 KB)
+  4068 brushes (556 KB)
+ 12449 nodes (340 KB)
+ 43444 polygon refs (339 KB)
+ 14219 brush refs (111 KB)
+ 18352 internal edges
+  1461 sharp edges
+     0 contained polygons removed
+     0 polygons merged
+  5551 KB total memory used
+1720 msec to load collision data.
+map bounds are (19640.0, 22168.0, 29496.0)
+max clip sector is (1227.5, 1385.5, 1843.5)
+    2 KB passage memory used to build PVS
+   12 msec to calculate PVS
+   56 areas
+  110 portals
+    9 areas visible on average
+  448 bytes PVS data
+[Load AAS]
+loading maps/game/demo_mars_city1.aas48
+done.
+[Load AAS]
+loading maps/game/demo_mars_city1.aas96
+[Load AAS]
+loading maps/game/demo_mars_city1.aas_guardian
+[Load AAS]
+loading maps/game/demo_mars_city1.aas_mancubus
+[Load AAS]
+loading maps/game/demo_mars_city1.aas_sabaoth
+[Load AAS]
+loading maps/game/demo_mars_city1.aas_cyberdemon
+Entering doom_main()
+Exiting doom_main()
+Spawning entities
+loaded collision model models/mapobjects/com/platguistand/mc_platguistand.lwo
+WARNING: marscity_cinematic_sarge_1 has no AAS file
+WARNING: marscity_cinematic_sarge2_1 has no AAS file
+loaded collision model models/mapobjects/filler/burgerboxopen.lwo
+WARNING: file def/weapon_bfg.def, line 92: Unknown entityDef 'damage_bfg' inherited by 'damage_bfg_cinematic'
+WARNING: file def/weapon_bfg.def, line 97: Unknown entityDef 'damage_bfgFreq' inherited by 'damage_bfgfreq_cinematic'
+WARNING: file def/weapon_bfg.def, line 102: Unknown entityDef 'damage_bfgSplash' inherited by 'damage_bfgsplash_cinematic'
+loaded collision model models/mapobjects/lab/diamondbox/diamondbox_sm.lwo
+loaded collision model models/mapobjects/com/modconsole1.lwo
+loaded collision model models/mapobjects/filler/burgereat.lwo
+loaded collision model models/mapobjects/filler/burgerboxclose.lwo
+WARNING: Unknown classname 'weapon_plasmagun' on 'weapon_plasmagun_1'.
+loaded collision model models/mapobjects/filler/mkeyboard.lwo
+loaded collision model models/mapobjects/lights/florescent_bulbflare.ASE
+loaded collision model models/mapobjects/base/misc/emerlight.ase
+loaded collision model models/mapobjects/monitors/controlmonitor.lwo
+loaded collision model models/mapobjects/doors/mcitydoor2l.lwo
+loaded collision model models/mapobjects/doors/mcitydoor2r.lwo
+loaded collision model models/mapobjects/doors/mcdoor2frame.lwo
+loaded collision model models/mapobjects/tables/conf_table/conf_table.lwo
+loaded collision model models/mapobjects/filler/cola1.lwo
+loaded collision model models/mapobjects/filler/foamcup.lwo
+loaded collision model models/mapobjects/signs/marquee/marquee.lwo
+loaded collision model models/mapobjects/doors/mcitydoorframe.lwo
+loaded collision model models/mapobjects/doors/mcitydoorframegui.lwo
+loaded collision model models/items/keycard/keycard3.lwo
+loaded collision model models/mapobjects/doors/mcitydoor.lwo
+loaded collision model models/mapobjects/cpu/pullhandle.lwo
+loaded collision model models/mapobjects/doors/delelev/delelevlf.lwo
+loaded collision model models/mapobjects/guiobjects/techdrpanel1/techdrpanel1.lwo
+loaded collision model models/mapobjects/doors/delelev/delelevrt.lwo
+loaded collision model models/mapobjects/cpu/heater.lwo
+loaded collision model models/mapobjects/cpu/heater2.lwo
+loaded collision model models/mapobjects/cpu/comrack2.lwo
+loaded collision model models/mapobjects/lab/sink2/sink2.lwo
+loaded collision model models/mapobjects/filler/sodamachine.lwo
+loaded collision model models/mapobjects/filler/binder1.ase
+loaded collision model models/mapobjects/lab/bubbler2/bubbler2.lwo
+loaded collision model models/mapobjects/filler/tbox7.ase
+loaded collision model models/mapobjects/filler/binder3.ase
+loaded collision model models/mapobjects/chairs/modchair/modtable.lwo
+loaded collision model models/mapobjects/chairs/modchair/modseat.lwo
+loaded collision model models/mapobjects/chairs/modchair/modarm.lwo
+removed 2 degenerate triangles
+loaded collision model models/mapobjects/lab/newfridge/newfridge.lwo
+loaded collision model models/mapobjects/filler/paper1.ase
+loaded collision model models/mapobjects/filler/tbox6.ase
+loaded collision model models/mapobjects/filler/tbox_open.ase
+loaded collision model models/mapobjects/filler/toolchest.lwo
+loaded collision model models/mapobjects/doors/deldoor1/deldoor1frm.lwo
+loaded collision model models/mapobjects/doors/deldoor1/deldoor1.lwo
+loaded collision model models/mapobjects/com/modconsole2.lwo
+loaded collision model models/mapobjects/com/modconsole5.lwo
+loaded collision model models/mapobjects/cpu/cpumaze1.lwo
+loaded collision model models/mapobjects/doors/deldoor1/deldoor1win.lwo
+loaded collision model models/mapobjects/com/modconsole4.lwo
+loaded collision model models/mapobjects/lab/gizmo2/gizmo2.lwo
+loaded collision model models/mapobjects/lab/autable/autable.lwo
+loaded collision model models/mapobjects/lab/roboarm1/roboarm1.lwo
+loaded collision model models/mapobjects/utility/tecknob2/tecknob2.lwo
+loaded collision model models/mapobjects/cpu/comrack.lwo
+loaded collision model models/mapobjects/tables/gendesk/gendesk2.lwo
+loaded collision model models/mapobjects/filler/tbox2.ase
+loaded collision model models/mapobjects/cpu/serverplate.lwo
+loaded collision model models/mapobjects/filler/snackmachine.lwo
+loaded collision model models/mapobjects/filler/tbox1.ase
+loaded collision model models/mapobjects/washroom/clamp.ase
+loaded collision model models/mapobjects/washroom/urinal2.ase
+loaded collision model models/mapobjects/washroom/dryer.ase
+loaded collision model models/mapobjects/washroom/bsink.ase
+loaded collision model models/mapobjects/washroom/soap.ase
+loaded collision model models/mapobjects/washroom/toilet.ase
+loaded collision model models/mapobjects/washroom/tp.ase
+loaded collision model models/mapobjects/arcade_machine/arcade_machine.lwo
+loaded collision model models/mapobjects/mcity/deskcomp/deskcomp.lwo
+loaded collision model models/mapobjects/skmachines/skoverhang.lwo
+loaded collision model models/mapobjects/shipping_crates/shipping_crates.lwo
+loaded collision model models/mapobjects/skmachines/skcube.lwo
+loaded collision model models/mapobjects/doors/accesshatch/accesshatch.lwo
+loaded collision model models/mapobjects/doors/accesshatch/accesshatchdoor.lwo
+loaded collision model models/mapobjects/elevators/elevator.lwo
+loaded collision model models/mapobjects/swinglights/swinglight1b.lwo
+loaded collision model models/mapobjects/swinglights/swinglight_long_wbulbs_bulb_broken.ase
+loaded collision model models/mapobjects/filler/keyboard1.ase
+loaded collision model models/mapobjects/storagecab/gunrack/gunrackcomp.lwo
+loaded collision model models/mapobjects/chairs/modchair/modcorner.lwo
+loaded collision model models/mapobjects/shutter/shutter_small.lwo
+loaded collision model models/mapobjects/mcity/outside/mc_outside.lwo
+loaded collision model models/mapobjects/turrets/ceilingturret1b.lwo
+loaded collision model models/mapobjects/mcity/outside/mc_outside2.lwo
+loaded collision model models/mapobjects/kiosk/infokiosk2.lwo
+loaded collision model models/mapobjects/lab/loadingplatform/loadingplatform.lwo
+loaded collision model models/mapobjects/deltakiosk/deltakiosk.lwo
+WARNING: marscity_cinematic_player_sarge has no AAS file
+loaded collision model models/mapobjects/hangar/hangar1b.lwo
+loaded collision model models/mapobjects/doors/jumbodoor/jumbodoorfrm.lwo
+loaded collision model models/mapobjects/hangar/hangar1tower.lwo
+loaded collision model models/mapobjects/hangar/rails3.lwo
+loaded collision model models/mapobjects/hangar/rails2.lwo
+loaded collision model models/mapobjects/hangar/rails1.lwo
+loaded collision model models/mapobjects/hangar/rails4.lwo
+loaded collision model models/mapobjects/hangar/rails5.lwo
+loaded collision model models/mapobjects/hangar/pillar1.lwo
+loaded collision model models/mapobjects/hangar/rails6.lwo
+loaded collision model models/mapobjects/hangar/marquee.lwo
+loaded collision model models/mapobjects/hangar/hangarlamp1.lwo
+loaded collision model models/mapobjects/mcity/bioscanner/bioscannereye.lwo
+loaded collision model models/mapobjects/tables/gendesk/gendesk1.lwo
+loaded collision model models/mapobjects/hangar/hangar2tower.lwo
+loaded collision model models/mapobjects/monitors/hangingmonitor.lwo
+loaded collision model models/mapobjects/signs/ceilingsign/ceilingsign.lwo
+loaded collision model models/mapobjects/elevators/elevator_door.lwo
+loaded collision model models/mapobjects/com/platguistand/platguistand.lwo
+loaded collision model models/mapobjects/guiobjects/flatmonitor/flatmonitor.lwo
+loaded collision model models/mapobjects/mcity/bioscanner/bioscanbeam.lwo
+loaded collision model models/mapobjects/mcity/bioscanner/bioscanner.lwo
+loaded collision model models/mapobjects/doors/mcitydoor_glass.lwo
+loaded collision model models/mapobjects/lab/fridge1/fridge1_delta2b.lwo
+WARNING: Couldn't load sound 'guisounds.wav' using default
+loaded collision model models/mapobjects/turrets/ceilingturret1a.lwo
+...1969 entities spawned, 0 inhibited
+
+==== Processing events ====
+SpawnPlayer: 0
+loaded collision model models/weapons/shell1/mshell_lo.lwo
+loaded collision model models/weapons/shell1/sshell_bigger.lwo
+load so far: 2 images in 8 msec (DDS 1 in 8, files 0 in 0, uploads 1 in 0), 458 models in 14226 msec (with their images), 392 sounds in 21749 msec, 2923 pk4 file opens in 3673 msec
+----- idRenderModelManagerLocal::EndLevelLoad -----
+    0 models purged from previous level,   991 models kept.
+----- idImageManager::EndLevelLoad -----
+   13 purged from previous
+  154 kept from previous
+ 1958 new loaded
+all images loaded in   0.0 seconds
+    37 msec: renderSystem->EndLevelLoad
+load so far: 2 images in 8 msec (DDS 1 in 8, files 0 in 0, uploads 1 in 0), 458 models in 14226 msec (with their images), 392 sounds in 21749 msec, 2923 pk4 file opens in 3673 msec
+----- idSoundCache::EndLevelLoad -----
+10798k referenced
+  192k purged
+    21 msec: soundSystem->EndLevelLoad
+load so far: 2 images in 8 msec (DDS 1 in 8, files 0 in 0, uploads 1 in 0), 458 models in 14226 msec (with their images), 392 sounds in 21749 msec, 2923 pk4 file opens in 3673 msec
+ 17696 msec: declManager->EndLevelLoad
+load so far: 1960 images in 17654 msec (DDS 1952 in 16429, files 20 in 283, uploads 1952 in 302), 458 models in 14226 msec (with their images), 392 sounds in 21749 msec, 4936 pk4 file opens in 5801 msec
+    30 msec: uiManager->EndLevelLoad
+load so far: 1960 images in 17654 msec (DDS 1952 in 16429, files 20 in 283, uploads 1952 in 302), 458 models in 14226 msec (with their images), 392 sounds in 21749 msec, 4936 pk4 file opens in 5801 msec
+  1261 msec: 10 game frames to settle
+load so far: 1963 images in 17654 msec (DDS 1952 in 16429, files 20 in 283, uploads 1952 in 302), 458 models in 14226 msec (with their images), 395 sounds in 21946 msec, 4948 pk4 file opens in 5814 msec
+ 89776 msec to load game/demo_mars_city1
+load in all: 1963 images in 17654 msec (DDS 1952 in 16429, files 20 in 283, uploads 1952 in 302), 458 models in 14226 msec (with their images), 395 sounds in 21946 msec, 4948 pk4 file opens in 5814 msec
+idRenderWorld::GenerateAllInteractions, msec = 51, staticAllocCount = 0.
+interactionTable size: 2819964 bytes
+29902 interaction take 3349024 bytes
+----- Warnings -----
+during game/demo_mars_city1...
+WARNING: Couldn't load sound 'guisounds.wav' using default
+WARNING: file def/weapon_bfg.def, line 102: Unknown entityDef 'damage_bfgSplash' inherited by 'damage_bfgsplash_cinematic'
+WARNING: file def/weapon_bfg.def, line 92: Unknown entityDef 'damage_bfg' inherited by 'damage_bfg_cinematic'
+WARNING: file def/weapon_bfg.def, line 97: Unknown entityDef 'damage_bfgFreq' inherited by 'damage_bfgfreq_cinematic'
+WARNING: Unknown classname 'weapon_plasmagun' on 'weapon_plasmagun_1'.
+5 warnings
+Toggling speakers
+WARNING: Unknown string id #str_07186
+WARNING: Unknown string id #str_07186
+WARNING: Unknown string id #str_07212
+----- Game Map Shutdown -----
+Shutting down sound hardware
+idRenderSystem::Shutdown()
+Shutting down backend threadShutting down OpenGL subsystem
+----- Game Shutdown -----
+----- Game Map Shutdown -----
+Shutdown event system

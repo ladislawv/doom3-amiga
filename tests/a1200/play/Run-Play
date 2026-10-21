@@ -6,6 +6,12 @@
 ;   Another size:                  Execute Run-Play W=320 H=200
 ;   Another map:                   Execute Run-Play MAP=game/demo_mars_city1
 ;   No sound:                      Execute Run-Play SOUND=0
+;   Sound through AHI:             Execute Run-Play AUDIO=ahi (default paula: SDL's
+;                                  Paula driver, 8-bit mono, the cheapest; AHI's unit 0
+;                                  costs far more CPU, PLAN.md section 14)
+;   The mixer's voices and rate:   Execute Run-Play VOICES=16 RATE=11025 (defaults 32
+;                                  and 22050; fewer and lower are faster, but with 16 the
+;                                  intro's voice lines were lost)
 ;   Another game rate:             Execute Run-Play HZ=30 (game tics a second; default 20)
 ;   Other game data:               Execute Run-Play DATA=<directory with demo/ or base/>
 ;   More console commands:         one line in dhewm3.args next to it
@@ -13,9 +19,12 @@
 ;                                  detects "Ultra" here, from the memory); the default,
 ;                                  low, runs low.cfg (Doom 3's Low preset, and shadows,
 ;                                  post-process effects, decals, blood, muzzle flashes,
-;                                  projectile lights, ejected shells off)
+;                                  projectile lights, ejected shells off); QUALITY=high
+;                                  runs high.cfg (Doom 3's High preset, those effects on);
+;                                  QUALITY=medium medium.cfg (the Medium preset, shadows on,
+;                                  the cosmetic extras off)
 ; Output goes to results/ (console log, memory before and after).
-.key MAP/K,W/K,H/K,DATA/K,QUALITY/K,HZ/K,SOUND/K
+.key MAP/K,W/K,H/K,DATA/K,QUALITY/K,HZ/K,SOUND/K,AUDIO/K,VOICES/K,RATE/K
 .def MAP "game/demo_mc_underground"
 .def W 640
 .def H 480
@@ -23,6 +32,9 @@
 .def QUALITY "low"
 .def HZ 20
 .def SOUND 1
+.def AUDIO "paula"
+.def VOICES 32
+.def RATE 22050
 .bra {
 .ket }
 
@@ -53,9 +65,17 @@ If EXISTS {QUALITY}.cfg
   Set quality "+exec {QUALITY}.cfg"
 EndIf
 
-Echo "Doom 3: {MAP} at {W}x{H}, {QUALITY} settings, {HZ} Hz; quit from the console (key above Tab) with: quit"
+; the OpenAL subset's settings (global variables: the game reads them with GetVar)
+SetEnv SDL_AUDIODRIVER {AUDIO}
+SetEnv D3AL_VOICES {VOICES}
+SetEnv D3AL_RATE {RATE}
+
+Echo "Doom 3: {MAP} at {W}x{H}, {QUALITY} settings, {HZ} Hz, sound {AUDIO} ({VOICES} voices, {RATE} Hz); quit from the console (key above Tab) with: quit"
 dhewm3 +set fs_basepath "{DATA}" +set s_noSound $nosound +set image_usePrecompressedTextures 1 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth {W} +set r_customHeight {H} +set com_gameHz {HZ} +set r_swapInterval 0 $quality $args +map {MAP} >results/stdout.txt
 Echo "exit code $RC" >>results/stdout.txt
+UnSetEnv SDL_AUDIODRIVER
+UnSetEnv D3AL_VOICES
+UnSetEnv D3AL_RATE
 Copy save/dhewm3log.txt results/ QUIET
 Avail FLUSH >NIL:
 Avail >results/avail-after.txt
