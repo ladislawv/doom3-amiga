@@ -1,0 +1,270 @@
+dhewm3 1.5.3pre.1305 amigaos-m68k Oct 20 2026 20:20:20 using SDL v2.33.0
+SDL video driver: amigaos3
+1768 MB System Memory (1704 MB free)
+stack: 9000000 bytes
+no networking on this platform (single player only)
+----- Initializing File System -----
+Current search path:
+Stuff:amictld/work/bench/save/base
+Stuff:doom3/base
+Addon pk4s:
+WARNING: Couldn't find default.cfg in base/, trying again with demo/
+
+----- Initializing File System -----
+Loaded pk4 Stuff:doom3/demo/demo00.pk4 with checksum 0xfe75bbef
+Current search path:
+Stuff:amictld/work/bench/save/demo
+Stuff:doom3/demo
+Stuff:doom3/demo/demo00.pk4 (12234 files)
+Stuff:amictld/work/bench/save/base
+Stuff:doom3/base
+Addon pk4s:
+----- Initializing Decls -----
+Detected
+	1768 MB of System memory
+
+This system qualifies for Ultra quality!
+5151 strings read from strings/english.lang
+Couldn't open journal files
+couldn't exec editor.cfg
+execing default.cfg
+couldn't exec dhewm.cfg
+couldn't exec autoexec.cfg
+5151 strings read from strings/english.lang
+Running the game at com_gameHz = 30Hz, frametime 33ms
+----- Initializing OpenAL -----
+Sound disabled with s_noSound 1 !
+----- Initializing OpenGL -----
+Initializing OpenGL subsystem
+Will create a fullscreen-window with resolution 640x480 (r_mode = -1)
+SDL detected 1 displays: 
+ 0: 640x480 at (0, 0) to (640, 480)
+Will use display 0 because mouse cursor is at (0, 0).
+Requested 8 color bits per chan, 8 alpha 24 depth, 8 stencil
+Got 8 stencil bits, 24 depth bits, color bits: r8 g8 b8 a8
+Detected keyboard layout as "english"
+OpenGL vendor: ogles2.library
+OpenGL renderer: V3D 4.2.14 (PiStorm), 8 QPUs, 64 KB VPM
+OpenGL version: OpenGL ES 2.0 ogles2.library 1.3
+...using GL_EXT_texture_filter_anisotropic
+...using GL_OES_texture_npot
+ npotAvailable: 1
+...using GL_OES_packed_depth_stencil
+ depthStencilAvailable: 1
+...using GL_EXT_texture_compression_s3tc
+ textureCompressionAvailable: 1
+   maxTextureAnisotropy: 16.000000
+----- R_ReloadGLSLPrograms -----
+Loading main interaction shader
+Loading main interaction shader (Phong) 
+Loading default diffuse shader
+Loading skybox cubemap shader
+Loading reflection cubemap shader
+Loading diffuse cubemap shader
+Loading Zfill shader
+Loading Zfill shader (Clip plane version)
+Loading Fog shader
+Loading BlendLight shader
+Loading Stencil shadow shader
+-------------------------------
+Init Vertex Cache
+using GLSL renderSystem
+----- OpenGL Initialization complete-----
+R_InitFrameBuffer Real[640, 480] -> Framebuffer[640,480]
+Not using framebuffer
+----- Initializing Game -----
+gamename: baseDOOM-1
+gamedate: Oct 20 2026
+Initializing event system
+...474 event definitions
+Initializing class hierarchy
+...142 classes, 382992 bytes for event callbacks
+Initializing scripts
+Compiled 'script/doom_main.script': 6515 ms
+----- Compile stats -----
+Memory usage:
+     Strings: 79, 9648 bytes
+  Statements: 67881, 1357620 bytes
+   Functions: 2109, 250532 bytes
+   Variables: 147288 bytes
+    Mem used: 2575852 bytes
+ Static data: 2477552 bytes
+   Allocated: 3480988 bytes
+ Thread size: 13210 bytes
+...6 aas types
+----- Initializing Session -----
+WARNING: Couldn't load gui: 'guis/mainmenu.gui'
+Couldn't read doomkey.
+Couldn't read xpkey.
+Detected
+	1768 MB of System memory
+
+This system qualifies for Ultra quality!
+----- Warnings -----
+during dhewm 3 initialization...
+WARNING: Couldn't find default.cfg in base/, trying again with demo/
+
+WARNING: Couldn't load gui: 'guis/mainmenu.gui'
+2 warnings
+in_grabKeyboard: Will *not* grab the keyboard if mouse is grabbed, so global keyboard-shortcuts (like Alt-Tab) will still work
+----- Game Map Shutdown -----
+reloading guis/demo_mainmenu.gui.
+reloading guis/restart.gui.
+reloading guis/gameover.gui.
+reloading guis/msg.gui.
+reloading guis/takeNotes.gui.
+reloading guis/intro.gui.
+----- Map Initialization -----
+Map: game/demo_mc_underground
+----- Game Map Init -----
+collision data:
+   721 models
+ 69250 vertices (1623 KB)
+128065 edges (4502 KB)
+ 55477 polygons (3881 KB)
+  5639 brushes (777 KB)
+ 24881 nodes (680 KB)
+100541 polygon refs (785 KB)
+ 26540 brush refs (207 KB)
+ 38026 internal edges
+  4376 sharp edges
+     0 contained polygons removed
+     0 polygons merged
+ 12457 KB total memory used
+3960 msec to load collision data.
+map bounds are (6152.0, 5344.0, 2560.0)
+max clip sector is (192.3, 334.0, 320.0)
+    4 KB passage memory used to build PVS
+   19 msec to calculate PVS
+   58 areas
+  134 portals
+    9 areas visible on average
+  464 bytes PVS data
+[Load AAS]
+loading maps/game/demo_mc_underground.aas48
+done.
+[Load AAS]
+loading maps/game/demo_mc_underground.aas96
+[Load AAS]
+loading maps/game/demo_mc_underground.aas_guardian
+[Load AAS]
+loading maps/game/demo_mc_underground.aas_mancubus
+[Load AAS]
+loading maps/game/demo_mc_underground.aas_sabaoth
+[Load AAS]
+loading maps/game/demo_mc_underground.aas_cyberdemon
+Entering doom_main()
+Exiting doom_main()
+Spawning entities
+loaded collision model models/mapobjects/cpu/comrack.lwo
+loaded collision model models/mapobjects/utility/binplug/binplug_c.lwo
+loaded collision model models/mapobjects/doors/techdoor1/techdr1rt.lwo
+loaded collision model models/mapobjects/doors/delelev/delelevrt.lwo
+loaded collision model models/mapobjects/elevators/elevator_door.lwo
+loaded collision model models/mapobjects/elevators/elevator.lwo
+loaded collision model models/mapobjects/signs/marquee/marquee.lwo
+loaded collision model models/mapobjects/mc_underground/mcucave.ASE
+loaded collision model models/mapobjects/filler/tbox8.ase
+loaded collision model models/mapobjects/filler/tbox2.ase
+loaded collision model models/mapobjects/filler/mkeyboard.lwo
+loaded collision model models/mapobjects/guiobjects/techdrpanel1/techdrpanel1.lwo
+loaded collision model models/mapobjects/doors/techdoor1/techdr1frame.lwo
+loaded collision model models/mapobjects/doors/techdoor1/techdr1lft.lwo
+loaded collision model models/mapobjects/filler/cola1.lwo
+loaded collision model models/mapobjects/airlock/airlockcomp.lwo
+loaded collision model models/mapobjects/mc_underground/outside/mc_ug_out.lwo
+loaded collision model models/mapobjects/lights/klaxon/klaxon.lwo
+loaded collision model models/mapobjects/guiobjects/mc_constand/mc_constand.lwo
+loaded collision model models/mapobjects/skmachines/skcube.lwo
+loaded collision model models/mapobjects/doors/techdoor2/techdr2rt.lwo
+removed 4 degenerate triangles
+loaded collision model models/mapobjects/delta1/warfoot/warfoot.lwo
+loaded collision model models/mapobjects/doors/delelev/delelevlf.lwo
+loaded collision model models/mapobjects/airlock/airlockdoorgui.lwo
+loaded collision model models/mapobjects/airlock/airlockdoor.lwo
+loaded collision model models/mapobjects/filler/toolchest.lwo
+loaded collision model models/mapobjects/healthgui/healthgui.lwo
+loaded collision model models/mapobjects/swinglights/swinglight_long_wbulbs_bulb.ase
+loaded collision model models/mapobjects/swinglights/swinglight_long_wbulbs_bulb_broken.ase
+loaded collision model models/mapobjects/cpu/serverplate.lwo
+loaded collision model models/mapobjects/cpu/cpufloorinsert2.lwo
+loaded collision model models/mapobjects/utility/trapbra/trapbra.lwo
+loaded collision model models/mapobjects/swinglights/swinglight1c.lwo
+loaded collision model models/mapobjects/doors/techdoor2/techdr2frame.lwo
+loaded collision model models/mapobjects/doors/techdoor2/techdr2lft.lwo
+loaded collision model models/mapobjects/matt_test/mc_underthing1.ASE
+loaded collision model models/mapobjects/mcity/mc_underarm/underarmhand.lwo
+loaded collision model models/mapobjects/mcity/mc_underarm/underarmfingers.lwo
+loaded collision model models/mapobjects/mcity/mc_underarm/underarmbase.lwo
+loaded collision model models/mapobjects/mcity/mc_underarm/underarmarm.lwo
+loaded collision model models/mapobjects/lab/mfscomp/mfscompcell.lwo
+loaded collision model models/mapobjects/airlock/airlockvertlock.lwo
+loaded collision model models/mapobjects/airlock/airlockbrace.lwo
+loaded collision model models/mapobjects/shipping_crates/shipping_crates.lwo
+loaded collision model models/mapobjects/airlock/airlockhallgui.lwo
+loaded collision model models/mapobjects/com/modconsole3.lwo
+loaded collision model models/mapobjects/com/modconsole2.lwo
+loaded collision model models/mapobjects/com/modconsole6.lwo
+loaded collision model models/mapobjects/com/modconsole1.lwo
+loaded collision model models/mapobjects/utility/binplug/binplug_o.lwo
+loaded collision model models/mapobjects/utility/tecknob2/tecknob2.lwo
+loaded collision model models/mapobjects/cpu/cpuoverdoor.lwo
+loaded collision model models/mapobjects/lab/diamondbox/diamondbox_sm.lwo
+loaded collision model models/mapobjects/mc_underground/outside/mc_ug_out2.lwo
+loaded collision model models/mapobjects/com/joint/joint.lwo
+loaded collision model models/mapobjects/caves/crane/cranecomp.lwo
+loaded collision model models/mapobjects/mc_underground/mcucave_b.ASE
+loaded collision model models/mapobjects/mc_underground/mcucave_c.ASE
+loaded collision model models/mapobjects/storagecab/wallcabinet/wallcabinetdoor.lwo
+loaded collision model models/mapobjects/storagecab/pegmount/pegmount.lwo
+loaded collision model models/mapobjects/com/platguistand/platguistand.lwo
+loaded collision model models/mapobjects/mcity/deskcomp/deskcomp.lwo
+loaded collision model models/mapobjects/filler/lunchbag.lwo
+loaded collision model models/mapobjects/filler/tbox1.ase
+loaded collision model models/mapobjects/shelf/shelf.lwo
+loaded collision model models/mapobjects/monitors/hangingmonitor.lwo
+loaded collision model models/mapobjects/mc_underground/outside/mc_ug_out3.lwo
+WARNING: underground_cin_player_1 has no AAS file
+...2533 entities spawned, 18 inhibited
+
+==== Processing events ====
+SpawnPlayer: 0
+loaded collision model models/weapons/shell1/mshell_lo.lwo
+loaded collision model models/weapons/shell1/sshell_bigger.lwo
+load so far: 8 images in 174 msec (DDS 4 in 105, files 1 in 63, uploads 4 in 6), 542 models in 14273 msec (with their images), 0 sounds in 0 msec, 1237 pk4 file opens in 1478 msec
+----- idRenderModelManagerLocal::EndLevelLoad -----
+    0 models purged from previous level,  1261 models kept.
+----- idImageManager::EndLevelLoad -----
+   10 purged from previous
+  157 kept from previous
+ 1793 new loaded
+all images loaded in   0.0 seconds
+    38 msec: renderSystem->EndLevelLoad
+load so far: 8 images in 174 msec (DDS 4 in 105, files 1 in 63, uploads 4 in 6), 542 models in 14273 msec (with their images), 0 sounds in 0 msec, 1237 pk4 file opens in 1478 msec
+    16 msec: soundSystem->EndLevelLoad
+load so far: 8 images in 174 msec (DDS 4 in 105, files 1 in 63, uploads 4 in 6), 542 models in 14273 msec (with their images), 0 sounds in 0 msec, 1237 pk4 file opens in 1478 msec
+ 17331 msec: declManager->EndLevelLoad
+load so far: 1801 images in 17464 msec (DDS 1789 in 16068, files 31 in 405, uploads 1789 in 388), 542 models in 14273 msec (with their images), 0 sounds in 0 msec, 3074 pk4 file opens in 3292 msec
+    27 msec: uiManager->EndLevelLoad
+load so far: 1801 images in 17464 msec (DDS 1789 in 16068, files 31 in 405, uploads 1789 in 388), 542 models in 14273 msec (with their images), 0 sounds in 0 msec, 3074 pk4 file opens in 3292 msec
+  1045 msec: 10 game frames to settle
+load so far: 1801 images in 17464 msec (DDS 1789 in 16068, files 31 in 405, uploads 1789 in 388), 542 models in 14273 msec (with their images), 0 sounds in 0 msec, 3075 pk4 file opens in 3293 msec
+ 71407 msec to load game/demo_mc_underground
+load in all: 1801 images in 17464 msec (DDS 1789 in 16068, files 31 in 405, uploads 1789 in 388), 542 models in 14273 msec (with their images), 0 sounds in 0 msec, 3075 pk4 file opens in 3293 msec
+idRenderWorld::GenerateAllInteractions, msec = 93, staticAllocCount = 0.
+interactionTable size: 4028556 bytes
+42181 interaction take 4724272 bytes
+benchmark: 10 seconds of warm-up, then counting frames for 30 seconds
+benchmark: 325 frames rendered in 30.0 seconds = 10.8 fps
+benchmark: per frame 27.1 ms game, 18.7 ms renderer front end, 43.5 ms back end; 30.0 game tics a second
+benchmark: back end per frame: 0.1 ms view set-up, 4.5 depth fill, 31.9 interactions, 5.0 shader passes, 0.0 fog, 0.2 post, 1.7 swap
+benchmark: front end per frame: 0.0 ms view set-up, 0.8 visible lights and entities, 1.2 light surfaces, 16.0 model surfaces, 0.0 subviews, 0.7 the rest; inside them 0.9 dynamic models, 2.2 interactions created, 0.0 light triangles later
+benchmark: front end's model surfaces per frame: 0.3 ms entity scissors, 5.3 ambient draw surfaces (with the dynamic models), 10.1 active interactions (with those created)
+benchmark: front end's interactions per frame: 264 visited, 193 of them culled or scissored by the view frustum (4.3 ms), 577 light surfaces and 99 shadow surfaces linked; 253 ambient draw surfaces
+benchmark: 1042 clock reads per frame (Sys_MillisecondsPrecise)
+----- Game Map Shutdown -----
+idRenderSystem::Shutdown()
+Shutting down backend threadShutting down OpenGL subsystem
+----- Game Shutdown -----
+----- Game Map Shutdown -----
+Shutdown event system

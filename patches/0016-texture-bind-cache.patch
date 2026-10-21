@@ -1,0 +1,279 @@
+diff --git a/neo/renderer/Image.h b/neo/renderer/Image.h
+index cf4d8d33..8ec60fe5 100644
+--- a/neo/renderer/Image.h
++++ b/neo/renderer/Image.h
+@@ -163,6 +163,10 @@ public:
+ 	// for use with fragment programs, doesn't change any enable2D/3D/cube states
+ 	void		BindFragment();
+ 
++	// true if this image is bound on that texture unit already (counted as a
++	// use, as Bind would); GL_BindImage asks it before selecting the unit
++	bool		IsBoundOn( int unit );
++
+ 	// deletes the texture object, but leaves the structure so it can be reloaded
+ 	void		PurgeImage();
+ 
+diff --git a/neo/renderer/Image_init.cpp b/neo/renderer/Image_init.cpp
+index d949f613..14fc373b 100644
+--- a/neo/renderer/Image_init.cpp
++++ b/neo/renderer/Image_init.cpp
+@@ -1707,6 +1707,10 @@ BindNull
+ */
+ void idImageManager::BindNull() {
+ 	qglBindTexture( GL_TEXTURE_2D, 0 );
++	const int unit = backEnd.glState.currentTexture;	// the bind cache (patch 0016)
++	if ( unit >= 0 && unit < MAX_MULTITEXTURE_UNITS ) {
++		backEnd.glState.tmu2D[unit] = 0;
++	}
+ }
+ 
+ /*
+diff --git a/neo/renderer/Image_load.cpp b/neo/renderer/Image_load.cpp
+index 37cd7e66..eff30c6d 100644
+--- a/neo/renderer/Image_load.cpp
++++ b/neo/renderer/Image_load.cpp
+@@ -1138,9 +1138,51 @@ void idImage::PurgeImage() {
+ 	if ( texnum != TEXTURE_NOT_LOADED ) {
+ 		qglDeleteTextures( 1, &texnum );	// this should be the ONLY place it is ever called!
+ 		texnum = TEXTURE_NOT_LOADED;
++		// GL unbound it wherever it was bound, and may give its number to a new one
++		GL_ForgetTextureBindings();
+ 	}
+ }
+ 
++/*
++==============
++TextureUnitBinding
++
++The texture unit cache's entry for this image's target on the current unit
++(backEnd.glState.tmu2D/tmuCube, patch 0016), NULL if unknown or none
++==============
++*/
++static GLuint *TextureUnitBinding( int unit, textureType_t type ) {
++	if ( unit < 0 || unit >= MAX_MULTITEXTURE_UNITS ) {
++		return NULL;
++	}
++	if ( type == TT_2D ) {
++		return &backEnd.glState.tmu2D[unit];
++	}
++	if ( type == TT_CUBIC ) {
++		return &backEnd.glState.tmuCube[unit];
++	}
++	return NULL;
++}
++
++/*
++==============
++IsBoundOn
++==============
++*/
++bool idImage::IsBoundOn( int unit ) {
++	if ( texnum == TEXTURE_NOT_LOADED || !r_useBindCache.GetBool() ) {
++		return false;
++	}
++	const GLuint *bound = TextureUnitBinding( unit, type );
++	if ( !bound || *bound != texnum ) {
++		return false;
++	}
++	// a use, as Bind counts it
++	frameUsed = backEnd.frameCount;
++	bindCount++;
++	return true;
++}
++
+ /*
+ ==============
+ Bind
+@@ -1163,12 +1205,19 @@ bool idImage::Bind() {
+ 	frameUsed = backEnd.frameCount;
+ 	bindCount++;
+ 
+-	// bind the texture
++	// bind the texture, unless the current unit has it already
++	GLuint *bound = TextureUnitBinding( backEnd.glState.currentTexture, type );
++	if ( bound && *bound == texnum && r_useBindCache.GetBool() ) {
++		return true;
++	}
+ 	if ( type == TT_2D ) {
+ 		qglBindTexture( GL_TEXTURE_2D, texnum );
+ 	} else if ( type == TT_CUBIC ) {
+ 		qglBindTexture( GL_TEXTURE_CUBE_MAP, texnum );
+ 	}
++	if ( bound ) {
++		*bound = texnum;
++	}
+ 	return true;
+ }
+ 
+@@ -1193,12 +1242,19 @@ void idImage::BindFragment() {
+ 	frameUsed = backEnd.frameCount;
+ 	bindCount++;
+ 
+-	// bind the texture
++	// bind the texture, unless the current unit has it already
++	GLuint *bound = TextureUnitBinding( backEnd.glState.currentTexture, type );
++	if ( bound && *bound == texnum && texnum != TEXTURE_NOT_LOADED && r_useBindCache.GetBool() ) {
++		return;
++	}
+ 	if ( type == TT_2D ) {
+ 		qglBindTexture( GL_TEXTURE_2D, texnum );
+ 	} else if ( type == TT_CUBIC ) {
+ 		qglBindTexture( GL_TEXTURE_CUBE_MAP, texnum );
+ 	}
++	if ( bound ) {
++		*bound = texnum;
++	}
+ }
+ 
+ 
+diff --git a/neo/renderer/RenderSystem_init.cpp b/neo/renderer/RenderSystem_init.cpp
+index 432f9545..6cefc9b3 100644
+--- a/neo/renderer/RenderSystem_init.cpp
++++ b/neo/renderer/RenderSystem_init.cpp
+@@ -142,6 +142,7 @@ idCVar r_flareSize( "r_flareSize", "1", CVAR_RENDERER | CVAR_FLOAT, "scale the f
+ idCVar r_useExternalShadows( "r_useExternalShadows", "1", CVAR_RENDERER | CVAR_INTEGER, "1 = skip drawing caps when outside the light volume, 2 = force to no caps for testing", 0, 2, idCmdSystem::ArgCompletion_Integer<0,2> );
+ idCVar r_useOptimizedShadows( "r_useOptimizedShadows", "1", CVAR_RENDERER | CVAR_BOOL, "use the dmap generated static shadow volumes" );
+ idCVar r_useScissor( "r_useScissor", "1", CVAR_RENDERER | CVAR_BOOL, "scissor clip as portals and lights are processed" );
++idCVar r_useBindCache( "r_useBindCache", "1", CVAR_RENDERER | CVAR_BOOL, "skip texture binds and unit selects already in place (port, patch 0016)" );
+ 
+ idCVar r_screenFraction( "r_screenFraction", "100", CVAR_RENDERER | CVAR_INTEGER, "for testing fill rate, the resolution of the entire screen can be changed" );
+ idCVar r_demonstrateBug( "r_demonstrateBug", "0", CVAR_RENDERER | CVAR_BOOL, "used during development to show IHV's their problems" );
+diff --git a/neo/renderer/draw_gles2.cpp b/neo/renderer/draw_gles2.cpp
+index b7dd05e3..b136cca3 100644
+--- a/neo/renderer/draw_gles2.cpp
++++ b/neo/renderer/draw_gles2.cpp
+@@ -576,27 +576,23 @@ static void RB_GLSL_DrawInteraction(const drawInteraction_t* din) {
+ 	GL_Uniform4fv(offsetof(shaderProgram_t, diffuseColor), din->diffuseColor.ToFloatPtr());
+ 	GL_Uniform4fv(offsetof(shaderProgram_t, specularColor), din->specularColor.ToFloatPtr());
+ 
+-	// set the textures
++	// set the textures (each unit selected only if its texture changes:
++	// the light's two are the same for all of its surfaces, patch 0016)
+ 
+ 	// texture 0 will be the per-surface bump map
+-	// NB: Texture 0 is expected to be active at this point
+-	din->bumpImage->Bind();
++	GL_BindImage(0, din->bumpImage);
+ 
+ 	// texture 1 will be the light falloff texture
+-	GL_SelectTexture(1);
+-	din->lightFalloffImage->Bind();
++	GL_BindImage(1, din->lightFalloffImage);
+ 
+ 	// texture 2 will be the light projection texture
+-	GL_SelectTexture(2);
+-	din->lightImage->Bind();
++	GL_BindImage(2, din->lightImage);
+ 
+ 	// texture 3 is the per-surface diffuse map
+-	GL_SelectTexture(3);
+-	din->diffuseImage->Bind();
++	GL_BindImage(3, din->diffuseImage);
+ 
+ 	// texture 4 is the per-surface specular map
+-	GL_SelectTexture(4);
+-	din->specularImage->Bind();
++	GL_BindImage(4, din->specularImage);
+ 
+ 	// Be sure to activate Texture 0 for next interaction, or next pass
+ 	GL_SelectTexture(0);
+diff --git a/neo/renderer/framebuffer.cpp b/neo/renderer/framebuffer.cpp
+index 4b077321..92cf07a1 100644
+--- a/neo/renderer/framebuffer.cpp
++++ b/neo/renderer/framebuffer.cpp
+@@ -171,6 +171,7 @@ void R_InitFrameBuffer()
+ 	// Create texture
+ 	qglGenTextures(1, &m_framebuffer_texture);
+ 	qglBindTexture(GL_TEXTURE_2D, m_framebuffer_texture);
++	GL_ForgetTextureBindings();	// bound outside idImage::Bind (patch 0016)
+ 	
+ 	qglTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_framebuffer_width, m_framebuffer_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+ 	if(r_framebufferFilter.GetInteger() == 0)
+@@ -259,6 +260,7 @@ void R_FrameBufferEnd()
+ 
+     // Bind the texture
+     qglBindTexture(GL_TEXTURE_2D, m_framebuffer_texture);
++    GL_ForgetTextureBindings();	// bound outside idImage::Bind (patch 0016)
+ 
+     // Unbind any VBOs
+     vertexCache.UnbindIndex();
+diff --git a/neo/renderer/tr_backend.cpp b/neo/renderer/tr_backend.cpp
+index 68b676a5..25a8a680 100644
+--- a/neo/renderer/tr_backend.cpp
++++ b/neo/renderer/tr_backend.cpp
+@@ -53,6 +53,7 @@ void RB_SetDefaultGLState( void ) {
+ 	// make sure our GL state vector is set correctly
+ 	memset( &backEnd.glState, 0, sizeof( backEnd.glState ) );
+ 	backEnd.glState.forceGlState = true;
++	GL_ForgetTextureBindings();
+ 
+ 	// All color channels are used
+ 	qglColorMask( 1, 1, 1, 1 );
+@@ -99,6 +100,30 @@ void GL_SelectTexture( int unit ) {
+ 	}
+ }
+ 
++/*
++====================
++GL_BindImage, GL_ForgetTextureBindings
++
++Port (patch 0016): every glActiveTexture and glBindTexture is a library call
++on the Amiga; an interaction draw made ten of them for its five textures,
++the light's two the same for all of its surfaces.
++====================
++*/
++void GL_BindImage( int unit, idImage *image ) {
++	if ( image->IsBoundOn( unit ) ) {
++		return;
++	}
++	GL_SelectTexture( unit );
++	image->Bind();
++}
++
++void GL_ForgetTextureBindings( void ) {
++	for ( int i = 0; i < MAX_MULTITEXTURE_UNITS; i++ ) {
++		backEnd.glState.tmu2D[i] = (GLuint)idImage::TEXTURE_NOT_LOADED;
++		backEnd.glState.tmuCube[i] = (GLuint)idImage::TEXTURE_NOT_LOADED;
++	}
++}
++
+ 
+ /*
+ ====================
+diff --git a/neo/renderer/tr_local.h b/neo/renderer/tr_local.h
+index 228ac203..9a745d16 100644
+--- a/neo/renderer/tr_local.h
++++ b/neo/renderer/tr_local.h
+@@ -607,6 +607,12 @@ typedef struct {
+ 	bool		forceGlState;		// the next GL_State will ignore glStateBits and set everything
+ 	int     currentTexture;
+ 
++	// what each texture unit has bound, so idImage::Bind binds only what is
++	// not bound yet (port, patch 0016); (GLuint)idImage::TEXTURE_NOT_LOADED:
++	// not known (GL_ForgetTextureBindings)
++	GLuint	tmu2D[MAX_MULTITEXTURE_UNITS];
++	GLuint	tmuCube[MAX_MULTITEXTURE_UNITS];
++
+ 	shaderProgram_s	*currentProgram;
+ } glstate_t;
+ 
+@@ -885,6 +891,7 @@ extern idCVar r_useDeferredTangents;	// 1 = don't always calc tangents after def
+ extern idCVar r_useCachedDynamicModels;	// 1 = cache snapshots of dynamic models
+ extern idCVar r_useInfiniteFarZ;		// 1 = use the no-far-clip-plane trick
+ extern idCVar r_useScissor;				// 1 = scissor clip as portals and lights are processed
++extern idCVar r_useBindCache;			// 1 = skip texture binds already in place (port, patch 0016)
+ extern idCVar r_usePortals;				// 1 = use portals to perform area culling, otherwise draw everything
+ extern idCVar r_useStateCaching;		// avoid redundant state changes in GL_*() calls
+ extern idCVar r_useVertexBuffers;		// if 0, don't use ARB_vertex_buffer_object for vertexes
+@@ -998,6 +1005,11 @@ GL wrapper/helper functions
+ */
+ 
+ void	GL_SelectTexture( int unit );
++// the image on that texture unit, selecting the unit only if it is not bound there yet
++void	GL_BindImage( int unit, idImage *image );
++// the texture units' bindings not known any more (after a glBindTexture outside
++// idImage::Bind, a deleted texture, a new GL state)
++void	GL_ForgetTextureBindings( void );
+ void	GL_CheckErrors( void );
+ void	GL_ClearStateDelta( void );
+ void	GL_State( int stateVector );

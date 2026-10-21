@@ -1,0 +1,88 @@
+diff --git a/neo/game/Actor.cpp b/neo/game/Actor.cpp
+index 4651c91d..c1bc7275 100644
+--- a/neo/game/Actor.cpp
++++ b/neo/game/Actor.cpp
+@@ -33,6 +33,7 @@ If you have questions concerning this license or the applicable additional terms
+ #include "Light.h"
+ #include "Projectile.h"
+ #include "WorldSpawn.h"
++#include "Player.h"
+ 
+ #include "Actor.h"
+ 
+@@ -417,6 +418,7 @@ idActor::idActor
+ */
+ idActor::idActor( void ) {
+ 	viewAxis.Identity();
++	walkIKOff = false;
+ 
+ 	scriptThread		= NULL;		// initialized by ConstructScriptObject, which is called by idEntity::Spawn
+ 
+@@ -1688,6 +1690,29 @@ bool idActor::UpdateAnimationControllers( void ) {
+ 	}
+ 
+ 	if ( walkIK.IsInitialized() ) {
++		// port (patch 0022, from doom3bfg-vita): the walk IK fits the feet to
++		// the floor, rebuilding the skeleton and tracing 2-3 boxes every tic.
++		// Skipped for the player while his body cannot be seen (in single
++		// player his body is hidden from his view and casts no shadow), and
++		// for actors beyond g_ikDistance; their legs keep the animated pose
++		// (the joint mods are cleared once).
++		const idPlayer *player = gameLocal.GetLocalPlayer();
++		bool skip = false;
++		if ( player == this ) {
++			skip = !g_playerWalkIK.GetBool() && !gameLocal.isMultiplayer && !g_showPlayerShadow.GetBool() &&
++				!pm_thirdPerson.GetBool() && !gameLocal.inCinematic;
++		} else if ( g_ikDistance.GetFloat() > 0.0f && player != NULL ) {
++			skip = ( GetPhysics()->GetOrigin() - player->GetPhysics()->GetOrigin() ).LengthSqr() >
++				Square( g_ikDistance.GetFloat() );
++		}
++		if ( skip ) {
++			if ( !walkIKOff ) {
++				walkIK.ClearJointMods();
++				walkIKOff = true;
++			}
++			return false;
++		}
++		walkIKOff = false;
+ 		walkIK.Evaluate();
+ 		return true;
+ 	}
+diff --git a/neo/game/Actor.h b/neo/game/Actor.h
+index c52fb27f..7031a1e9 100644
+--- a/neo/game/Actor.h
++++ b/neo/game/Actor.h
+@@ -239,6 +239,7 @@ protected:
+ 	jointHandle_t			soundJoint;
+ 
+ 	idIK_Walk				walkIK;
++	bool					walkIKOff;		// its joint mods cleared while it is skipped (patch 0022)
+ 
+ 	idStr					animPrefix;
+ 	idStr					painAnim;
+diff --git a/neo/game/gamesys/SysCvar.cpp b/neo/game/gamesys/SysCvar.cpp
+index 9fddfd26..e0c1ed7f 100644
+--- a/neo/game/gamesys/SysCvar.cpp
++++ b/neo/game/gamesys/SysCvar.cpp
+@@ -148,6 +148,8 @@ idCVar g_showActiveEntities(		"g_showActiveEntities",		"0",			CVAR_GAME | CVAR_B
+ idCVar g_showEnemies(				"g_showEnemies",			"0",			CVAR_GAME | CVAR_BOOL, "draws boxes around monsters that have targeted the the player" );
+ 
+ idCVar g_frametime(					"g_frametime",				"0",			CVAR_GAME | CVAR_BOOL, "displays timing information for each game frame" );
++idCVar g_playerWalkIK(				"g_playerWalkIK",			"0",			CVAR_GAME | CVAR_BOOL, "0: skip the player's walk IK while his body cannot be seen (single player, no player shadow, first person, no cinematic); 1: always (port, patch 0022)" );
++idCVar g_ikDistance(				"g_ikDistance",				"0",			CVAR_GAME | CVAR_FLOAT, "actors farther than this from the player skip the walk IK (feet fitted to the floor); 0: never (port, patch 0022)" );
+ idCVar g_animLOD(					"g_animLOD",				"0",			CVAR_GAME | CVAR_BOOL, "animate entities 512 units away every 64 ms, 768 away or unseen every 96 ms (port, patch 0021)" );
+ idCVar g_profileThink(				"g_profileThink",			"0",			CVAR_GAME | CVAR_BOOL, "sums the game frame's parts and each entity class's think time until gameProfile print (port)" );
+ idCVar g_timeentities(				"g_timeEntities",			"0",			CVAR_GAME | CVAR_FLOAT, "when non-zero, shows entities whose think functions exceeded the # of milliseconds specified" );
+diff --git a/neo/game/gamesys/SysCvar.h b/neo/game/gamesys/SysCvar.h
+index 70b3b809..f3b90d97 100644
+--- a/neo/game/gamesys/SysCvar.h
++++ b/neo/game/gamesys/SysCvar.h
+@@ -86,6 +86,8 @@ extern idCVar	g_showEnemies;
+ 
+ extern idCVar	g_frametime;
+ extern idCVar	g_timeentities;
++extern idCVar	g_playerWalkIK;
++extern idCVar	g_ikDistance;
+ extern idCVar	g_animLOD;
+ extern idCVar	g_profileThink;
+ 

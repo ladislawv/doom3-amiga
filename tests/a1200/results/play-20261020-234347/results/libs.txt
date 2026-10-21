@@ -1,0 +1,4 @@
+Directory "libs" on Tuesday 20-Oct-26
+ogles2.library               240312 ----rwed Today     23:43:44
+v3dglslc                   19007888 ----rwed Today     23:43:46
+2 files - 18M bytes - 37597 blocks used

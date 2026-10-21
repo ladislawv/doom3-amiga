@@ -1,0 +1,107 @@
+dhewm3 1.5.3pre.1305 amigaos-m68k Oct 20 2026 14:07:54 using SDL v2.33.0
+SDL video driver: amigaos3
+1864 MB System Memory (1757 MB free)
+stack: 9000000 bytes
+no networking on this platform (single player only)
+----- Initializing File System -----
+Current search path:
+Stuff:amictld/work/start/save/base
+Stuff:doom3/base
+Addon pk4s:
+WARNING: Couldn't find default.cfg in base/, trying again with demo/
+
+----- Initializing File System -----
+Loaded pk4 Stuff:doom3/demo/demo00.pk4 with checksum 0xfe75bbef
+Current search path:
+Stuff:amictld/work/start/save/demo
+Stuff:doom3/demo
+Stuff:doom3/demo/demo00.pk4 (12234 files)
+Stuff:amictld/work/start/save/base
+Stuff:doom3/base
+Addon pk4s:
+----- Initializing Decls -----
+5151 strings read from strings/english.lang
+Couldn't open journal files
+couldn't exec editor.cfg
+execing default.cfg
+execing dhewm.cfg
+couldn't exec autoexec.cfg
+5151 strings read from strings/english.lang
+----- Initializing OpenAL -----
+Sound disabled with s_noSound 1 !
+----- Initializing OpenGL -----
+Initializing OpenGL subsystem
+Will create a fullscreen-window with resolution 640x480 (r_mode = -1)
+SDL detected 1 displays: 
+ 0: 640x480 at (0, 0) to (640, 480)
+Will use display 0 because mouse cursor is at (0, 0).
+Requested 8 color bits per chan, 8 alpha 24 depth, 8 stencil
+Got 8 stencil bits, 24 depth bits, color bits: r8 g8 b8 a8
+Detected keyboard layout as "english"
+OpenGL vendor: ogles2.library
+OpenGL renderer: V3D 4.2.14 (PiStorm), 8 QPUs, 64 KB VPM
+OpenGL version: OpenGL ES 2.0 ogles2.library 1.3
+...using GL_EXT_texture_filter_anisotropic
+...using GL_OES_texture_npot
+ npotAvailable: 1
+...using GL_OES_packed_depth_stencil
+ depthStencilAvailable: 1
+...using GL_EXT_texture_compression_s3tc
+ textureCompressionAvailable: 1
+   maxTextureAnisotropy: 16.000000
+----- R_ReloadGLSLPrograms -----
+Loading main interaction shader
+Loading main interaction shader (Phong) 
+Loading default diffuse shader
+Loading skybox cubemap shader
+Loading reflection cubemap shader
+Loading diffuse cubemap shader
+Loading Zfill shader
+Loading Zfill shader (Clip plane version)
+Loading Fog shader
+Loading BlendLight shader
+Loading Stencil shadow shader
+-------------------------------
+Init Vertex Cache
+using GLSL renderSystem
+----- OpenGL Initialization complete-----
+R_InitFrameBuffer Real[640, 480] -> Framebuffer[640,480]
+Not using framebuffer
+----- Initializing Game -----
+gamename: baseDOOM-1
+gamedate: Oct 20 2026
+Initializing event system
+...473 event definitions
+Initializing class hierarchy
+...142 classes, 382184 bytes for event callbacks
+Initializing scripts
+Compiled 'script/doom_main.script': 7023 ms
+----- Compile stats -----
+Memory usage:
+     Strings: 79, 9648 bytes
+  Statements: 67783, 1355660 bytes
+   Functions: 2108, 250452 bytes
+   Variables: 147320 bytes
+    Mem used: 2573396 bytes
+ Static data: 2477552 bytes
+   Allocated: 3480492 bytes
+ Thread size: 13210 bytes
+...6 aas types
+----- Initializing Session -----
+WARNING: Couldn't load gui: 'guis/mainmenu.gui'
+----- Warnings -----
+during dhewm 3 initialization...
+WARNING: Couldn't find default.cfg in base/, trying again with demo/
+
+WARNING: Couldn't load gui: 'guis/mainmenu.gui'
+2 warnings
+in_grabKeyboard: Will *not* grab the keyboard if mouse is grabbed, so global keyboard-shortcuts (like Alt-Tab) will still work
+----- Game Map Shutdown -----
+idRenderSystem::Shutdown()
+Shutting down backend threadShutting down OpenGL subsystem
+----- Game Shutdown -----
+----- Game Map Shutdown -----
+Shutdown event system
+Sys_Quit: call 1, calling exit()
+exit: atexit handlers running
+exit code 0

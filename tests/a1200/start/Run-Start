@@ -1,0 +1,33 @@
+; Run-Start - Doom 3 port, phase 3: the first start on the A1200 (PLAN.md
+; section 8). The game initialises everything (file system, renderer and its
+; GLSL programs, game code), then quits. Watch the screen: a 640x480 screen
+; opens for a moment.
+;   CD to this directory, then:   Execute Run-Start
+;   Other game data:               Execute Run-Start DATA=<directory with demo/ or base/>
+;   Extra console commands:        Execute Run-Start CMD="+map game/demo_mars_city1 +wait 100"
+; Output goes to results/ (the console log, the memory before and after).
+.key DATA/K,CMD/K
+.def DATA "Stuff:doom3"
+.def CMD ""
+.bra {
+.ket }
+
+FailAt 21
+If NOT EXISTS dhewm3
+  Echo "Please CD into the start directory first, then run:  Execute Run-Start"
+  Quit 20
+EndIf
+MakeDir results >NIL:
+Avail FLUSH >NIL:
+Avail >results/avail-before.txt
+List LIBS:ogles2#? >results/libs.txt
+List libs >>results/libs.txt
+Stack 9000000
+
+Echo "Doom 3: start, initialise, quit (data in {DATA})"
+dhewm3 +set fs_basepath "{DATA}" +set s_noSound 1 +set image_usePrecompressedTextures 1 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth 640 +set r_customHeight 480 {CMD} +quit >results/stdout.txt
+Echo "exit code $RC" >>results/stdout.txt
+Copy save/dhewm3log.txt results/ QUIET
+Avail FLUSH >NIL:
+Avail >results/avail-after.txt
+Type results/stdout.txt

@@ -1,0 +1,295 @@
+diff --git a/neo/framework/Session.cpp b/neo/framework/Session.cpp
+index 60868c94..c4539b6f 100644
+--- a/neo/framework/Session.cpp
++++ b/neo/framework/Session.cpp
+@@ -2668,6 +2668,9 @@ prints each frame, without the printing), and the game tics run per second
+ ===============
+ */
+ extern double rb_stageMsec[7];	// renderer/draw_common.cpp: the back end's stages
++extern double rf_stageMsec[13];	// renderer/tr_main.cpp: the front end's stages
++extern int rf_count[5];			// and its counts
++extern bool rf_timeStages;		// the front end's timers on
+ #ifdef __amigaos3__
+ extern unsigned int sys_clockReads;	// sys/amigaos3/amiga_main.cpp: Sys_MillisecondsPrecise's calls
+ #endif
+@@ -2700,6 +2703,9 @@ static void BenchmarkFrame( bool mapRunning, int gameTics ) {
+ 		startTics = gameTics;
+ 		time_gameFrame = 0;
+ 		memset( rb_stageMsec, 0, sizeof( rb_stageMsec ) );
++		memset( rf_stageMsec, 0, sizeof( rf_stageMsec ) );
++		memset( rf_count, 0, sizeof( rf_count ) );
++		rf_timeStages = true;	// only while counting
+ #ifdef __amigaos3__
+ 		startReads = sys_clockReads;
+ #endif
+@@ -2722,6 +2728,20 @@ static void BenchmarkFrame( bool mapRunning, int gameTics ) {
+ 			"%3.1f shader passes, %3.1f fog, %3.1f post, %3.1f swap\n",
+ 			rb_stageMsec[0] / frames, rb_stageMsec[1] / frames, rb_stageMsec[2] / frames, rb_stageMsec[3] / frames,
+ 			rb_stageMsec[4] / frames, rb_stageMsec[5] / frames, rb_stageMsec[6] / frames );
++		common->Printf( "benchmark: front end per frame: %3.1f ms view set-up, %3.1f visible lights and entities, "
++			"%3.1f light surfaces, %3.1f model surfaces, %3.1f subviews, %3.1f the rest; inside them %3.1f dynamic models, "
++			"%3.1f interactions created, %3.1f light triangles later\n",
++			rf_stageMsec[0] / frames, rf_stageMsec[1] / frames, rf_stageMsec[2] / frames, rf_stageMsec[3] / frames,
++			rf_stageMsec[4] / frames, rf_stageMsec[5] / frames, rf_stageMsec[6] / frames, rf_stageMsec[7] / frames,
++			rf_stageMsec[8] / frames );
++		common->Printf( "benchmark: front end's model surfaces per frame: %3.1f ms entity scissors, %3.1f ambient draw surfaces "
++			"(with the dynamic models), %3.1f active interactions (with those created)\n",
++			rf_stageMsec[9] / frames, rf_stageMsec[10] / frames, rf_stageMsec[11] / frames );
++		common->Printf( "benchmark: front end's interactions per frame: %d visited, %d of them culled or scissored by the "
++			"view frustum (%3.1f ms), %d light surfaces and %d shadow surfaces linked; %d ambient draw surfaces\n",
++			rf_count[0] / frames, rf_count[1] / frames, rf_stageMsec[12] / frames, rf_count[2] / frames,
++			rf_count[3] / frames, rf_count[4] / frames );
++		rf_timeStages = false;
+ #ifdef __amigaos3__
+ 		common->Printf( "benchmark: %u clock reads per frame (Sys_MillisecondsPrecise)\n",
+ 			( sys_clockReads - startReads ) / frames );
+diff --git a/neo/renderer/Interaction.cpp b/neo/renderer/Interaction.cpp
+index 17089e2a..51f665f6 100644
+--- a/neo/renderer/Interaction.cpp
++++ b/neo/renderer/Interaction.cpp
+@@ -1033,6 +1033,9 @@ void idInteraction::AddActiveInteraction( void ) {
+ 
+ 	vLight = lightDef->viewLight;
+ 	vEntity = entityDef->viewEntity;
++	if ( rf_timeStages ) {
++		rf_count[0]++;
++	}
+ 
+ 	// do not waste time culling the interaction frustum if there will be no shadows
+ 	if ( !HasShadows() ) {
+@@ -1051,12 +1054,18 @@ void idInteraction::AddActiveInteraction( void ) {
+ 		// try to cull the interaction
+ 		// this will also cull the case where the light origin is inside the
+ 		// view frustum and the entity bounds are outside the view frustum
++		const double t0 = RF_NOW();
++		if ( rf_timeStages ) {
++			rf_count[1]++;
++		}
+ 		if ( CullInteractionByViewFrustum( tr.viewDef->viewFrustum ) ) {
++			rf_stageMsec[12] += RF_NOW() - t0;
+ 			return;
+ 		}
+ 
+ 		// calculate the shadow scissor rectangle
+ 		shadowScissor = CalcInteractionScissorRectangle( tr.viewDef->viewFrustum );
++		rf_stageMsec[12] += RF_NOW() - t0;
+ 	}
+ 
+ 	// get out before making the dynamic model if the shadow scissor rectangle is empty
+@@ -1080,7 +1089,9 @@ void idInteraction::AddActiveInteraction( void ) {
+ 
+ 	// actually create the interaction if needed, building light and shadow surfaces as needed
+ 	if ( IsDeferred() ) {
++		const double t0 = RF_NOW();
+ 		CreateInteraction( model );
++		rf_stageMsec[7] += RF_NOW() - t0;
+ 	}
+ 
+ 	R_GlobalPointToLocal( vEntity->modelMatrix, lightDef->globalLightOrigin, localLightOrigin );
+@@ -1103,8 +1114,10 @@ void idInteraction::AddActiveInteraction( void ) {
+ 			// make sure we have created this interaction, which may have been deferred
+ 			// on a previous use that only needed the shadow
+ 			if ( sint->lightTris == LIGHT_TRIS_DEFERRED ) {
++				const double t0 = RF_NOW();
+ 				sint->lightTris = R_CreateLightTris( vEntity->entityDef, sint->ambientTris, vLight->lightDef, sint->shader, sint->cullInfo );
+ 				R_FreeInteractionCullInfo( sint->cullInfo );
++				rf_stageMsec[8] += RF_NOW() - t0;
+ 			}
+ 
+ 			srfTriangles_t *lightTris = sint->lightTris;
+@@ -1140,6 +1153,10 @@ void idInteraction::AddActiveInteraction( void ) {
+ 					const idMaterial *shader = sint->shader;
+ 					R_GlobalShaderOverride( &shader );
+ 
++					if ( rf_timeStages ) {
++						rf_count[2]++;
++					}
++
+ 					// there will only be localSurfaces if the light casts shadows and
+ 					// there are surfaces with NOSELFSHADOW
+ 					if ( sint->shader->Coverage() == MC_TRANSLUCENT ) {
+@@ -1220,6 +1237,9 @@ void idInteraction::AddActiveInteraction( void ) {
+ 
+ 			// see if we can avoid using the shadow volume caps
+ 			bool inside = R_PotentiallyInsideInfiniteShadow( sint->ambientTris, localViewOrigin, localLightOrigin );
++			if ( rf_timeStages ) {
++				rf_count[3]++;
++			}
+ 
+ 			if ( sint->shader->TestMaterialFlag( MF_NOSELFSHADOW ) ) {
+ 				R_LinkLightSurf( &vLight->localShadows,
+diff --git a/neo/renderer/tr_light.cpp b/neo/renderer/tr_light.cpp
+index ff047f74..bbf19110 100644
+--- a/neo/renderer/tr_light.cpp
++++ b/neo/renderer/tr_light.cpp
+@@ -1008,7 +1008,9 @@ idRenderModel *R_EntityDefDynamicModel( idRenderEntityLocal *def ) {
+ 	if ( !def->dynamicModel ) {
+ 
+ 		// instantiate the snapshot of the dynamic model, possibly reusing memory from the cached snapshot
++		const double t0 = RF_NOW();
+ 		def->cachedDynamicModel = model->InstantiateDynamicModel( &def->parms, tr.viewDef, def->cachedDynamicModel );
++		rf_stageMsec[6] += RF_NOW() - t0;
+ 
+ 		if ( def->cachedDynamicModel ) {
+ 
+@@ -1312,6 +1314,9 @@ static void R_AddAmbientDrawsurfs( viewEntity_t *vEntity ) {
+ 
+ 			// add the surface for drawing
+ 			R_AddDrawSurf( tri, vEntity, &vEntity->entityDef->parms, shader, vEntity->scissorRect );
++			if ( rf_timeStages ) {
++				rf_count[4]++;
++			}
+ 
+ 			// ambientViewCount is used to allow light interactions to be rejected
+ 			// if the ambient surface isn't visible at all
+@@ -1363,6 +1368,7 @@ void R_AddModelSurfaces( void ) {
+ 	// any light that intersects the view (for shadows)
+ 	for ( vEntity = tr.viewDef->viewEntitys; vEntity; vEntity = vEntity->next ) {
+ 
++		double t0 = RF_NOW(), t1;	// rf_stageMsec 9-11
+ 		if ( r_useEntityScissors.GetBool() ) {
+ 			// calculate the screen area covered by the entity
+ 			idScreenRect scissorRect = R_CalcEntityScissorRectangle( vEntity );
+@@ -1373,6 +1379,9 @@ void R_AddModelSurfaces( void ) {
+ 				R_ShowColoredScreenRect( vEntity->scissorRect, vEntity->entityDef->index );
+ 			}
+ 		}
++		t1 = RF_NOW();
++		rf_stageMsec[9] += t1 - t0;
++		t0 = t1;
+ 
+ 		float oldFloatTime = 0.0f;
+ 		int oldTime = 0;
+@@ -1417,6 +1426,9 @@ void R_AddModelSurfaces( void ) {
+ 		} else {
+ 			tr.pc.c_shadowViewEntities++;
+ 		}
++		t1 = RF_NOW();
++		rf_stageMsec[10] += t1 - t0;	// with the dynamic model above
++		t0 = t1;
+ 
+ 		//
+ 		// for all the entity / light interactions on this entity, add them to the view
+@@ -1446,6 +1458,7 @@ void R_AddModelSurfaces( void ) {
+ 				inter->AddActiveInteraction();
+ 			}
+ 		}
++		rf_stageMsec[11] += RF_NOW() - t0;
+ 
+ 		if ( vEntity->entityDef->parms.timeGroup ) {
+ 			tr.viewDef->floatTime = oldFloatTime;
+diff --git a/neo/renderer/tr_local.h b/neo/renderer/tr_local.h
+index d41444fb..228ac203 100644
+--- a/neo/renderer/tr_local.h
++++ b/neo/renderer/tr_local.h
+@@ -1318,6 +1318,25 @@ void R_ReloadGLSLPrograms_f(const idCmdArgs &args);
+ #define RB_NUM_STAGES 7
+ extern double rb_stageMsec[RB_NUM_STAGES];
+ 
++// The front end's stages, summed until the benchmark clears them (tr_main.cpp,
++// patch 0015): of R_RenderView, the outermost view only, 0 view set-up, 1 the
++// visible lights and entities, 2 light surfaces, 3 model surfaces, 4 subviews,
++// 5 the rest; inside them, 6 dynamic model snapshots (InstantiateDynamicModel:
++// skinning, deforms), 7 interactions created (light triangles, shadow volumes),
++// 8 light triangles made on a later view; and of the model surfaces, 9 entity
++// scissors, 10 ambient draw surfaces, 11 active interactions added (with 7, 8);
++// of the active interactions, 12 the view frustum cull and shadow scissor.
++#define RF_NUM_STAGES 13
++extern double rf_stageMsec[RF_NUM_STAGES];
++// and counts, while rf_timeStages: 0 active interactions visited, 1 of them
++// culled or scissored by the view frustum (12), 2 light surfaces linked,
++// 3 shadow surfaces linked, 4 ambient draw surfaces
++#define RF_NUM_COUNTS 5
++extern int rf_count[RF_NUM_COUNTS];
++extern bool rf_timeStages;	// set while the benchmark counts: the timers read the clock (about 500 reads a frame)
++// a clock read for the front end's timers, 0 when they are off
++#define RF_NOW() ( rf_timeStages ? Sys_MillisecondsPrecise() : 0.0 )
++
+ void RB_GLSL_PrepareShaders(void);
+ void RB_GLSL_FillDepthBuffer(drawSurf_t **drawSurfs, int numDrawSurfs);
+ void RB_GLSL_DrawInteractions(void);
+diff --git a/neo/renderer/tr_main.cpp b/neo/renderer/tr_main.cpp
+index b1cd3c18..93228b06 100644
+--- a/neo/renderer/tr_main.cpp
++++ b/neo/renderer/tr_main.cpp
+@@ -1122,6 +1122,18 @@ a mirror / remote location, or a 3D view on a gui surface.
+ Parms will typically be allocated with R_FrameAlloc
+ ================
+ */
++double rf_stageMsec[RF_NUM_STAGES];	// tr_local.h
++int rf_count[RF_NUM_COUNTS];
++bool rf_timeStages;
++
++// the stages of the outermost view: a subview's R_RenderView is inside its
++// parent's R_GenerateSubViews
++static int rf_viewDepth;
++struct rfViewDepth_t {
++	rfViewDepth_t() { rf_viewDepth++; }
++	~rfViewDepth_t() { rf_viewDepth--; }
++};
++
+ void R_RenderView( viewDef_t *parms ) {
+ 	viewDef_t		*oldView;
+ 
+@@ -1129,6 +1141,11 @@ void R_RenderView( viewDef_t *parms ) {
+ 		return;
+ 	}
+ 
++	rfViewDepth_t	depth;
++	const bool		timed = rf_viewDepth == 1 && rf_timeStages;
++	double			t0 = timed ? Sys_MillisecondsPrecise() : 0.0, t1;
++#define RF_STAGE( n ) if ( timed ) { t1 = Sys_MillisecondsPrecise(); rf_stageMsec[n] += t1 - t0; t0 = t1; }
++
+ 	tr.viewCount++;
+ 
+ 	// save view in case we are a subview
+@@ -1148,31 +1165,39 @@ void R_RenderView( viewDef_t *parms ) {
+ 	// we need to set the projection matrix before doing
+ 	// portal-to-screen scissor box calculations
+ 	R_SetupProjection();
++	RF_STAGE( 0 );
+ 
+ 	// identify all the visible portalAreas, and the entityDefs and
+ 	// lightDefs that are in them and pass culling.
+ 	static_cast<idRenderWorldLocal *>(parms->renderWorld)->FindViewLightsAndEntities();
++	RF_STAGE( 1 );
+ 
+ 	// constrain the view frustum to the view lights and entities
+ 	R_ConstrainViewFrustum();
++	RF_STAGE( 5 );
+ 
+ 	// make sure that interactions exist for all light / entity combinations
+ 	// that are visible
+ 	// add any pre-generated light shadows, and calculate the light shader values
+ 	R_AddLightSurfaces();
++	RF_STAGE( 2 );
+ 
+ 	// adds ambient surfaces and create any necessary interaction surfaces to add to the light
+ 	// lists
+ 	R_AddModelSurfaces();
++	RF_STAGE( 3 );
+ 
+ 	// any viewLight that didn't have visible surfaces can have it's shadows removed
+ 	R_RemoveUnecessaryViewLights();
+ 
+ 	// sort all the ambient surfaces for translucency ordering
+ 	R_SortDrawSurfs();
++	RF_STAGE( 5 );
+ 
+ 	// generate any subviews (mirrors, cameras, etc) before adding this view
+-	if ( R_GenerateSubViews() ) {
++	const bool subviews = R_GenerateSubViews();
++	RF_STAGE( 4 );
++	if ( subviews ) {
+ 		// if we are debugging subviews, allow the skipping of the
+ 		// main view draw
+ 		if ( r_subviewOnly.GetBool() ) {
+@@ -1187,6 +1212,8 @@ void R_RenderView( viewDef_t *parms ) {
+ 
+ 	// add the rendering commands for this viewDef
+ 	R_AddDrawViewCmd( parms );
++	RF_STAGE( 5 );
++#undef RF_STAGE
+ 
+ 	// restore view in case we are a subview
+ 	tr.viewDef = oldView;

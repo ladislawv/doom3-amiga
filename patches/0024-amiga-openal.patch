@@ -1,0 +1,33 @@
+diff --git a/neo/CMakeLists.txt b/neo/CMakeLists.txt
+index 99fc4f40..20dbd446 100644
+--- a/neo/CMakeLists.txt
++++ b/neo/CMakeLists.txt
+@@ -202,9 +202,16 @@ if(CMAKE_SYSTEM_NAME STREQUAL "AmigaOS")
+ endif()
+ 
+ if(AMIGAOS3)
+-	# no OpenAL library on AmigaOS 3 yet: its headers (OPENAL_INCLUDE_DIR, given
+-	# by the build) and the stub in sys/stub/openal_stub.cpp; play with s_noSound 1
+-	set(OPENAL_LIBRARY "")
++	# OpenAL on AmigaOS 3: the port's subset (AMIGA_OPENAL_LIBRARY, its
++	# build_al.sh; patch 0024), with OpenAL's headers (OPENAL_INCLUDE_DIR, given
++	# by the build); without it the stub in sys/stub/openal_stub.cpp (s_noSound 1)
++	if(AMIGA_OPENAL_LIBRARY)
++		set(OPENAL_LIBRARY ${AMIGA_OPENAL_LIBRARY})
++		set(amiga_openal_stub "")
++	else()
++		set(OPENAL_LIBRARY "")
++		set(amiga_openal_stub sys/stub/openal_stub.cpp)
++	endif()
+ 	include_directories(${OPENAL_INCLUDE_DIR})
+ else()
+ 	find_package(OpenAL REQUIRED)
+@@ -1097,7 +1104,7 @@ elseif(AMIGAOS3)
+ 
+ 	set(src_sys_core
+ 		sys/glimp.cpp
+-		${src_stub_openal}
++		${amiga_openal_stub}
+ 	)
+ elseif(APPLE)
+ 	set(OSX_RESOURCE_FILES

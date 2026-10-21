@@ -1,0 +1,526 @@
+diff --git a/neo/framework/Session.cpp b/neo/framework/Session.cpp
+index 13c07638..c6b0923a 100644
+--- a/neo/framework/Session.cpp
++++ b/neo/framework/Session.cpp
+@@ -2668,6 +2668,9 @@ prints each frame, without the printing), and the game tics run per second
+ ===============
+ */
+ extern double rb_stageMsec[7];	// renderer/draw_common.cpp: the back end's stages
++#ifdef __amigaos3__
++extern unsigned int sys_clockReads;	// sys/amigaos3/amiga_main.cpp: Sys_MillisecondsPrecise's calls
++#endif
+ 
+ static idCVar com_benchmarkSeconds( "com_benchmarkSeconds", "0", CVAR_SYSTEM | CVAR_INTEGER,
+ 	"after a map has loaded, count the frames for this many seconds, print them and quit (0: off)" );
+@@ -2677,6 +2680,7 @@ static idCVar com_benchmarkWarmup( "com_benchmarkWarmup", "0", CVAR_SYSTEM | CVA
+ static void BenchmarkFrame( bool mapRunning, int gameTics ) {
+ 	static int mapMsec = 0, startMsec = 0, frames = 0, startTics = 0;
+ 	static int sumGame = 0, sumFront = 0, sumBack = 0;
++	static unsigned int startReads = 0;
+ 	static bool done = false;
+ 	int seconds = com_benchmarkSeconds.GetInteger();
+ 	if ( seconds <= 0 || done || !mapRunning ) {
+@@ -2696,6 +2700,12 @@ static void BenchmarkFrame( bool mapRunning, int gameTics ) {
+ 		startTics = gameTics;
+ 		time_gameFrame = 0;
+ 		memset( rb_stageMsec, 0, sizeof( rb_stageMsec ) );
++#ifdef __amigaos3__
++		startReads = sys_clockReads;
++#endif
++		if ( cvarSystem->GetCVarBool( "g_profileThink" ) ) {
++			cmdSystem->BufferCommandText( CMD_EXEC_NOW, "gameProfile reset\n" );	// the game's profile: these seconds only
++		}
+ 		return;
+ 	}
+ 	frames++;
+@@ -2712,7 +2722,14 @@ static void BenchmarkFrame( bool mapRunning, int gameTics ) {
+ 			"%3.1f shader passes, %3.1f fog, %3.1f post, %3.1f swap\n",
+ 			rb_stageMsec[0] / frames, rb_stageMsec[1] / frames, rb_stageMsec[2] / frames, rb_stageMsec[3] / frames,
+ 			rb_stageMsec[4] / frames, rb_stageMsec[5] / frames, rb_stageMsec[6] / frames );
++#ifdef __amigaos3__
++		common->Printf( "benchmark: %u clock reads per frame (Sys_MillisecondsPrecise)\n",
++			( sys_clockReads - startReads ) / frames );
++#endif
+ 		done = true;
++		if ( cvarSystem->GetCVarBool( "g_profileThink" ) ) {
++			cmdSystem->BufferCommandText( CMD_EXEC_NOW, "gameProfile print\n" );
++		}
+ 		cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "quit\n" );
+ 	}
+ }
+diff --git a/neo/game/Entity.cpp b/neo/game/Entity.cpp
+index 451aaa85..5dd62776 100644
+--- a/neo/game/Entity.cpp
++++ b/neo/game/Entity.cpp
+@@ -45,6 +45,7 @@ If you have questions concerning this license or the applicable additional terms
+ #include "SmokeParticles.h"
+ 
+ #include "Entity.h"
++#include "GameProfile.h"
+ 
+ /*
+ ===============================================================================
+@@ -1395,6 +1396,7 @@ Present is called to allow entities to generate refEntities, lights, etc for the
+ ================
+ */
+ void idEntity::Present( void ) {
++	idGameProfileScope gp( GP_PRESENT );
+ 
+ 	if ( !gameLocal.isNewFrame ) {
+ 		return;
+@@ -2539,6 +2541,7 @@ bool idEntity::RunPhysics( void ) {
+ 	int			i, reachedTime, startTime, endTime;
+ 	idEntity *	part, *blockedPart, *blockingEntity;
+ 	bool		moved;
++	idGameProfileScope gp( GP_PHYSICS );
+ 
+ 	// don't run physics if not enabled
+ 	if ( !( thinkFlags & TH_PHYSICS ) ) {
+@@ -4986,6 +4989,8 @@ idAnimatedEntity::UpdateAnimation
+ ================
+ */
+ void idAnimatedEntity::UpdateAnimation( void ) {
++	idGameProfileScope gp( GP_ANIMATION );
++
+ 	// don't do animations if they're not enabled
+ 	if ( !( thinkFlags & TH_ANIMATE ) ) {
+ 		return;
+diff --git a/neo/game/GameProfile.h b/neo/game/GameProfile.h
+new file mode 100644
+index 00000000..a8464908
+--- /dev/null
++++ b/neo/game/GameProfile.h
+@@ -0,0 +1,95 @@
++/*
++===========================================================================
++
++Doom 3 GPL Source Code
++Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
++
++This file is part of the Doom 3 GPL Source Code ("Doom 3 Source Code").
++
++Doom 3 Source Code is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++Doom 3 Source Code is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
++
++===========================================================================
++*/
++
++#ifndef __GAME_PROFILE_H__
++#define __GAME_PROFILE_H__
++
++/*
++===============================================================================
++
++	Game profile (g_profileThink 1): the time of each part of the game's
++	frames, and the think time of each entity class, summed until
++	"gameProfile print" ("gameProfile reset" starts again; the benchmark
++	does both, around its counted seconds). The parts below the think loop
++	(physics, animation, render world updates, scripts) are also inside
++	their entities' think time; each is counted once when nested.
++
++===============================================================================
++*/
++
++#include "sys/sys_public.h"
++
++class idCmdArgs;
++
++enum {
++	GP_FRAME,			// all of RunFrame
++	GP_FRAME_START,		// RunFrame up to the entities' think
++	GP_THINK,			// every entity's Think
++	GP_EVENTS,			// idEvent::ServiceEvents
++	GP_PHYSICS,			// idEntity::RunPhysics
++	GP_ANIMATION,		// idAnimatedEntity::UpdateAnimation
++	GP_PRESENT,			// idEntity::Present: the render world's entity updates
++	GP_SCRIPT,			// idThread::Execute: the script interpreter
++	GP_PUSH,			// idPush::ClipPush: a pusher's move tried against what it touches
++	GP_CLIP_LINK,		// idClipModel::Link: a clip model put into the clip sectors
++	GP_CLIP_QUERY,		// idClip's traces, contacts and contents tests
++	GP_NUM
++};
++
++extern bool		gp_on;				// g_profileThink, read at each RunFrame
++extern double	gp_msec[GP_NUM];
++extern int		gp_depth[GP_NUM];
++extern int		gp_count[GP_NUM];	// entries, nested ones too
++
++void			GameProfile_StartTic( void );
++void			GameProfile_AddThink( int typeNum, int entityNum, double msec );
++void			GameProfile_f( const idCmdArgs &args );	// "gameProfile reset|print"
++
++class idGameProfileScope {
++public:
++	idGameProfileScope( int part ) : part( part ), entered( false ), timing( false ), t0( 0.0 ) {
++		if ( gp_on ) {
++			entered = true;
++			gp_count[part]++;
++			if ( gp_depth[part]++ == 0 ) {
++				timing = true;
++				t0 = Sys_MillisecondsPrecise();
++			}
++		}
++	}
++	~idGameProfileScope() {
++		if ( entered ) {
++			gp_depth[part]--;
++			if ( timing ) {
++				gp_msec[part] += Sys_MillisecondsPrecise() - t0;
++			}
++		}
++	}
++private:
++	int		part;
++	bool	entered, timing;
++	double	t0;
++};
++
++#endif /* !__GAME_PROFILE_H__ */
+diff --git a/neo/game/Game_local.cpp b/neo/game/Game_local.cpp
+index 36e5a25e..e98ef3d5 100644
+--- a/neo/game/Game_local.cpp
++++ b/neo/game/Game_local.cpp
+@@ -48,6 +48,7 @@ If you have questions concerning this license or the applicable additional terms
+ #include "WorldSpawn.h"
+ #include "Misc.h"
+ #include "Trigger.h"
++#include "GameProfile.h"
+ 
+ #include "framework/Licensee.h" // DG: for ID__DATE__
+ 
+@@ -2235,6 +2236,119 @@ static int CalcMSec( long long framenum ) {
+ 	return int( (framenum * 100000LL) / divisor - ((framenum-1) * 100000LL) / divisor );
+ }
+ 
++/*
++================
++Game profile (GameProfile.h)
++================
++*/
++bool			gp_on;
++double			gp_msec[GP_NUM];
++int				gp_depth[GP_NUM];
++int				gp_count[GP_NUM];
++static int		gp_tics;
++static idList<double> gp_classMsec;		// by idTypeInfo::typeNum
++static idList<int> gp_classThinks;
++static double	gp_entityMsec[MAX_GENTITIES];	// by entity number
++
++void GameProfile_StartTic( void ) {
++	gp_tics++;
++}
++
++void GameProfile_AddThink( int typeNum, int entityNum, double msec ) {
++	if ( typeNum >= gp_classMsec.Num() ) {
++		gp_classMsec.AssureSize( typeNum + 1, 0.0 );
++		gp_classThinks.AssureSize( typeNum + 1, 0 );
++	}
++	gp_classMsec[typeNum] += msec;
++	gp_classThinks[typeNum]++;
++	if ( entityNum >= 0 && entityNum < MAX_GENTITIES ) {
++		gp_entityMsec[entityNum] += msec;
++	}
++}
++
++// the n most expensive of count values, the most expensive first
++static void GameProfile_Top( const double *msec, int count, int n, idList<int> &order ) {
++	int i, j, k;
++	order.Clear();
++	for ( i = 0; i < count; i++ ) {
++		if ( msec[i] > 0.0 ) {
++			order.Append( i );
++		}
++	}
++	for ( i = 0; i < order.Num() && i < n; i++ ) {
++		for ( j = i + 1; j < order.Num(); j++ ) {
++			if ( msec[order[j]] > msec[order[i]] ) {
++				k = order[i];
++				order[i] = order[j];
++				order[j] = k;
++			}
++		}
++	}
++	if ( order.Num() > n ) {
++		order.SetNum( n );
++	}
++}
++
++void GameProfile_f( const idCmdArgs &args ) {
++	int i, n;
++	if ( !idStr::Icmp( args.Argv( 1 ), "reset" ) ) {
++		memset( gp_msec, 0, sizeof( gp_msec ) );
++		memset( gp_count, 0, sizeof( gp_count ) );
++		memset( gp_entityMsec, 0, sizeof( gp_entityMsec ) );
++		gp_tics = 0;
++		gp_classMsec.Clear();
++		gp_classThinks.Clear();
++		return;
++	}
++	if ( idStr::Icmp( args.Argv( 1 ), "print" ) ) {
++		gameLocal.Printf( "usage: gameProfile reset|print (what g_profileThink 1 counted)\n" );
++		return;
++	}
++	if ( !gp_tics ) {
++		gameLocal.Printf( "gameProfile: no game tics counted (g_profileThink 1 counts them)\n" );
++		return;
++	}
++	// what one timer call costs: the think loop makes one per entity, each
++	// part two (they are in the numbers below)
++	double t0 = Sys_MillisecondsPrecise();
++	for ( i = 0; i < 1000; i++ ) {
++		Sys_MillisecondsPrecise();
++	}
++	double callUsec = Sys_MillisecondsPrecise() - t0;	// ms for 1000 calls: us for one
++
++	const double f = 1.0 / gp_tics;
++	gameLocal.Printf( "gameProfile: %d tics; per tic %.2f ms in RunFrame: %.2f before the think, %.2f think, "
++		"%.2f events, %.2f the rest\n", gp_tics, gp_msec[GP_FRAME] * f, gp_msec[GP_FRAME_START] * f,
++		gp_msec[GP_THINK] * f, gp_msec[GP_EVENTS] * f,
++		( gp_msec[GP_FRAME] - gp_msec[GP_FRAME_START] - gp_msec[GP_THINK] - gp_msec[GP_EVENTS] ) * f );
++	gameLocal.Printf( "gameProfile: per tic, within the think and events: %.2f ms physics, %.2f animation, "
++		"%.2f render world updates, %.2f scripts\n", gp_msec[GP_PHYSICS] * f, gp_msec[GP_ANIMATION] * f,
++		gp_msec[GP_PRESENT] * f, gp_msec[GP_SCRIPT] * f );
++	gameLocal.Printf( "gameProfile: per tic, collision (mostly in the physics): %.2f ms pushes (%.1f calls), "
++		"%.2f clip links (%.1f), %.2f clip queries (%.1f)\n", gp_msec[GP_PUSH] * f, gp_count[GP_PUSH] * f, gp_msec[GP_CLIP_LINK] * f,
++		gp_count[GP_CLIP_LINK] * f, gp_msec[GP_CLIP_QUERY] * f, gp_count[GP_CLIP_QUERY] * f );
++	gameLocal.Printf( "gameProfile: a timer call costs %.2f us\n", callUsec );
++
++	// the classes, the most expensive first
++	idList<int> order;
++	GameProfile_Top( gp_classMsec.Ptr(), gp_classMsec.Num(), 30, order );
++	for ( i = 0; i < order.Num(); i++ ) {
++		n = order[i];
++		gameLocal.Printf( "gameProfile: %6.2f ms per tic, %5.1f thinks per tic, %6.3f ms each: %s\n",
++			gp_classMsec[n] * f, gp_classThinks[n] * f, gp_classMsec[n] / gp_classThinks[n],
++			idClass::GetType( n )->classname );
++	}
++
++	// the entities, the most expensive first (still in the game: their name)
++	GameProfile_Top( gp_entityMsec, MAX_GENTITIES, 30, order );
++	for ( i = 0; i < order.Num(); i++ ) {
++		n = order[i];
++		const idEntity *ent = gameLocal.entities[n];
++		gameLocal.Printf( "gameProfile: entity %4d %6.3f ms per tic: %s (%s)\n", n, gp_entityMsec[n] * f,
++			ent ? ent->GetName() : "(removed)", ent ? ent->GetClassname() : "" );
++	}
++}
++
+ /*
+ ================
+ idGameLocal::RunFrame
+@@ -2257,6 +2371,10 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t *clientCmds ) {
+ 
+ 	player = GetLocalPlayer();
+ 
++	gp_on = g_profileThink.GetBool();
++	idGameProfileScope gpFrame( GP_FRAME );
++	double gpStart = 0.0;
++
+ 	if ( !isMultiplayer && g_stopTime.GetBool() ) {
+ 		// clear any debug lines from a previous frame
+ 		gameRenderWorld->DebugClearLines( time + 1 );
+@@ -2268,6 +2386,11 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t *clientCmds ) {
+ 			player->Think();
+ 		}
+ 	} else do {
++		if ( gp_on ) {
++			GameProfile_StartTic();
++			gpStart = Sys_MillisecondsPrecise();
++		}
++
+ 		// update the game time
+ 		framenum++;
+ 		previousTime = time;
+@@ -2325,7 +2448,25 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t *clientCmds ) {
+ 		timer_think.Start();
+ 
+ 		// let entities think
+-		if ( g_timeentities.GetFloat() ) {
++		if ( gp_on ) {
++			// the game profile: each think timed and summed by class (one
++			// timer call per entity: each think ends where the next starts)
++			double t0 = Sys_MillisecondsPrecise(), t1, thinkStart = t0;
++			gp_msec[GP_FRAME_START] += t0 - gpStart;
++			num = 0;
++			for( ent = activeEntities.Next(); ent != NULL; ent = ent->activeNode.Next() ) {
++				if ( g_cinematic.GetBool() && inCinematic && !ent->cinematic ) {
++					ent->GetPhysics()->UpdateTime( time );
++					continue;
++				}
++				ent->Think();
++				t1 = Sys_MillisecondsPrecise();
++				GameProfile_AddThink( ent->GetType()->typeNum, ent->entityNumber, t1 - t0 );
++				t0 = t1;
++				num++;
++			}
++			gp_msec[GP_THINK] += t0 - thinkStart;
++		} else if ( g_timeentities.GetFloat() ) {
+ 			num = 0;
+ 			for( ent = activeEntities.Next(); ent != NULL; ent = ent->activeNode.Next() ) {
+ 				if ( g_cinematic.GetBool() && inCinematic && !ent->cinematic ) {
+@@ -2382,7 +2523,10 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t *clientCmds ) {
+ 		timer_events.Start();
+ 
+ 		// service any pending events
+-		idEvent::ServiceEvents();
++		{
++			idGameProfileScope gpEvents( GP_EVENTS );
++			idEvent::ServiceEvents();
++		}
+ 
+ 		timer_events.Stop();
+ 
+diff --git a/neo/game/gamesys/SysCmds.cpp b/neo/game/gamesys/SysCmds.cpp
+index 105ff577..481e0edb 100644
+--- a/neo/game/gamesys/SysCmds.cpp
++++ b/neo/game/gamesys/SysCmds.cpp
+@@ -43,6 +43,7 @@ If you have questions concerning this license or the applicable additional terms
+ #include "Misc.h"
+ 
+ #include "SysCmds.h"
++#include "game/GameProfile.h"
+ 
+ /*
+ ==================
+@@ -2304,6 +2305,7 @@ so it can perform tab completion
+ =================
+ */
+ void idGameLocal::InitConsoleCommands( void ) {
++	cmdSystem->AddCommand( "gameProfile",			GameProfile_f,				CMD_FL_GAME,				"game profile: reset, or print what g_profileThink counted" );
+ 	cmdSystem->AddCommand( "listTypeInfo",			ListTypeInfo_f,				CMD_FL_GAME,				"list type info" );
+ 	cmdSystem->AddCommand( "writeGameState",		WriteGameState_f,			CMD_FL_GAME,				"write game state" );
+ 	cmdSystem->AddCommand( "testSaveGame",			TestSaveGame_f,				CMD_FL_GAME|CMD_FL_CHEAT,	"test a save game for a level" );
+diff --git a/neo/game/gamesys/SysCvar.cpp b/neo/game/gamesys/SysCvar.cpp
+index 940c1d88..887d2b6c 100644
+--- a/neo/game/gamesys/SysCvar.cpp
++++ b/neo/game/gamesys/SysCvar.cpp
+@@ -148,6 +148,7 @@ idCVar g_showActiveEntities(		"g_showActiveEntities",		"0",			CVAR_GAME | CVAR_B
+ idCVar g_showEnemies(				"g_showEnemies",			"0",			CVAR_GAME | CVAR_BOOL, "draws boxes around monsters that have targeted the the player" );
+ 
+ idCVar g_frametime(					"g_frametime",				"0",			CVAR_GAME | CVAR_BOOL, "displays timing information for each game frame" );
++idCVar g_profileThink(				"g_profileThink",			"0",			CVAR_GAME | CVAR_BOOL, "sums the game frame's parts and each entity class's think time until gameProfile print (port)" );
+ idCVar g_timeentities(				"g_timeEntities",			"0",			CVAR_GAME | CVAR_FLOAT, "when non-zero, shows entities whose think functions exceeded the # of milliseconds specified" );
+ 
+ idCVar ai_debugScript(				"ai_debugScript",			"-1",			CVAR_GAME | CVAR_INTEGER, "displays script calls for the specified monster entity number" );
+diff --git a/neo/game/gamesys/SysCvar.h b/neo/game/gamesys/SysCvar.h
+index a4883b51..274b1e3a 100644
+--- a/neo/game/gamesys/SysCvar.h
++++ b/neo/game/gamesys/SysCvar.h
+@@ -86,6 +86,7 @@ extern idCVar	g_showEnemies;
+ 
+ extern idCVar	g_frametime;
+ extern idCVar	g_timeentities;
++extern idCVar	g_profileThink;
+ 
+ extern idCVar	ai_debugScript;
+ extern idCVar	ai_debugMove;
+diff --git a/neo/game/physics/Clip.cpp b/neo/game/physics/Clip.cpp
+index 561f177f..66144fe0 100644
+--- a/neo/game/physics/Clip.cpp
++++ b/neo/game/physics/Clip.cpp
+@@ -30,6 +30,7 @@ If you have questions concerning this license or the applicable additional terms
+ #include "gamesys/SaveGame.h"
+ #include "Entity.h"
+ #include "Game_local.h"
++#include "GameProfile.h"
+ 
+ #include "physics/Clip.h"
+ 
+@@ -583,6 +584,7 @@ idClipModel::Link
+ ===============
+ */
+ void idClipModel::Link( idClip &clp, idEntity *ent, int newId, const idVec3 &newOrigin, const idMat3 &newAxis, int renderModelHandle ) {
++	idGameProfileScope gp( GP_CLIP_LINK );
+ 
+ 	this->entity = ent;
+ 	this->id = newId;
+@@ -1064,6 +1066,7 @@ idClip::Translation
+ */
+ bool idClip::Translation( trace_t &results, const idVec3 &start, const idVec3 &end,
+ 						const idClipModel *mdl, const idMat3 &trmAxis, int contentMask, const idEntity *passEntity ) {
++	idGameProfileScope gp( GP_CLIP_QUERY );
+ 	int i, num;
+ 	idClipModel *touch, *clipModelList[MAX_GENTITIES];
+ 	idBounds traceBounds;
+@@ -1138,6 +1141,7 @@ idClip::Rotation
+ */
+ bool idClip::Rotation( trace_t &results, const idVec3 &start, const idRotation &rotation,
+ 					const idClipModel *mdl, const idMat3 &trmAxis, int contentMask, const idEntity *passEntity ) {
++	idGameProfileScope gp( GP_CLIP_QUERY );
+ 	int i, num;
+ 	idClipModel *touch, *clipModelList[MAX_GENTITIES];
+ 	idBounds traceBounds;
+@@ -1205,6 +1209,7 @@ idClip::Motion
+ */
+ bool idClip::Motion( trace_t &results, const idVec3 &start, const idVec3 &end, const idRotation &rotation,
+ 					const idClipModel *mdl, const idMat3 &trmAxis, int contentMask, const idEntity *passEntity ) {
++	idGameProfileScope gp( GP_CLIP_QUERY );
+ 	int i, num;
+ 	idClipModel *touch, *clipModelList[MAX_GENTITIES];
+ 	idVec3 dir, endPosition;
+@@ -1366,6 +1371,7 @@ idClip::Contacts
+ */
+ int idClip::Contacts( contactInfo_t *contacts, const int maxContacts, const idVec3 &start, const idVec6 &dir, const float depth,
+ 					 const idClipModel *mdl, const idMat3 &trmAxis, int contentMask, const idEntity *passEntity ) {
++	idGameProfileScope gp( GP_CLIP_QUERY );
+ 	int i, j, num, n, numContacts;
+ 	idClipModel *touch, *clipModelList[MAX_GENTITIES];
+ 	idBounds traceBounds;
+@@ -1436,6 +1442,7 @@ idClip::Contents
+ ============
+ */
+ int idClip::Contents( const idVec3 &start, const idClipModel *mdl, const idMat3 &trmAxis, int contentMask, const idEntity *passEntity ) {
++	idGameProfileScope gp( GP_CLIP_QUERY );
+ 	int i, num, contents;
+ 	idClipModel *touch, *clipModelList[MAX_GENTITIES];
+ 	idBounds traceBounds;
+diff --git a/neo/game/physics/Push.cpp b/neo/game/physics/Push.cpp
+index 0b986130..0f0922fe 100644
+--- a/neo/game/physics/Push.cpp
++++ b/neo/game/physics/Push.cpp
+@@ -32,6 +32,7 @@ If you have questions concerning this license or the applicable additional terms
+ #include "Player.h"
+ #include "Moveable.h"
+ #include "Game_local.h"
++#include "GameProfile.h"
+ 
+ #include "physics/Push.h"
+ 
+@@ -1390,6 +1391,7 @@ idPush::ClipPush
+ float idPush::ClipPush( trace_t &results, idEntity *pusher, const int flags,
+ 								const idVec3 &oldOrigin, const idMat3 &oldAxis,
+ 									idVec3 &newOrigin, idMat3 &newAxis ) {
++	idGameProfileScope gp( GP_PUSH );
+ 	idVec3 translation;
+ 	idRotation rotation;
+ 	float mass;
+diff --git a/neo/game/script/Script_Thread.cpp b/neo/game/script/Script_Thread.cpp
+index 6fa6c317..708f5647 100644
+--- a/neo/game/script/Script_Thread.cpp
++++ b/neo/game/script/Script_Thread.cpp
+@@ -33,6 +33,7 @@ If you have questions concerning this license or the applicable additional terms
+ #include "game/Camera.h"
+ 
+ #include "Script_Thread.h"
++#include "game/GameProfile.h"
+ 
+ const idEventDef EV_Thread_Execute( "<execute>", NULL );
+ const idEventDef EV_Thread_SetCallback( "<script_setcallback>", NULL );
+@@ -651,6 +652,7 @@ idThread::Execute
+ bool idThread::Execute( void ) {
+ 	idThread	*oldThread;
+ 	bool		done;
++	idGameProfileScope gp( GP_SCRIPT );
+ 
+ 	if ( manualControl && ( waitingUntil > gameLocal.time ) ) {
+ 		return false;

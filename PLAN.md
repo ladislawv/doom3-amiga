@@ -61,13 +61,14 @@
 ## 4. Where things live
 
 - **Windows: `C:\- CPP\doom3`** (this folder) holds everything that is not a clone or a build:
-  - `PLAN.md`;
-  - `sources.sh`, `build.sh`, `build_host.sh`;
-  - `patches/` (changes to d3es, made against the WSL clone, LF line ends);
-  - `src/` (new files: the AmigaOS 3 system layer, the sound library, the build glue);
-  - `sdl2/` (SDL2 patches);
+  - `PLAN.md`, and `CLAUDE.md` (the short handbook: build order, the patch workflow, testing, rules, traps);
+  - `sources.sh`, `build_deps.sh`, `build_sdl2.sh`, `build_al.sh`, `build.sh`, `build_host.sh`, `run_host.sh`, `bench_host.sh`;
+  - `patches/` (changes to d3es, made against the WSL clone, LF line ends; `tools/patch/reopen.sh`, `export.sh`, `checkrest.sh`);
+  - `src/` (new files: the AmigaOS 3 system layer `src/sys`, the OpenAL subset `src/al`, the libnix additions `src/amiga`);
+  - `sdl2/` (SDL2 patches, `PROVENANCE.md`);
   - `tests/a1200/<package>/` and `tests/a1200/results/`;
-  - `config/` (the default `autoexec.cfg`).
+  - `tools/` (`a1200.py`, `build_all.sh`, `bench_pkg.sh`, `map_pkg.sh`, `pcsample_report.py`, `sndcmp.py`, `tga2png.py`, `check_fpconv.py`);
+  - `config/` (the default `autoexec.cfg`; not written yet: §10.4).
 - **WSL (Ubuntu 24.04):**
   - `~/d3es`: the clone at the pinned commit, reset and patched on every build;
   - `~/d3es-ref`: dhewm3 1.5.5, for reference;
@@ -153,7 +154,7 @@ Checked for this plan (2026-10-20) or taken from ogles2's documentation:
 | D4 | Threads | **None in the engine.** `r_multithread 0`; async tic from the main loop. The only other task is SDL's audio task, which touches only the sound library's mixer state |
 | D5 | Game code | **Linked in**: `doom3` (base) and `doom3-roe` (d3xp) |
 | D6 | Textures | **Precompressed DDS as S3TC**; TGA as RGBA8 for the rest; ETC1 off |
-| D7 | Sound | **A small OpenAL 1.1 subset written for the port** (`src/al/`): exactly the calls d3es uses, mixing in SDL2's audio callback (AHI) at 22,050 Hz stereo by default, with distance attenuation, stereo panning, pitch, looping and queued streaming (Ogg music and speech). EFX reports itself unavailable, which d3es supports (`s_useEAXReverb` 0). Why: OpenAL Soft needs `std::thread`/`std::mutex`, which this libstdc++ lacks, and does far more per sample than this CPU can spare. Sound stays off (`s_noSound 1`, which skips OpenAL) until phase 7 |
+| D7 | Sound | **A small OpenAL 1.1 subset written for the port** (`src/al/`; written 2026-10-20, §14): exactly the calls d3es uses, mixing in SDL2's audio callback (AHI) at 22,050 Hz stereo by default, with distance attenuation, stereo panning, pitch, looping and queued streaming (Ogg music and speech). EFX reports itself unavailable, which d3es supports (`s_useEAXReverb` 0). Why: OpenAL Soft needs `std::thread`/`std::mutex`, which this libstdc++ lacks, and does far more per sample than this CPU can spare. Sound stays off (`s_noSound 1`, which skips OpenAL) until phase 7 |
 | D8 | Picture size | **640x480 32-bit screen**, rendered at `r_framebufferWidth`/`Height` (for example 320x240 or 480x360) and scaled up when the frame time asks for it |
 | D9 | Verification | **The x86-64 host build first** for every functional change; the A1200 for byte order, speed and the real GPU |
 
@@ -302,7 +303,7 @@ The work of §10, each change measured alone with `timedemo demo1` and kept only
 
 ### 10.2 CPU savings from ldhewm3-rearmed
 
-These are ported without its `__vita__`, vitaGL and NEON parts:
+Its commits were reviewed on 2026-10-20 (§14, "the Vita port reviewed": what a 68k can use, in three groups, and patch 0020). These are ported without its `__vita__`, vitaGL and NEON parts:
 - dormant entities behind closed portals;
 - lower animation rates for distant entities;
 - cached shadow volumes for static lights and models;
@@ -354,7 +355,19 @@ The port's `autoexec.cfg` sets:
 
 ## 13. Requests to ogles2
 
-None yet. Requests go here only with a measurement behind them; the developer decides whether ogles2 takes them.
+Requests go here only with a measurement behind them; the developer decides whether ogles2 takes them.
+
+1. **(2026-10-20) Per-draw CPU time with Doom 3's draw pattern: 25.6 µs a draw, 27.3 ms a frame.** Measured with probe P: 1,066 draws a frame, mostly `glDrawElements` with 16-bit indices from a `GL_STREAM_DRAW` buffer re-sent once a frame, or from static buffers, 5–7 attributes, 5 textures. The largest stages per frame:
+   - uniforms 7.4 ms: the interaction program has about 13 uniforms, most of them changed every draw;
+   - vertex data 5.8 ms;
+   - checks 5.3 ms.
+
+   Anything that lowers the fixed cost per draw helps this game directly. Raw data: `tests/a1200/results/bench-*/results/ogles2.log` (the `OGLES2PROBE=1` runs).
+2. **(2026-10-20) A swap without waiting for SDL's full-screen windows.**
+   - **The cost:** SDL2's ogles2 backend creates its context with `OGLES2_CCT_WINDOW`, also for a full-screen window, which is a borderless backdrop window covering its own screen. Window mode renders into an offscreen bitmap and `ClipBlit`s it at the swap, so the swap waits for the finished frame. On the A1200 that is 16.2 ms of Doom 3's 128 ms frame with vsync off, 13.6 ms of it the render wait.
+   - **The request:** when a window's bitmap is its screen's and nothing can cover it (a borderless backdrop window the size of its screen, as SDL opens for full screen), could ogles2 store straight into the screen bitmap and return at submission, as `OGLES2_CCT_MODEID` does? Every SDL2/SDL3 full-screen program would gain.
+   - **The alternative:** the port's copy of the SDL backend could use `OGLES2_CCT_MODEID` itself and take SDL's input from ogles2's window (`OGLES2_CCT_PISTORM_GET_WINDOW`). That is more intricate: two screens, and SDL's event code reading another window.
+   - **Done in ogles2 (2026-10-20, uncommitted there):** a window that is all of its private 32-bit screen is rendered into directly; the swap returns at submission (ogles2's §7.2; `ENV:OGLES2/WindowCopy 1` keeps the copy). The SDL backend needs no change. Results under §14, "the swap without the copy".
 
 ## 14. Status and next steps
 
@@ -442,8 +455,449 @@ None yet. Requests go here only with a measurement behind them; the developer de
   - The demo code is dhewm3's apart from the version-5 "nospecular" header that d3es lacks, so the fault is more likely in what d3es's split front end and back end write.
   - Whether id's retail `demo1` plays is not known until the full data is here. Until then `com_benchmarkSeconds` measures instead.
 
+**Done (2026-10-20): the C++ probe on the A1200; phase 2's exit check met.**
+- **`tools/a1200.py`:** ogles2's `amictl.py` used as it is, with results written here (`tests/a1200/results/`). Run with `python tools/a1200.py runpkg <package> -t <s>`.
+- **The packages carry `libs/ogles2.library`:** the test machine has none in `LIBS:`.
+- **Run 1 (stack swap linked):** the Amiga crashed and rebooted. Its output was lost, because it was buffered.
+- **Run 2, in steps with unbuffered output:**
+  - Without the swap, everything passes except the stack (200,000 bytes).
+  - With libnix's swap (`-Wl,-u,___stkinit`), every check passes, including 8 MB and a 1 MB `alloca`, but the program hangs after its last line, in libnix's stack-swap exit code. It ignores Ctrl-C and stays as a process until the next reboot.
+- **Decision:** no libnix stack swap. The Shell's `Stack 9000000` (and, later, the icon's stack) gives the stack; the program checks it at start.
+- **Run 3** (`tests/a1200/results/cxx-probe-2-20261020-133252`), 14.3 s, every check passes:
+  - C++ runtime: static constructors, an exception through three frames with destructors, `dynamic_cast`/`typeid`, STL;
+  - float-to-int truncation, `sqrtf`/`sinf`/`atan2f`, byte order, sizes;
+  - stack 9,000,000 bytes and a 1 MB `alloca`;
+  - a 256 MB `malloc`;
+  - SDL2's GLES 2.0 context: "V3D 4.2.14 (PiStorm), 8 QPUs, 64 KB VPM", depth 24, stencil 8, with red, green and blue cleared and shown;
+  - SDL audio: 22 callbacks in one second at 22,050 Hz. **SDL chose its Paula driver, not AHI**: the sound phase must ask for AHI.
+- **libnix's `free` is slow:** 100,000 small blocks take 79 ms to `new` and **4,358 ms to `delete`** in mixed order, 44 µs a block. Doom 3 allocates and frees all the time, so **its own allocator (§9) moves from "if needed" to required.**
+- **Open:**
+  - Free fast memory was 8.8 MB lower after the run than before. This may be ogles2's GPU set-up, which it never frees by design, or a leak; to be told apart by running twice.
+  - AmigaDOS `If` has no `LE`. `Run-Probe` now uses `If NOT {FROM} GT n VAL`.
+
+**Done (2026-10-20): zlib and the port's allocator.**
+- **`build_deps.sh`** builds `~/doom3-build/m68k/deps`: zlib 1.3.1's `libz.a`, and `libd3amiga.a`, the port's support library.
+  - `sources.sh` fetches zlib and dlmalloc 2.8.6 into `~/downloads/doom3-deps` and checks their SHA-256.
+- **`libd3amiga.a`:**
+  - `src/amiga/d3malloc.c`: dlmalloc with prefixed names, no locks, no mmap. It takes non-contiguous 4 MB segments from libnix's `malloc`, so libnix frees them at exit, and never gives them back before that.
+  - `src/amiga/d3new.cpp`: every `operator new`/`delete` form on it.
+  - `src/amiga/libnix_shims.c`.
+- **SDL and libnix keep libnix's `malloc`,** so SDL's audio task and the game never share an allocator and no lock is needed.
+- **Link traps:**
+  - `-Wl,-u,___xpg_strerror_r` is needed, because libstdc++ comes after `-ld3amiga` on the link line.
+  - dlmalloc's `MORECORE(0)` must return the end of the last segment, as `sbrk(0)` would. While it returned failure, the first `new` threw `bad_alloc` and the A1200 run aborted (`cxx-probe-3`).
+- **Host test** (`tests/host/d3malloc_test.c`): 2,000,000 random operations including `realloc`, contents checked, no errors.
+- **A1200** (`tests/a1200/results/cxx-probe-4-20261020-134239`), every check passes:
+
+  | 100,000 small blocks | Allocate | Free (mixed order) |
+  |---|---|---|
+  | The port's allocator | 16 ms | 26–28 ms |
+  | libnix | 72–75 ms | 4,334–4,464 ms |
+
+  About 160 times faster freeing. The random load (200,000 operations of 1 byte to 64 KB, contents checked) takes 2.3 s.
+- **The 8.8 MB:** each run ends 8.8 MB lower, but the next run starts higher than the last one ended, so the memory comes back. It is held a while after the run, probably by ogles2.library until it is expunged. Not a leak of the program's.
+
+**Done (2026-10-20): phase 3, the 68k build links.** `build.sh` gives `~/doom3-build/m68k/game/dhewm3`: 7.9 MB, Release, base game linked in, no undefined references.
+- **`patches/0008-qgl-only`:** `VertexCache.cpp` and `framebuffer.cpp` called about 60 GL functions directly; now all go through the `qgl*` pointers. On the Amiga every GL function comes from `SDL_GL_GetProcAddress`. Host benchmark unchanged: 39.7 fps at 640x480, 30.2 fps through the 320x240 framebuffer.
+- **`patches/0009-amigaos3-build`:**
+  - CMake:
+    - AmigaOS detected from `CMAKE_SYSTEM_NAME`;
+    - OpenAL's headers and d3es's `openal_stub.cpp` in place of the library;
+    - no `GLESv2` library;
+    - the system sources `sys/amigaos3/*`;
+    - `AMIGA_LIBS`/`AMIGA_LDFLAGS` from the build;
+    - minizip with `USE_FILE32API` (libnix's `stdio.h` does not declare `fseeko` to C);
+    - no `-fvisibility`, no `-fPIC` on idlib.
+  - `platform.h` gets an `__amigaos3__` block.
+  - `fs_caseSensitiveOS` 0, `:` as a directory separator, and the CD-key path as on AROS.
+  - `BuildOSPath` joins `Work:` + `base` without a `/`.
+  - `RenderSystem.cpp` includes `<unistd.h>` (`usleep`).
+- **`cmake/m68k-amigaos.cmake` and `cmake/Platform/AmigaOS.cmake`:**
+  - GCC 16.2, `-mcpu=68020 -m68881 -noixemul`;
+  - `-std=gnu++17`, because GCC 16 defaults to C++20, where `requires` is a keyword and Doom 3 uses it as a name;
+  - no PIC flags, since `-fPIC` output (`@GOT(a4)`) does not assemble;
+  - try-compiles without linking.
+- **`src/sys/amigaos3`:**
+  - `amiga_main.cpp`:
+    - paths: data, configuration and saves next to the executable (`save/`), as `Sys_GetPath` gives them;
+    - a stack check at start, with a requester when the stack is under 4 MB;
+    - console to `stdout` and `save/dhewm3log.txt`, flushed every line;
+    - `Sys_Error` closes SDL and shows a requester;
+    - no DLLs, processes or URLs.
+  - `amiga_os.c`/`amiga_os.h`: the AmigaDOS and exec calls behind a C interface, so the AmigaOS headers' macros (`Read`, `Write`, `Printf`) never meet Doom 3's names. It covers program directory and name, `Lock`/`ExNext` listing, `CreateDir`, dates, `AvailMem`, the stack size and `EasyRequest`.
+  - `amiga_net.cpp`: no sockets (single player); loopback addresses only.
+- **`tools/check_fpconv.py`** checks the disassembly per register. The game's 645 float-to-integer stores all truncate with `fintrz`. The 205 without it are in SDL2 (`-m68040`, which switches the FPU rounding mode instead: correct, slower).
+- **Packages and data:**
+  - `tests/a1200/build_pkg.sh <name>` adds the game and ogles2 release 1.3's `ogles2.library` and `v3dglslc` in `libs/`, where ogles2 looks when `LIBS:` has none.
+  - `tests/a1200/start/Run-Start`: start, initialise, quit.
+  - `tools/a1200_put_large.py` uploads a file of any size in 48 MB pieces and `Join`s them on the Amiga (amictl's PUT stops at 64 MB; AmigaOS 3.2 makes directories with `MakeDir ALL`). The game data goes to `Stuff:doom3`, which has 3.8 GB free.
+
+**Done (2026-10-20): phase 3's exit check met: the game starts and quits on the A1200** (`tests/a1200/results/start-20261020-141241`, 94 s with sound off; the developer watching).
+- **What start-up does on the A1200:**
+  - mounts the demo pk4 from `Stuff:doom3` (12,234 files);
+  - opens a 640x480 RTG screen through SDL2 with depth 24 and stencil 8;
+  - creates the GL ES 2.0 context on ogles2: "V3D 4.2.14 (PiStorm)", with `EXT_texture_compression_s3tc`, `OES_packed_depth_stencil`, `OES_texture_npot` and anisotropy 16;
+  - compiles all 11 GLSL programs on the Amiga (ogles2's `v3dglslc` from the package's `libs/`);
+  - initialises the game: 142 classes; `script/doom_main.script` compiles in 7.1 s;
+  - starts the session, shuts down cleanly and exits.
+- **Two crashes found and fixed on the way:**
+  1. **amiga.lib's `sprintf` in place of the C library's.** `-lamiga` was on the link line before libnix, and amiga.lib's `sprintf` is `RawDoFmt`, with 16-bit `%d`. The first `sprintf` crashed before `main` wrote anything; the `vamos` emulator showed it (`RawDoFmt` reading a bad string pointer). The driver already links amiga.lib after libnix, so `build.sh` and the probe no longer name it.
+  2. **Static destructors in the wrong order at exit.** GCC on this target puts them in the DTOR list, which libnix runs in link order, whereas Linux uses `__cxa_atexit` (reverse construction order), and Doom 3's static objects rely on that. SmartCrash caught the crash after the game had shut down cleanly (a trace showed `exit()` reached and the `atexit` handlers starting). The fix: `src/amiga/cxa_atexit.c` in `libd3amiga.a`, a `__cxa_atexit` and `__dso_handle` that libnix lacks, run from one `atexit` handler, and `-fuse-cxa-atexit` for the game. After that, no crash at exit.
+- **Also learnt:**
+  - `vamos` runs the game as far as `SDL_Init`, which needs `CreateNewProc`; a stack size of 0 (`vamos`) now counts as unknown.
+  - Each run ends 8.8 MB lower in free memory, as the probe does (ogles2 holding it until it is expunged).
+  - My earlier reading of a "double shutdown" was two files' tails printed one after the other.
+
+**Done (2026-10-20): the first map on the A1200, and the phase 4 measurement** (`tests/a1200/map`, demo data, sound off, the developer watching).
+- **`demo_mc_underground` loads in 77–78 s** (4.6 s of it collision data); on the host it takes 1.7 s. The screen stays black with the mouse pointer while it loads, and the station does not answer meanwhile.
+- **The A1200's screenshot matches the host's:** the door with normal maps, per-pixel lighting and the HUD. Byte order, the DDS textures and the GLSL programs are right on the real GPU.
+- **Frame rate, 10 s counted after loading:**
+  - 640x480: **81 frames = 8.0 fps** (`map-20261020-141750`);
+  - rendered at 320x240 and scaled up: **79 frames = 7.9 fps** (`map-20261020-142230`).
+
+  The picture size makes no difference: the game is CPU-bound.
+- **Where a frame goes** (`com_speeds`, last 40 frames at 320x240):
+
+  | Part | ms per frame |
+  |---|---|
+  | Game frame | 88 |
+  | Renderer front end | 11 |
+  | Renderer back end, including ogles2's draw calls | 42 |
+  | Total | 150 |
+
+  The game runs fixed 60 Hz tics (`USERCMD_HZ` is a constant in d3es). At about 125 ms a frame it runs 7–8 tics per frame to keep up, so game logic takes over half the CPU. dhewm3's `com_gameHz` exists only in its high-fps branch, commented out in 1.5.5.
+- **The gate (§7, phase 4):** 8 fps is at the lower limit, in the "in between" band: phase 5 (performance) first, then decide again. The first target is the cost of one game tic, not rendering.
+
+**Done (2026-10-20): the game tic profiled on the A1200** (`Run-Map PROFILE=1`: `g_timeEntities 2`, `g_frametime`, `com_showTics`; `map-20261020-142752`).
+- **Right after loading, a tic costs 45–55 ms.** Two ragdolls lying in the map (`env_ragdoll_zsecm_0`, `env_ragdoll_maint_0`) take 6–7 ms each and the gibs 2 ms each, while they settle.
+  - On the host the same entities show up in the first 7 tics only (`g_timeEntities 0.2`), then come to rest.
+  - On the A1200 they had settled by game time 4.8 s too, so this is not a port fault.
+- **Once settled, a tic costs about 30 ms of CPU** for 16.7 ms of game time, with 225 entities. The largest are `player1` (2–3 ms), `crane_main` (2 ms) and `swinglight_mover` (2 ms); the other entities cost about 0.1 ms each and add up to the rest.
+  - The game logic alone needs about 1.8 times real time.
+  - The engine then runs slower than real time (game time falls behind) rather than dropping tics.
+- **The 10 s benchmark window covers only the first few seconds of game time,** because game time runs slower than real time. Measurements must start after the ragdolls have settled, or run longer.
+- **Host, same map:** 54.5 fps (llvmpipe).
+
+**Done (2026-10-20): phase 5, compiler flags measured; the game frequency made variable.**
+- **Benchmark (patch 0007):**
+  - `com_benchmarkWarmup` (seconds before counting starts) and a summary line: per frame the game, front-end and back-end times, and game tics per second. `com_speeds` prints these every frame, which costs time on the Amiga; the summary does not.
+  - The renderer's times reach it only when `EndFrame` is given somewhere to put them, so `UpdateScreen` now passes them while the benchmark runs too.
+- **`tests/a1200/bench`:**
+  - runs each `dhewm3-<build>` in the package in turn (`bench-one`, one line per build written by `List LFORMAT`, since AmigaDOS has no loops);
+  - a `<build>.args` file adds console commands for that build;
+  - `build.sh` takes `AMIGA_OPT` (in place of d3es's Release flags, through patch 0009) and `OUT_NAME`;
+  - `build_pkg.sh bench <builds...>`.
+- **Compiler flags on the A1200** (`demo_mc_underground`, 10 s warm-up, 30 s counted):
+
+  | Build | fps | Game time per frame | Game tics a second |
+  |---|---|---|---|
+  | d3es Release (`-O2 -fno-math-errno -fno-trapping-math -fomit-frame-pointer`) | 4.9 | 114.9 ms | 48.9 |
+  | `-O2 -ffast-math -fomit-frame-pointer` | 4.9 | 113.2 ms | 49.2 |
+  | `-O3` with d3es's other flags (1 MB larger) | 5.0 | 107.4 ms | 49.8 |
+
+  `-O3` saves about 6% of game time and `-ffast-math` 1.5%; neither is the lever. (`-ffast-math` turns `pow(2, x)` into `exp2f`, which libnix lacks; it is in `libnix_shims.c` now.)
+- **A tic costs about 11.5 ms once the map has settled:** 49 tics a second at about 10 per frame. The earlier 30 ms included `g_timeEntities`' printing. About 90 ms of each ~200 ms frame is rendering.
+- **`patches/0010-game-hz`:** dhewm3's `kickstart-my-hertz` branch (`com_gameHz` 10–480).
+  - The branch's diff since its merge base, without d3xp, ImGui and its settings menu, applied with `--reject`. Of 20 rejected hunks, the ones about soft particles, the version string, display refresh rates and macOS clocks were left out.
+  - In `Common.cpp`, the `com_gameHz` check and `Com_UpdateFrameTime` were put in by hand. The branch's async thread replaces the SDL timer, kept under `#ifndef D3_SINGLE_TASK`.
+  - `Sys_MillisecondsPrecise`/`Sys_SleepUntilPrecise` are new per-platform functions (`Sys_Milliseconds` is now inline on them). The POSIX ones come with the branch; the Amiga ones are in `amiga_main.cpp`, on SDL's performance counter.
+  - Host: `com_gameHz 30` gives 29.9 tics a second and 29.1 fps (frames are drawn when a tic is ready); 60 Hz gives 58.4 tics and 38.3 fps.
+
+**Done (2026-10-20): 30 Hz game measured on the A1200; shadows; a run-order effect.**
+- **`com_gameHz` 60 against 30** (one build under two names; both ran after three other builds in the same package):
+
+  | `com_gameHz` | fps | Game | Front end | Back end | Game tics a second |
+  |---|---|---|---|---|---|
+  | 60 | 4.8 | 116.8 ms | 17.2 ms | 69.6 ms | 48.1 |
+  | 30 | 7.1 | 49.2 ms | 17.1 ms | 71.9 ms | 30.0 |
+
+  30 Hz gives 48% more frames, and the game keeps up with real time.
+- **In a package of their own, with `hz30` first:**
+  - `hz30`: **9.6 fps** (game 35.3, front end 12.1, back end 53.4 ms);
+  - `r_shadows 0`: **10.5 fps** (31.2 / 11.6 / 49.3 ms).
+
+  Stencil shadows cost only about 9%.
+- **The same build ran 7.1 fps in one package and 9.6 fps in another.** It was not the run order: the developer was moving the mouse during some runs, and the camera's direction changes the frame rate a lot. Since then `bench-one` turns mouse look off (`sensitivity 0`; d3es has no `in_mouse`). Comparisons made before that point carry this uncertainty.
+- `tools/a1200.py runpkg` now deletes the package's directory on the Amiga first: amictl uploads into it without removing an earlier package's files, and one bench ran the previous package's builds too.
+- **Host:** about 1,080 draws a frame in this scene (`r_showPrimitives 2`). At ogles2's roughly 30 µs a draw, that accounts for most of the back end. Each interaction draw makes 11–13 uniform calls (four of them per-light values that do not change between surfaces) and 5 texture binds.
+- `Run-Bench OGLES2PROBE=1` turns on ogles2's probe P: every 256 frames, the draws, their time and its stages, in `results/ogles2.log`.
+
+**Done (2026-10-20): measurements repeat; the baseline.**
+- With mouse look off, two identical runs of the 30 Hz build gave 7.0 fps each:
+
+  | Run | fps | Game | Front end | Back end |
+  |---|---|---|---|---|
+  | `hz30a` | 7.0 | 49.5 ms | 17.2 ms | 72.3 ms |
+  | `hz30b` | 7.0 | 49.8 ms | 17.3 ms | 72.5 ms |
+
+- **Run order does not matter; the camera does.** The faster runs before that (9.1–10.5 fps) had the camera turned towards a cheaper view, and the 9% for shadows is uncertain for the same reason.
+- A task list (`tools/amiga/tasks.c`: every exec task and process with its state, which `Status` does not show) found nothing left running after a run.
+- **The baseline for comparisons:** `demo_mc_underground`, 30 Hz, mouse look off, 7.0 fps.
+
+**Done (2026-10-20): the back end split by ogles2's probe P** (`Run-Bench OGLES2PROBE=1 SECS=90`; 30 Hz, 6.8 fps). Steady state, frames 256–768, per frame:
+- **The frame:** 146 ms (6.8 fps), 1,066 draws.
+- **ogles2, inside `glDrawElements`: 27.3 ms** (25.6 µs a draw):
+
+  | Stage | ms per frame |
+  |---|---|
+  | Uniforms | 7.4 |
+  | Vertex data | 5.8 |
+  | Checks | 5.3 |
+  | Binning list | 2.5 |
+  | Texture records | 2.4 |
+  | Indices | 1.6 |
+  | Shader record | 1.4 |
+  | Shaders | 0.7 |
+
+- **Waiting for the GPU** (ogles2's "render wait" per job): **13.6 ms**.
+- `glBufferData` 0.8 ms; texture uploads none.
+- **That leaves about 32 ms of the back end's ~74 ms in Doom's own back end** and its other GL calls: 11–13 uniform calls, 5 texture binds and the attribute set-up per interaction, about 20,000 GL calls a frame through ogles2's dispatch.
+- The first report (frames 0–256) includes the loading screen, so a measurement needs at least 512 frames.
+
+**Done (2026-10-20): `patches/0011-uniform-cache`.**
+- The GLES2 back end's `GL_Uniform*` helpers remember, per program, the last value of each uniform field (`glColor` to `clipPlane`, 24 slots of up to 16 floats in `shaderProgram_t`) and skip calls that would not change it.
+- Per-light values (light origin, light projection, view origin) and the colour modulation were sent again for every surface.
+- The cache is cleared when a program's locations are fetched (load and `reloadGLSLprograms`). The sampler uniforms, set directly, are not cached fields.
+- Host: the same picture.
+
+**Done (2026-10-20): the uniform cache, the back end's stages, vsync** (A1200, 30 Hz, mouse look off; baseline 7.0 fps):
+
+| Change | fps | Game | Front end | Back end |
+|---|---|---|---|---|
+| Uniform cache (patch 0011) | 7.1 | 49.0 | 17.3 | 71.2 |
+| Uniform cache, rendered at 320x240 | 7.3 | 48.0 | 17.3 | 68.6 |
+| Uniform cache, `r_swapInterval 0` | **7.8** | 45.4 | 17.8 | 60.6 |
+
+- **The uniform cache saves about 1 ms;** the GL calls are not where Doom's back end spends its time.
+- **`patches/0012-backend-stage-timers`:** `rb_stageMsec` around the stages of `RB_RenderView` and the swap, reported by the benchmark per frame. With vsync on (d3es's `r_swapInterval` defaults to 1):
+
+  | Stage | ms per frame |
+  |---|---|
+  | Interactions (with stencil shadows) | 32.4 |
+  | **Swap** | **28.5** |
+  | Shader passes | 4.9 |
+  | Depth fill | 4.5 |
+  | View set-up, fog, post-processing | 0.5 |
+
+- **With vsync off the swap is 16.2 ms.** That is about ogles2's render wait (13.6 ms) plus the copy.
+  - SDL's ogles2 backend uses ogles2's **window mode**, an offscreen bitmap copied with `ClipBlit`. ogles2's own §7.2 says its swaps wait for the finished frame, while its full-screen mode (`OGLES2_CCT_MODEID`) returns at submission and overlaps the next frame's CPU work with the render.
+  - So a full-screen path could save most of the 16 ms (§13, request 2).
+- **`r_swapInterval 0` belongs in the port's defaults:** at these frame rates vsync only adds waiting.
+- **Per frame, at 7.8 fps:**
+  - game 45 ms (3.85 tics of 11.8 ms);
+  - front end 18 ms;
+  - interactions 34 ms;
+  - swap 16 ms;
+  - the rest of the back end 10 ms.
+
+**Done (2026-10-20): the swap without the copy** (§13, request 2, done in ogles2). The same `dhewm3-novsync` build (`com_gameHz 30`, `r_swapInterval 0`), demo_mc_underground, 10 s warm-up, 30 s counted, ogles2 built from its working tree:
+
+| ogles2 path | fps | game | front end | back end | swap |
+|---|---|---|---|---|---|
+| copy (`ENV:OGLES2/WindowCopy 1`), `bench-20261020-170441` | 8.1 | 43.1 ms | 17.8 ms | 58.5 ms | 16.3 ms |
+| direct, `bench-20261020-170942` | **9.8** | 36.1 ms | 17.6 ms | 44.4 ms | **1.7 ms** |
+
+- ogles2's log says "application window, all of its screen (no copy), 640x480".
+- The game's time fell too (43 to 36 ms), probably because the CPU work now overlaps the render.
+- The Emu68 beta's video memory is allocated dynamically: its size setting (32 or 128 MB) makes no difference (the developer).
+
+**Done (2026-10-20): the game tic profiled by class; the clock made 11 times cheaper.**
+- **`patches/0013-game-profile`:** `g_profileThink 1` sums, per game tic, the parts of `idGameLocal::RunFrame` (before the think, the think, `idEvent::ServiceEvents`, the rest) and, nested inside them, `idEntity::RunPhysics`, `idAnimatedEntity::UpdateAnimation`, `idEntity::Present` (the render world's entity updates) and `idThread::Execute` (scripts), counted once when nested (`neo/game/GameProfile.h`). Every think is timed and summed by entity class (one clock read per entity). The game's `gameProfile reset|print` command; the benchmark resets the profile when it starts counting and prints it before it quits. The benchmark also prints the clock reads per frame (Amiga only).
+- **The first profile run measured mostly the clock:** 2.6 fps, 321 ms of game per frame, because one read of SDL's performance counter cost 20.7 µs.
+- **`tests/a1200/clock-probe`** (`build_clock_probe.sh`, `Run-Clock`; `clock-probe-20261020-173807`), 10,000 calls each:
+
+  | Clock | µs a read |
+  |---|---|
+  | Emu68's free-running counter (ARM `CNTPCT`, 54 MHz), `MOVEC` 0xe1/0xe2 through exec's `Supervisor()` | **1.7** |
+  | timer.device `ReadEClock` (SDL2_68k's `SDL_GetPerformanceCounter`) | 19.7 |
+  | timer.device `GetSysTime` | 20.4 |
+
+  The counter agreed with the E-clock over `Delay(50)` (1,005 ms each) and never went backwards. Emu68 documents these control registers in `docs/internals/ControlRegisters.md`; `MOVEC` is privileged there as on a 68k.
+- **`src/sys/amigaos3`:** `Sys_MillisecondsPrecise` (and so `Sys_Milliseconds`) reads Emu68's counter (`amiga_counter_hz`/`amiga_counter_read` in `amiga_os.c`; SDL's counter when `devicetree.resource`, Emu68's, is missing).
+- **A1200, `bench-20261020-174123`** (same settings as above):
+
+  | Build | fps | game | front end | back end | clock reads per frame |
+  |---|---|---|---|---|---|
+  | `ReadEClock` (before) | 9.9 | 36.1 ms | 17.4 ms | 44.5 ms | (not counted) |
+  | Emu68 counter | **10.3** | 33.5 ms | 16.8 ms | 43.3 ms | 130 |
+  | Emu68 counter, `g_profileThink 1` | 9.3 | 44.7 ms | 16.7 ms | 43.5 ms | 3,302 |
+
+- **Where a game tic goes** (the profile run: 13.8 ms a tic, about 2 ms of it the profile's own clock reads at 2 µs each; 3 tics a frame):
+  - the entities' think 13.4 ms; before it, the events and the rest together 0.4 ms;
+  - inside the think: physics 6.8 ms, render world updates 1.1, animation 0.5, scripts 0.3;
+  - by class: `idMover` 5.1 ms (45 thinks a tic, 0.115 ms each), `idPlayer` 2.8 ms, `idLight` 2.2 ms (14 a tic, 0.16 ms each: lights bound to moving machinery, updated in the render world every tic), `idAI` 1.2 ms (51 thinks, 0.02 each), `idAFAttachment` 0.8 ms, every other class under 0.3 ms.
+  - So in this map the tic is the moving machinery (movers and the lights on them) and the player. ldhewm3-rearmed's animation and AI savings (§10.2) would win little here; its mover savings are the ones that later needed fixes there (movers stuck in callbacks, airlocks out of step).
+
+**Done (2026-10-20): the profile by entity; render world updates only before a frame is drawn.**
+- **The profile by entity** (patch 0013 prints the 30 entities with the most think time; `bench-20261020-175816`), per tic: `player1` 2.7 ms; `swinglight_mover` 1.9 ms; `underground_window_security_1` (`idAI`, the guard behind the window) 0.9 ms; then about 40 movers and lights at 0.1–0.2 ms each (`fly_around*`, `canismover*`, pistons, `crane_main`, the lights bound to them).
+  - `swinglight_mover` is a brush mover carrying `env_swinglight_long_wbulbs` (`idAFEntity_Generic`: 5 bodies, 5 universal joints, self-collision), a light and two effects. A mover runs its whole team's physics, so the articulated figure's simulation is charged to it, and the figure never rests because the mover keeps swinging. It is the map's content; left as it is.
+- **`patches/0014-present-last-tic`:** at 30 Hz a frame runs about three game tics, and every moving entity and light updated its render world definitions on each of them, though only the last update is ever drawn. `com_presentLastTic 1` (the default; 0 as before):
+  - the session sets `com_moreTicsBeforeDraw` (`framework/Game.h`) for every tic but the last of a frame;
+  - `idEntity::DeferPresent`, asked first by `idEntity::Present` and every override that updates the render world (`idLight`, `idItem`, `idMultiModelAF`, `idAFEntity_Gibbable`, `idSecurityCamera`), returns at once on those tics; the entity keeps `TH_UPDATEVISUALS`, so it stays active and its Think presents it on the last tic;
+  - for the entities whose own Think does not present (some are presented by direct calls, e.g. `target_*` entities), `idGameLocal::PresentDeferred` presents the remembered ones still waiting at the end of the frame's last tic, and also at the end of a tic that ends the frame early (a skipped cinematic);
+  - not through `gameLocal.isNewFrame`, which also gates one-shot effects (sounds, decals) in multiplayer prediction.
+- **A1200** (`bench-20261020-180854`, one build, the same settings as above):
+
+  | `com_presentLastTic` | fps | game | front end | back end |
+  |---|---|---|---|---|
+  | 0 (every tic) | 9.9 | 36.0 ms | 17.1 ms | 44.9 ms |
+  | 1 | **10.9** | **27.2 ms** | 16.8 ms | 45.0 ms |
+
+  An entity or light update frees its derived render data (interactions, shadows) and links it into the areas again, so the saving (8.8 ms a frame) is larger than the profile's "render world updates" (1.1 ms a tic) suggested.
+- **The picture:** `Run-Map` now takes `WAIT` (frames before its screenshot) and reads `dhewm3.args` like `bench-one`. The game's own screenshots 150 frames in, with 0 and with 1 (`map-20261020-182949`, `map-20261020-182514`), show the same scene: 0.74% of the bytes differ, 175 of 921,600 by more than 16 levels (animation at slightly different game times); nothing is missing. amictl's screenshots of the running game are black in both settings (the loading screen comes out): its capture, not the game.
+- Not explained yet: in the map's first 10 seconds (`Run-Map`, no warm-up) the game made 4,882 clock reads a frame, against about 130 later.
+
+**Done (2026-10-20): the front end's time by stage.**
+- **`patches/0015-frontend-stage-timers`:** `rf_stageMsec` (`tr_local.h`) around the stages of `R_RenderView` (the outermost view only: a subview's is inside its parent's `R_GenerateSubViews`), and inside them around `InstantiateDynamicModel`, `idInteraction::CreateInteraction`, the deferred `R_CreateLightTris`, and, in `R_AddModelSurfaces`' entity loop, the entity scissors, the ambient draw surfaces and the active interactions. The benchmark prints two lines of them. The timers read the clock only while the benchmark counts (`rf_timeStages`; about 500 reads a frame, 1 ms), so a game played normally does not pay for them.
+- **A1200** (`bench-20261020-183746` with the first timers: 11.1 fps, front end 17.0 ms; `bench-20261020-184346` with the finer ones, which add about 480 clock reads a frame, about 1.4 ms), per frame:
+
+  | Front end | ms |
+  |---|---|
+  | model surfaces (`R_AddModelSurfaces`) | 15.6 |
+  | … active interactions added | 9.6 |
+  | … … of which interactions created (light triangles, shadow volumes) | 2.3 |
+  | … ambient draw surfaces | 5.4 |
+  | … … of which dynamic model snapshots (skinning, deforms) | 0.9 |
+  | … entity scissors | 0.3 |
+  | light surfaces | 1.2 |
+  | visible lights and entities | 0.8 |
+  | the rest (frustum, sort, draw command) | 0.7 |
+
+  So most of the front end is the per-frame walk over interactions and surfaces that already exist (about 7 ms of interactions and 4.5 ms of ambient surfaces), not rebuilding them. In `AddActiveInteraction` that walk is the view-frustum cull and shadow scissor of each shadowing entity (`CullInteractionByViewFrustum`, `CalcInteractionScissorRectangle`), a box cull per surface (`R_CullLocalBox`), and linking the surfaces into the light's lists; in the ambient surfaces, a box cull and material register evaluation per surface.
+
+**Done (2026-10-20): the front end's interactions counted; interaction scissors; texture bindings cached.**
+- **Counts** (patch 0015, `bench-20261020-185727`), per frame: 264 interactions visited, 193 of them through the view-frustum cull and shadow scissor (`CullInteractionByViewFrustum`, `CalcInteractionScissorRectangle`: 4.3 ms, about 18 µs each net of the timers); 577 light surfaces and 99 shadow surfaces linked; 253 ambient draw surfaces (about 4.5 ms, 18 µs each).
+- **`r_useInteractionScissors`** (one build, `bench-20261020-190250`): 2 (the default) 10.5 fps, front end 19.3 ms (with the timers); 1 the same; **0: 10.8 fps, front end 16.5 ms**, back end 0.3 ms more (125 shadow surfaces against 99). On this machine a draw costs CPU, not fill rate, so the looser scissor costs little: a candidate for the port's defaults (§10.4).
+- **`patches/0016-texture-bind-cache`:** d3es had dropped Doom 3's texture-binding cache, so every `idImage::Bind` called `glBindTexture`, and an interaction draw made 5 `glActiveTexture` and 5 `glBindTexture` calls, each a library call into ogles2, though the light's falloff and projection textures stay the same for all of its surfaces. `backEnd.glState.tmu2D`/`tmuCube` remember each unit's binding; `Bind`/`BindFragment` skip what is bound; `GL_BindImage(unit, image)` selects the unit only when its texture changes, and the interaction draw uses it. Forgotten (`GL_ForgetTextureBindings`) where GL changes bindings outside it: a deleted texture (`PurgeImage`), the framebuffer's own texture (`framebuffer.cpp`), the default GL state. The game's screenshot 150 frames in matches the one before (`map-20261020-192749`: 0.68% of the bytes, 142 by more than 16 levels, as between any two runs). `r_useBindCache 0` binds as before, for comparison. **A1200** (`bench-20261020-195925`, one build): `r_useBindCache 1` **10.8 fps**, interactions 31.2 ms a frame; `0` 10.6 fps, 32.3 ms. About 1 ms of the back end; the rest of an interaction draw's 54 µs (577 light surfaces) is ogles2's draw (about 26 µs, §13) and the back end's own work per surface (light and view origins and light planes into the surface's space, the stage loops, uniforms, six attribute pointers).
+
+**Done (2026-10-20): map load 240 s to 92 s; compressed textures confirmed.**
+- **Compressed textures are used:** the runs set `image_usePrecompressedTextures 1` (§10.4: the "Ultra" preset would turn them off); 1,789 of the map's 1,801 images load from DDS (S3TC), uploaded and kept compressed by ogles2 (the TMU samples BC1–BC3). Their upload takes 0.4 s in all.
+- **Where the time went** (`com_timestampPrints 2`, `map-20261020-191732`): from the start to a playable map 239.7 s, of which **69.8 s opening `demo00.pk4`** (484 MB, 12,234 files, all deflated), 17.7 s compiling the game's scripts, the map load 136.5 s.
+- **`tests/a1200/io-probe`** (`build_io_probe.sh`, `Run-IO`; `io-probe-20261020-194304`; `Stuff:` is PFS3), on the pk4: open and close 0.30–0.36 ms; dos.library random Seek and a 64-byte Read **0.47 ms**, libnix stdio's **3.2 ms** (its buffer is 64 KB, refilled after every seek); a random seek and a 64 KB read 3.1 ms; reading straight on 21–26 MB/s. minizip reads the central directory, and each file's local header, a few bytes at a time after a seek: with stdio, each of those cost a 64 KB disk read.
+- **`patches/0017-zip-read-cache`** (`neo/framework/minizip/ioapi.c`): the zip streams read through a cache of their own: a seek only moves the position, small reads come from a block read at once, reads of a block or more go straight to the caller. On AmigaOS the file is read through dos.library (8 KB blocks, no Seek when a read goes on from the last), and the streams on one file share its handle (one task; each read seeks for itself), so a file opened in a pk4 costs no Open. Elsewhere stdio with 64 KB blocks. Streams opened for writing are unchanged.
+- **Patch 0002** opens a DDS file once (its timestamp from the open file) instead of once to check it and once to read it.
+- **`patches/0018-load-times`:** after "msec to load", one line with the time and count of images (DDS, image files, uploads), models (with their images), sounds and files opened in pk4s, and the time of each step of the map load's end (`EndLevelLoad`s, the 10 settling game frames).
+- **A1200:**
+
+  | From the start to | before | first cache (64 KB, stdio) | now |
+  |---|---|---|---|
+  | pk4 opened | 69.8 s | 0.7 s | 0.7 s |
+  | map initialisation | 103.1 s | 30.7 s | 18.6 s |
+  | **playable map** | **239.7 s** | 144.0 s | **91.5 s** |
+
+  Now (`map-20261020-194658`): the map load 72.9 s; 1,789 DDS images 16.4 s (9.2 ms each), models 14.7 s with their images, 3,075 files opened in the pk4 in 3.4 s (4,838 in 17.4 s before patch 0002's change and the shared handle); spawning the entities about 33 s, the render world (`.proc`) 8 s, collision 4 s, the game's scripts 9.5 s at start. The host loads the same pk4 (checksum 0xfe75bbef as before) and the map; the game's screenshot 150 frames in matches the earlier ones (0.68%).
+- **What is left in a DDS image** (9.2 ms for about 59 KB): reading about 30 KB compressed takes about 2 ms at the measured rates, so most of it is inflating on the 68k. A pk4 repacked without compression (about 1.1 GB; the files' CRCs, and so the pk4's checksum, stay the same) would trade that for twice the reading; not tried.
+
+**Done (2026-10-20): the physics split; a PC sampler; the Vita port reviewed.**
+- **Patch 0013's new parts:** `idPush::ClipPush`, `idClipModel::Link` and idClip's queries (`Translation`, `Rotation`, `Motion`, `Contacts`, `Contents`), each with its count of calls. **A1200** (`bench-20261020-200426`), per tic (12.5 ms): physics 7.6 ms, of which pushes 1.0 ms (47 calls), clip links 0.5 ms (104), **clip queries 2.1 ms in only 20 calls** (about 0.1 ms each). `swinglight_mover` alone costs 1.9 ms a tic: an articulated figure (`env_swinglight_long_wbulbs`) is bound to it, and since its master keeps moving it never comes to rest, so the AF solver and its collision run every tic.
+- **`tests/a1200/pc-sample`: a sampling profiler** (`build_pc_sample.sh [bench]`, `tools/pcsample_report.py`). `pc_sample` wakes every millisecond (timer.device, above the game's priority) and reads the PC exec saved for the preempted game process. `frame_probe` measured exec's frame on this machine (`pc-sample-20261020-200955`): at `tc_SPReg` a 0xFFFF word, the FPU's control registers, fp0–fp7 and its fsave frame, then PC, SR and d0–a6 (PC at +0x74). Emu68 stops a task at the end of a translated block, so a sample is a block's start: fine for functions. It samples while `ENV:d3bench` is `counting` (**`patches/0019-pc-sample-mark`**: the benchmark sets it, through `amiga_set_env` in `src/sys/amigaos3`). `bench-one` starts it when the package carries it. The report maps the game's PCs with `nm` (the packages' executables keep their symbols), others to the library whose vectors are just below them (ogles2's code lies about 10 KB above its stubs), and sums the game's functions by engine area. Sampling costs: 7.9 fps against 10.8.
+- **Where the frame goes** (`bench-20261020-201504`, 25,216 samples in 30 s, none waiting): ogles2.library 27%; the game 67%, of which the renderer's front end 17%, its back end (the game's side, with the GL stubs) 16%, collision 10%, physics 6%, game logic 4%, animation and skinning 4%, GUIs 2%, C library 1%, scripts 1%; exec 2%. The functions are spread thinly: `RB_RenderView` (the back end inlined into it) 7%, `RB_ComputeMVP` 1.8%, then the collision model's traces (about 1% each), `R_CornerCullLocalBox` and `R_RadiusCullLocalBox` 1.6%, `idFrustum`'s scissor and cull 2.2%, `PushVolumeIntoTree_r` 0.9%.
+- **ldhewm3-rearmed (the Vita port, `~/ldhewm3-rearmed`, last commit 2026-09-14) reviewed** for what a 68k without NEON can use:
+  1. the same picture with less work: box culling against one corner per plane (9392d5d); an entity pushed into the areas as a box (0a7957b); a static entity's GUIs only in the player's PVS (a724256); `idBounds::PlaneSide` (e4dd2a1: not hot here, not taken);
+  2. small visual trade-offs, behind cvars: an animated model's light triangles not culled per triangle (395ba95); animation at a lower rate for distant or unseen entities (8f06287, 2272689, c164170); `r_maxLights` (7f43e0d, 8 on the Vita);
+  3. game behaviour, riskier: movers outside the PVS thinking every second or fourth tic (85ae4cb, with three later fixes; its README still lists stuck movers); dormant AFs and FX (f968490); AI planning less often (9ca74fa, 0a0122b, a4b383e).
+  Not taken: the NEON code; 099af34, whose test reads inverted (`!r_shadows`).
+- **`patches/0020-vita-culling`** (group 1):
+  - `R_CullLocalBox`: each plane into the model's space (`R_GlobalPlaneToLocal`, exact for any linear model matrix, so scaled models too), then the corner nearest it; the same answer as eight corners in world space. The radius test before it went (it assumed no scale). `r_useCulling 3` keeps the old tests for comparison.
+  - `R_CreateEntityRefs`: the bounds pushed down the area tree as a box (half axes from the model matrix), with the corners' rule (in front when the farthest corner is at or in front of the plane, behind when the nearest is behind it); `r_useEntityBoxRefs 0` as before.
+  - `idStaticEntity::Think`: its GUIs' state only while it is in the player's PVS.
+  - Host (`demo_mc_underground`): the same counts with the new and the old tests (264 interactions visited, 193 culled or scissored, 99 shadow surfaces, 254 ambient surfaces; 578 against 576 light surfaces, as between runs).
+  - **A1200** (`bench-20261020-202120`): **10.8 fps, front end 18.7 ms**; with `r_useCulling 3 r_useEntityBoxRefs 0` 10.7 fps, 19.7 ms. The same counts in both.
+- **Tried and dropped: a model view projection cache.** `RB_ComputeMVP` looked like 1.8% of the frame, so `viewEntity_t` kept the product per view (`r_useMVPCache`). **A1200** (`bench-20261020-202647`): no difference beyond the runs' noise (10.9 fps with it, 11.1 without; back end 43.1 against 42.7 ms). The samples were not its own: **the toolchain keeps no symbols for static functions**, not even in the object files, so a global function's span runs on over the static ones after it in its file. `RB_ComputeMVP`'s 2.4 KB hold `RB_GLSL_DrawInteraction`, `RB_GLSL_CreateSingleDrawInteractions`, `RB_GLSL_CreateDrawInteractions` and `RB_T_GLSL_Shadow`; `RB_RenderView`'s 7% are the same kind. The report now prints each symbol's span.
+- **`patches/0021-vita-tradeoffs`** (group 2): **`r_cullDynamicLightTris 0` (the default)** makes an animated model's light surface its whole ambient surface. Without it, every animated model's triangles are tested against each light (facing, light volume) every frame. The light's falloff and projection keep the outside dark, and back faces lie in the model's own stencil shadow. **A1200** (`bench-20261020-202647`): front end 17.5 ms against 18.4 ("interactions created" 1.4 against 2.2 ms), back end unchanged, 11.1 fps against 10.9. **The picture** (the game's screenshots 150 frames in, `map-20261020-203415` with 0 and `map-20261020-203607` with 1): 0.48% of the bytes differ, 351 by more than 16 levels, all on the guard behind the window (whose pose differs between runs) and the HUD's animated corner; his lighting and shading are the same, with no lit back faces.
+
+- **A PC sample with stacks** (`bench-20261020-203955`, defaults after patch 0021; 8.0 fps while sampling). `pc_sample` now keeps, per sample, the first 8 values on the stack that point into the game's code; `build_pc_sample.sh bench` keeps the executables by MD5 (`~/doom3-build/pcsample-bin/`, named in `results/build-ids.txt`), so the report always uses the binary that ran. The shares are as before (ogles2 26%; the game's back end 17%, front end 16%, collision 10%, physics 6%).
+  - **ogles2's time by the game function that called it:** `RB_DrawElementsWithCounters` 41% (the draws), code inlined into `RB_RenderView` 25% (state and uniform calls), the interaction draw (`RB_ComputeMVP`'s span) 10%, the swap 4%, `GL_BindImage` 3%.
+  - **Collision's callers:** none found in half the samples (its recursion fills the 8 addresses kept); the player's `idPhysics_Player::CheckGround` 11%; movers (`idPhysics_Parametric::Evaluate`, their pushes) 10%; the swinging light's AF only 1%.
+  - **The inclusive sums are noisy:** values left on the stack by frequent calls count too (`Sys_MillisecondsPrecise`, the clock of the stage timers, shows in 29% of the samples). They are read as hints, the callers of one area more than the totals.
+
+- **Patch 0021, animation level of detail** (8f06287, 2272689, c164170): **`g_animLOD 1`** animates an entity 512 units from the view every 64 ms, from 768 units or out of the PVS or the view every 96 ms (every second and third tic at 30 Hz), with a phase per entity. Between updates `UpdateRenderEntity` keeps the last frame, so the renderer keeps the skinned model (an MD5 model is re-skinned only when its callback reports a new frame; a missing one is rebuilt from the last joints). Off by default. **A1200** (`bench-20261020-204520`): 11.0 fps against 10.8, game 26.6 against 27.3 ms, skinning unchanged (0.9 ms): this view's animated models (the guard, the swinging light) are near and in sight. To be measured where monsters are far or out of sight before it becomes a default. The host runs both demo maps with it.
+- **Not taken: the Vita port's mover throttle** (85ae4cb and its fixes): its README still lists a mover that can get stuck after its last fix, the bridge in the early game that the player must cross (a save and load frees it). A stuck mover can block the game.
+- The sampler's stack window is wider now (24 addresses from up to 8 KB of stack), for collision's callers.
+
+**Done (2026-10-20): playing on the A1200; mouse look fixed.**
+- **`tests/a1200/play`** (`Run-Play`): a map played with mouse look, no benchmark; it runs until the player quits (console: `quit`). `W=`/`H=` for the size, `QUALITY=low` (the default) runs `low.cfg` from the game's save directory with `+exec`: Doom 3's Low preset (`com_machineSpec 0`, half-size textures, no anisotropy), and shadows, post-process effects, Phong, interaction scissors, decals, blood, double vision, muzzle flashes, projectile lights and ejected shells off. The game's own detection picks "Ultra" from the memory (1 GB or more). `QUALITY=game` leaves the game's settings. The command line would pass 800 characters with these settings as `+set`s, hence the file.
+- **Sizes played by the developer** (`play-20261020-*`): 320x200, 480x360, 640x480, 800x600, 1280x720; each opens a full-screen window and a framebuffer of that size, loads in 71 s and quits cleanly.
+- **Mouse look stopped after part of a turn:** SDL2_68k's amigaos3 driver has no relative mouse mode and its `WarpMouse` is a stub, so SDL's fallback (warping the pointer back to the centre) did nothing, and the hidden pointer stopped at the screen's edge. **`sdl2/patches/0101-os3-relative-mouse.patch`**: the event pump sets `IDCMP_DELTAMOVE` on the windows while the mode is on and sends Intuition's movement deltas as relative motion (moves queued across a switch are dropped).
+
+- **The size costs almost nothing** (`bench-20261020-214544`, `low.cfg`, which `bench-one` now runs when the package carries it as `bench.cfg`):
+
+  | Size | fps | game | front end | back end | swap |
+  |---|---|---|---|---|---|
+  | 640x480 | **13.4** | 22.5 ms | 13.6 ms | 35.6 ms | 0.7 ms |
+  | 1280x720 | **13.0** | 23.2 ms | 13.6 ms | 37.2 ms | 0.9 ms |
+  | 1920x1080 | **12.8** | 23.7 ms | 13.9 ms | 37.3 ms | 1.3 ms |
+
+  **The Pi 4 overclocked** (by the developer, 2026-10-20; `bench-20261020-220642`, 1920x1080, `low.cfg`): **15.6 fps** against 12.8; game 17.5 ms (−26%), front end 12.3 ms (−12%), back end 31.4 ms (−16%), swap unchanged (1.3 ms). The CPU's parts gain, the GPU's wait does not move. Measurements before this point are at the old clock; comparisons stay within one clock.
+
+  6.75 times the pixels cost 4%: the V3D has fill rate to spare; the frame is CPU work (the game, the front end, ogles2's cost per draw), which does not depend on the size. The developer saw the same while playing. The low settings themselves: 13.4 fps at 640x480 against about 11 with the detected "Ultra" settings (front end 13.6 against about 18 ms, back end 35.6 against about 43 ms), mostly the shadows (their volumes and draws).
+
+**Done (2026-10-20): the DOOM 3 BFG Vita port reviewed** (`github.com/Rayz0rum/doom3bfg-vita`, cloned as `~/doom3bfg-vita`; its Vita work is one commit, `f55c068`, 2026-10-19, on chocolate-doom3-bfg). A different engine generation (BFG), so ideas, not patches. Its own notes (`docs/PERFORMANCE.md`, `TECHNICAL.md`): four cores and NEON for the game, the front end, shadow volumes and skinning; dynamic resolution; a lighter interaction shader; "culls lights and shadows hard". What maps onto d3es:
+- **Picture and behaviour unchanged:**
+  1. **with `r_shadows 0`, d3es still did the shadows' front-end work** (found while checking where the Vita's shadow culling would go): `idInteraction::HasShadows` ignored `r_shadows`, so every interaction of a shadowing light went through the view-frustum cull and shadow scissor, and the lights collected the entities out of sight as shadow casters (and skinned hidden monsters). **`patches/0023-no-shadow-front-end`**: `HasShadows` false and no hidden casters with `r_shadows 0`; `r_useShadowsFrontEnd 1` as before;
+  2. **the player's walk IK while his body cannot be seen** (single player, no player shadow, first person, no cinematic): it rebuilt the body's skeleton and traced 2–3 boxes every tic for feet nobody sees. **`patches/0022-bfg-vita-game`**: skipped (`g_playerWalkIK 0`, the default); `g_ikDistance` (0, off) skips it for actors farther than that;
+  3. a hand-written tree solve for the AF solver (`idAFTree::Solve`/`Response` for matrices up to 6x6, bit-identical; not taken yet);
+  4. the flashlight's monster alert traced only when its beam touches something that reacts (exact; not taken yet);
+  5. exact AAS speedups (a floor-edge cache, `SortWallEdges` without restarts; not taken yet).
+- **Behaviour or picture changed, each behind a cvar if taken:** articulated figures at half rate, the skipped tic simulated in the next one's double step (the swinging light, 1.9 ms a tic); far AI at half rate, with animation frame commands always run (the Vita's half rate once skipped the command that unlocks mc_underground's checkpoint door); lights small on screen dropped (0.25% of the view, with hysteresis); an adaptive light cap; at most 3 lights on an animated model; world GUIs and the HUD at 15 Hz; thinner particles; ragdolls and debris settled sooner.
+- **Not applicable:** threads, NEON, memory pools, the tile-GPU image work (MSAA, Toksvig, sharpening), dynamic resolution (the size costs almost nothing here), one game tic per frame (here the game would run at a third of real time).
+
+- **A1200** (`bench-20261020-222618`, 1920x1080, `low.cfg`, the new clock):
+
+  | Build | fps | game | front end | back end | interactions visited |
+  |---|---|---|---|---|---|
+  | `r_useShadowsFrontEnd 1 g_playerWalkIK 1` (as before) | 15.6 | 17.6 ms | 12.0 ms | 31.7 ms | 260 (189 culled or scissored) |
+  | `r_useShadowsFrontEnd 1` | 15.8 | 16.8 ms | 11.9 ms | 31.7 ms | 260 |
+  | **defaults (0022 and 0023)** | **16.7** | 16.0 ms | **9.4 ms** | 31.7 ms | 130 (none culled) |
+
+  The same 605 light surfaces in all three (the picture, with shadows off, is the same). The walk IK 0.8 ms of game a frame; the shadows' front end 2.5 ms.
+
+- **20 game tics a second** (`bench-20261020-223235`, 1920x1080, `low.cfg`; patch 0010 takes 10–480 Hz and rescales the 60 Hz values): **18.2 fps** against 16.7 at 30 Hz; game 10.8 against 16.0 ms a frame (per tic 9.8 against 8.9 ms: the longer steps cost a little more each). `Run-Play HZ=20` to play it.
+
+- **Decided (the developer, 2026-10-20): 20 game tics a second for play**, after playing it (`play-20261020-230014`): "20hz is ok". `Run-Play`'s default is `HZ=20`; the port's `autoexec.cfg` (§10.4) gets `com_gameHz 20`. The benchmarks keep 30 Hz so that they compare with the earlier ones.
+
+- The developer played the game's own "Ultra" settings at 1920x1080 and 20 Hz (`play-20261020-230719`; still with precompressed textures, which the Ultra preset turns off: on the command line).
+
+**Done (2026-10-20): sound, phase 7 started: the port's OpenAL subset.**
+- **`src/al/al.c`** (D7): the OpenAL 1.1 calls d3es makes. Buffers of 8 or 16-bit PCM, mono or stereo; sources with gain, pitch, position (relative or not), looping, play, pause, stop, rewind and queued buffers (d3es streams long sounds through three queued buffers); a listener (gain, position, orientation).
+  - The mixer runs in SDL2's audio callback, 22,050 Hz stereo 16-bit by default. On AmigaOS it uses AHI through SDL2_68k's driver (SDL's default there is Paula), opened with `SDL_AudioInit("ahi")` unless `SDL_AUDIODRIVER` says otherwise.
+  - Each source is resampled to the output rate: linearly, or as the average of two at exactly half rate (44 kHz sounds). It is panned by its direction from the listener at equal power (stereo sounds play as they are), and its gain is ramped over each block so changes don't click.
+  - d3es does the distance attenuation itself (`AL_ROLLOFF_FACTOR 0` on every source), so distance models, rolloff, cones and Doppler are accepted and ignored. EFX and the other extensions are reported absent, and d3es turns its reverb off.
+  - State changes take SDL's audio device lock. Settings come from the environment: `D3AL_VOICES` (32; d3es keeps 8 for stereo sounds), `D3AL_RATE`, `D3AL_SAMPLES` (1024).
+- **`build_al.sh`** builds `libd3al.a` for the A1200 (into `~/doom3-build/m68k/deps/lib`, after `build_deps.sh`, which clears that directory) and for the host (`~/doom3-build/host-al`). `build.sh` links it when it is there; **`patches/0024-amiga-openal`** drops d3es's OpenAL stub in that case (`AMIGA_OPENAL_LIBRARY`). `AL=1 bash build_host.sh` builds the host game with the subset in place of OpenAL Soft. `run_host.sh` now leaves `SDL_AUDIODRIVER` alone if set.
+- **Host, against OpenAL Soft** (20 s of `demo_mars_city1`'s opening). The subset's output went through SDL's `disk` driver, OpenAL Soft's through its `wave` writer. The loudness per second has the same course in both (silent while loading, then the same rises and falls), with no clipping in either. The subset is 15–25% louder (its centre is 0.707 on each side), with peaks of 5,931 against 6,903.
+- `Run-Play` plays with sound now (`SOUND=0` for none); the benchmarks keep `s_noSound 1` so that they compare with the earlier ones.
+
+**Open (2026-10-21): the sound is noise on the A1200.**
+- **The developer** (`play-20261020-232653`, `-234347`): noise on AHI, its loudness following the game's sounds (a door opening), much better at 10% of the game's volume, with occasional crackle and noise even then.
+- **Checked:**
+  - **The output:** SDL uses its AHI driver (`SDL_AudioInit("ahi")`) at 22,050 Hz, stereo, 1,024 frames a block, `AUDIO_S16MSB` (`0x9010`). The driver hands that to AHI as `AHIST_S16S` and double-buffers its writes; its audio thread runs at priority 10, above the game's 0.
+  - **`idMath::FtoiFast`** is `(int)f` here. stb_vorbis's fast float-to-int is the same in both byte orders.
+  - **The host's output with the subset** is clean (compared with OpenAL Soft, above).
+- **Found and fixed:**
+  - **`patches/0025-wav-big-endian`:** a WAV file's 16-bit PCM was handed on little-endian; it is now swapped after reading (`LittleShort`). That did not change what the developer heard; most of Doom 3's ".wav" sounds are OGG files under that name.
+  - **SDL2_68k's `SDL_getenv` sees only what `SDL_setenv` set** (its own table, not `ENV:`), so the subset's `D3AL_*` settings never reached it on the Amiga. It reads them with the C library's `getenv` now. It also prints its set-up on the console ("OpenAL subset: SDL audio driver …").
+  - **amictl does not upload empty files**, and `-a` takes no `/` in a value. `Run-Bench` skips `.dump` markers now (`dhewm3-~(#?.(args|dump))`).
+- **The diagnostic `D3AL_DUMP=PREFIX`** (`bench-one` sets it, global, when `<build>.dump` is in the package, non-empty): the first 30 s of the mixed output to `PREFIX.raw` and one line per `alBufferData` (format, rate, frames, peak, mean level, first samples) to `PREFIX.txt`, written when the device closes. Its host reference for 20 s of `demo_mars_city1`'s opening is in `~/doom3-build/sndtest/host.raw` and `host.txt`. The comparison is `tools/sndcmp.py`: buffers line by line, loudness per second, and whether the output reads as byte-swapped.
+- **The first run with the dump on the A1200 hung the machine** (2026-10-21 00:2x; the station no longer answered). That dump wrote its files through `SDL_RWFromFile`, new on this machine; it uses stdio now and runs on the host. Not known yet: whether the dump, the sound or the overclock hung it.
+- **Load time with sound:** 161 s against 62 s (`play-20261020-232653`). 862 sounds took 53 s (about 61 ms each: OGG decoded at load, for all shorter than `s_decompressionLimit`, 6 s); images 24.8 against 16 s and twice the pk4 opens (6,280), as the sounds come from the same pk4.
+- **The developer's idea, to follow:** sounds decoded on the PC once, in an extra pk4 of PCM (big-endian, so the 68k need not swap), which the loader prefers to the OGG. That saves the 53 s, takes the 68k's decoder out of the question, and shows whether the noise comes from the decoding.
+
 **Next, in order:**
-1. The C++ probe on the A1200 (when the station is up).
-2. The amictl wrapper; zlib for libnix.
-3. The developer gets the 1.3.1 data (§4: GOG, Steam or CD plus the patch), checks the MD5 sums, and copies `base/` and `d3xp/` to WSL and to the Amiga.
-4. Phase 3 (§8): the 68k build of the game.
+1. The A1200 reset (the developer); the dump run again (`demo_mars_city1`, 20 s, `WARMUP=0 SECS=20`, `MAP` set in the package's copy of `Run-Bench`), then compared with the host's. If the output is clean there, the fault is after the mixer (SDL2_68k's AHI driver, AHI's settings); if not, the buffers' log shows which sounds arrive damaged.
+2. Sounds decoded on the PC (above), and the frame time with sound against without.
+2. A PC sample with the wider stacks: collision's callers.
+2. `r_maxLights` from the Vita port (a setting that drops the least important lights), for the port's lower settings.
+3. Collision (10% of the frame): who makes the expensive queries (the swinging light's AF, the player).
+4. The front end's per-frame walk: what can be kept from one frame to the next for entities and lights that did not move.
+5. **Later (the developer, 2026-10-20): the load.**
+   - **A pk4 without compression:** `demo00.pk4` repacked with every file stored (about 1.1 GB against 484 MB; `Stuff:` has 3.2 GB free), copied to the Amiga, so that no file is inflated on the 68k (most of a DDS image's 9.2 ms). The files' CRCs stay the same, so the pk4's checksum does too. A tool to repack (`tools/`), then the load measured against `map-20261020-194658`.
+   - Or a faster inflate on the 68k, if the repacked pk4 is not wanted.
+   - The entities' spawn (33 s, models 14.7 s with their images), the render world (8 s), the scripts' compile at start (9.5 s).
+2. Performance (phase 5), cheapest first, each step measured with `Run-Bench`:
+   - compiler flags for the game: `-O3`, `-mcpu=68060` (scheduling), `-fno-exceptions` is not possible (Doom 3 throws);
+   - the game tic: a 30 Hz game rate (the idea of dhewm3's high-fps branch, which makes the tic length a variable), which would halve the logic's cost per second; dormant entities and animation level of detail from ldhewm3-rearmed (§10.2);
+   - the back end's 42 ms: where it goes in ogles2 (its log probes), a request to ogles2 only with numbers (§13).
+2. Map load time (77 s): where it goes (pk4 inflate, images, collision, AAS, scripts).
+2. The developer gets the 1.3.1 data (§4: GOG, Steam or CD plus the patch), checks the MD5 sums, and copies `base/` and `d3xp/` to WSL and to the Amiga.
+3. Phase 3 (§8): the 68k build of the game.

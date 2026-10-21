@@ -1,0 +1,58 @@
+; Run-Map - Doom 3 port, phase 4: a map on the A1200 (PLAN.md section 8).
+; Loads the map, takes a screenshot after a few frames, counts the frames
+; rendered for SECS seconds (com_benchmarkSeconds), then quits. Watch the
+; screen: the map is shown for about SECS seconds.
+;   CD to this directory, then:   Execute Run-Map
+;   Another map:                   Execute Run-Map MAP=game/demo_mars_city1
+;   Longer:                        Execute Run-Map SECS=30
+;   Smaller rendering:             Execute Run-Map FBW=320 FBH=240
+;   Where a frame goes:            Execute Run-Map SPEEDS=1 (com_speeds, in results/stdout.txt)
+;   The game tics timed:           Execute Run-Map PROFILE=1 (g_timeEntities 2, g_frametime, com_showTics)
+;   Other game data:               Execute Run-Map DATA=<directory with demo/ or base/>
+;   More console commands:         one line in dhewm3.args next to it (as bench-one's)
+;   The screenshot later:          Execute Run-Map WAIT=150 (frames after the map starts; default 20)
+; Output goes to results/ (console log, screenshots, memory before and after).
+.key MAP/K,SECS/K,FBW/K,FBH/K,SPEEDS/K,PROFILE/K,DATA/K,WAIT/K
+.def MAP "game/demo_mc_underground"
+.def SECS 10
+.def FBW 0
+.def FBH 0
+.def SPEEDS 0
+.def PROFILE 0
+.def DATA "Stuff:doom3"
+.def WAIT 20
+.bra {
+.ket }
+
+FailAt 21
+If NOT EXISTS dhewm3
+  Echo "Please CD into the map directory first, then run:  Execute Run-Map"
+  Quit 20
+EndIf
+MakeDir results >NIL:
+Delete save/demo/screenshots/#? QUIET >NIL:
+Avail FLUSH >NIL:
+Avail >results/avail-before.txt
+List LIBS:ogles2#? >results/libs.txt
+List libs >>results/libs.txt
+Stack 9000000
+Set prof ""
+If {PROFILE} EQ 1
+  Set prof "+set g_timeEntities 2 +set g_frametime 1 +set com_showTics 1"
+EndIf
+Set args ""
+If EXISTS dhewm3.args
+  Set args `Type dhewm3.args`
+EndIf
+
+Echo "Doom 3: {MAP}, {SECS} seconds counted (data in {DATA})"
+dhewm3 +set fs_basepath "{DATA}" +set s_noSound 1 +set image_usePrecompressedTextures 1 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth 640 +set r_customHeight 480 +set r_framebufferWidth {FBW} +set r_framebufferHeight {FBH} +set com_speeds {SPEEDS} +set com_benchmarkSeconds {SECS} $prof $args +map {MAP} +wait {WAIT} +screenshot >results/stdout.txt
+Echo "exit code $RC" >>results/stdout.txt
+Copy save/dhewm3log.txt results/ QUIET
+Copy save/demo/screenshots/#? results/ QUIET
+Copy save/base/screenshots/#? results/ QUIET
+Avail FLUSH >NIL:
+Avail >results/avail-after.txt
+Search results/stdout.txt "msec to load" NONUM
+Search results/stdout.txt "benchmark:" NONUM
+Search results/stdout.txt "exit code" NONUM

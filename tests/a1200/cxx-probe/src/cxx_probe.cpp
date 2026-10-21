@@ -10,15 +10,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <string>
 #include <typeinfo>
 #include <vector>
 
 // libnix's swapstack.o gives main() a stack of this size (Doom 3 makes large
-// alloca() calls; dhewm3 uses 8 MB on Windows).
+// alloca() calls; dhewm3 uses 8 MB on Windows). It is linked only into the
+// build that asks for it (-Wl,-u,___stkinit): cxx_probe, not cxx_probe_noswap.
 extern "C" { unsigned long __stack = 8 * 1024 * 1024; }
 
 static int failures = 0;
+static bool sdlStarted = false;
+
+// milliseconds: SDL's clock once SDL runs, the C library's before
+static unsigned int ticks() {
+	if ( sdlStarted ) {
+		return SDL_GetTicks();
+	}
+	return (unsigned int)( (unsigned long long)clock() * 1000 / CLOCKS_PER_SEC );
+}
 
 static void check(const char *what, bool ok, const char *detail = "") {
 	printf("%-44s %s %s\n", what, ok ? "ok  " : "FAIL", detail);
@@ -109,24 +120,74 @@ static void stack_checks() {
 	}
 }
 
-static void memory_checks() {
+// 100,000 small blocks, then freed every other one first (fragmented frees):
+// with new/delete (the port's allocator, d3new.cpp) or malloc/free (libnix's)
+static void time_blocks( const char *what, bool cxx ) {
 	const int n = 100000;
 	std::vector<char *> blocks( n );
-	Uint32 t0 = SDL_GetTicks();
+	Uint32 t0 = ticks();
 	for ( int i = 0; i < n; i++ ) {
-		blocks[i] = new char[16 + ( i % 7 ) * 24];
+		size_t size = 16 + ( i % 7 ) * 24;
+		blocks[i] = cxx ? new char[size] : (char *)malloc( size );
 	}
-	Uint32 t1 = SDL_GetTicks();
-	for ( int i = 0; i < n; i += 2 ) {	// every other first: fragmented frees
-		delete[] blocks[i];
+	Uint32 t1 = ticks();
+	for ( int pass = 0; pass < 2; pass++ ) {
+		for ( int i = pass; i < n; i += 2 ) {
+			if ( cxx ) {
+				delete[] blocks[i];
+			} else {
+				free( blocks[i] );
+			}
+		}
 	}
-	for ( int i = 1; i < n; i += 2 ) {
-		delete[] blocks[i];
-	}
-	Uint32 t2 = SDL_GetTicks();
+	Uint32 t2 = ticks();
 	char detail[96];
-	snprintf( detail, sizeof( detail ), "new %u ms, delete %u ms (100000 blocks)", (unsigned)( t1 - t0 ), (unsigned)( t2 - t1 ) );
-	check( "new/delete of small blocks", true, detail );
+	snprintf( detail, sizeof( detail ), "alloc %u ms, free %u ms (100000 blocks)", (unsigned)( t1 - t0 ), (unsigned)( t2 - t1 ) );
+	check( what, true, detail );
+}
+
+// the port's allocator under a random load: 200,000 allocations and frees of
+// 1 byte to 64 KB, every block filled and checked before it is freed
+static void stress_allocator() {
+	const int slots = 4096, ops = 200000;
+	std::vector<unsigned char *> p( slots, nullptr );
+	std::vector<size_t> sz( slots, 0 );
+	unsigned int seed = 12345;
+	bool ok = true;
+	Uint32 t0 = ticks();
+	for ( int i = 0; i < ops && ok; i++ ) {
+		seed = seed * 1103515245 + 12345;
+		int s = ( seed >> 8 ) % slots;
+		if ( p[s] ) {
+			for ( size_t j = 0; j < sz[s]; j += 61 ) {
+				if ( p[s][j] != (unsigned char)( s + j ) ) {
+					ok = false;
+				}
+			}
+			delete[] p[s];
+			p[s] = nullptr;
+		} else {
+			seed = seed * 1103515245 + 12345;
+			sz[s] = ( seed >> 8 ) % ( ( seed & 0x10000 ) ? 65536 : 256 ) + 1;
+			p[s] = new unsigned char[sz[s]];
+			for ( size_t j = 0; j < sz[s]; j += 61 ) {
+				p[s][j] = (unsigned char)( s + j );
+			}
+		}
+	}
+	for ( int s = 0; s < slots; s++ ) {
+		delete[] p[s];
+	}
+	Uint32 t1 = ticks();
+	char detail[64];
+	snprintf( detail, sizeof( detail ), "%u ms", (unsigned)( t1 - t0 ) );
+	check( "new/delete random load, contents kept", ok, detail );
+}
+
+static void memory_checks() {
+	time_blocks( "new/delete (port's allocator)", true );
+	time_blocks( "malloc/free (libnix)", false );
+	stress_allocator();
 
 	void *big = malloc( 256 * 1024 * 1024 );
 	check( "malloc of 256 MB", big != NULL );
@@ -146,20 +207,20 @@ static void file_checks( const char *path ) {
 		return;
 	}
 	static char buf[64 * 1024];
-	Uint32 t0 = SDL_GetTicks();
+	Uint32 t0 = ticks();
 	unsigned long total = 0;
 	size_t got;
 	while ( ( got = fread( buf, 1, sizeof( buf ), f ) ) > 0 ) {
 		total += got;
 	}
-	Uint32 t1 = SDL_GetTicks();
+	Uint32 t1 = ticks();
 	int seeks = 0;
 	for ( unsigned long pos = 0; pos < total; pos += total / 64 + 1 ) {
 		if ( fseek( f, (long)pos, SEEK_SET ) == 0 && fread( buf, 1, 4096, f ) > 0 ) {
 			seeks++;
 		}
 	}
-	Uint32 t2 = SDL_GetTicks();
+	Uint32 t2 = ticks();
 	fclose( f );
 	char detail[128];
 	unsigned ms = ( t1 - t0 ) ? ( t1 - t0 ) : 1;
@@ -259,12 +320,19 @@ static void audio_checks() {
 	check( "SDL audio (a 440 Hz tone, 1 s)", audioCallbacks >= 15, detail );
 }
 
+static void step( const char *what ) {
+	printf( "-- %s\n", what );	// unbuffered: the last one shows where a crash happened
+}
+
 int main( int argc, char **argv ) {
+	setvbuf( stdout, NULL, _IONBF, 0 );
 	const char *file = NULL;
-	bool gl = true, audio = true;
+	bool sdl = true, gl = true, audio = true;
 	for ( int i = 1; i < argc; i++ ) {
 		if ( !strcmp( argv[i], "--file" ) && i + 1 < argc ) {
 			file = argv[++i];
+		} else if ( !strcmp( argv[i], "--nosdl" ) ) {
+			sdl = gl = audio = false;
 		} else if ( !strcmp( argv[i], "--nogl" ) ) {
 			gl = false;
 		} else if ( !strcmp( argv[i], "--noaudio" ) ) {
@@ -273,23 +341,36 @@ int main( int argc, char **argv ) {
 	}
 	printf( "cxx_probe: GCC %d.%d.%d, libnix\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__ );
 
+	step( "C++ runtime" );
 	cxx_checks();
+	step( "CPU and FPU" );
 	cpu_checks();
+	step( "stack" );
 	stack_checks();
 
-	if ( SDL_Init( SDL_INIT_TIMER | ( gl ? SDL_INIT_VIDEO : 0 ) | ( audio ? SDL_INIT_AUDIO : 0 ) ) != 0 ) {
-		check( "SDL_Init", false, SDL_GetError() );
-		return 20;
+	if ( sdl ) {
+		step( "SDL_Init" );
+		if ( SDL_Init( SDL_INIT_TIMER | ( gl ? SDL_INIT_VIDEO : 0 ) | ( audio ? SDL_INIT_AUDIO : 0 ) ) != 0 ) {
+			check( "SDL_Init", false, SDL_GetError() );
+			return 20;
+		}
+		sdlStarted = true;
 	}
+	step( "memory" );
 	memory_checks();
+	step( "files" );
 	file_checks( file );
 	if ( gl ) {
+		step( "SDL GL ES" );
 		gl_checks();
 	}
 	if ( audio ) {
+		step( "SDL audio" );
 		audio_checks();
 	}
-	SDL_Quit();
+	if ( sdl ) {
+		SDL_Quit();
+	}
 
 	printf( "cxx_probe: %d failure(s)\n", failures );
 	return failures ? 10 : 0;

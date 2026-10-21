@@ -1,0 +1,7 @@
+clock_probe: Emu68 counter at 54000000 Hz, 10000 calls each
+clock_probe: Delay(50): 1005 ms by the counter, 1005 ms by the E-clock (709379 Hz)
+clock_probe: Emu68 counter through Supervisor(): 1712 ns a call
+clock_probe: ReadEClock (SDL's performance counter): 19655 ns a call
+clock_probe: GetSysTime: 20369 ns a call
+clock_probe: 0 of 10000 counter reads went backwards
+exit code 0

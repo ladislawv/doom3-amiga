@@ -1,0 +1,41 @@
+     1 ogles2.library 1.3 init
+     2 open (count 1)
+     3 GPU submission lock "V3D 4.2 submit" at 0x08F96C38
+     4 device: V3D 4.2.14 (PiStorm), 8 QPUs, 64 KB VPM, clipper granularity 256
+     5 device: GPU-visible RAM (device tree memory): 0x01000000-0x3C9FFFFF
+     6 device: GPU-visible RAM (device tree memory): 0x40000000-0x79DFFFFF
+     7 device: memory region "expansion memory" 0x08000020-0x3C9FFFFF fast: the GPU reaches it
+     8 device: memory region "expansion memory" 0x01000020-0x07FFFFFF fast: the GPU reaches it
+     9 device: memory region "expansion memory" 0x41000020-0x79DFFFFF fast: the GPU reaches it
+    10 device: memory region "memory" 0x00C00020-0x00C7FFFF fast: OUTSIDE the GPU-visible RAM
+    11 device: memory region "chip memory" 0x00001020-0x001FFFFF chip: OUTSIDE the GPU-visible RAM
+    12 aglCreateContext2: probes "P" (ENV:OGLES2/Probe)
+    13 display: application window, 640x480, BGRA
+    14 device: context pools for 640x480, D32F, 18852224 bytes of GPU memory in use
+    15 aglCreateContext2: context 0x096C5A4C, 640x480
+    16 compiler: Stuff:amictld/work/bench/libs/v3dglslc, 19007888 bytes, id F758B608
+    17 glLinkProgram: T:69857faeac3b989dd306640f.v3dp (5 variants, 3968 bytes of code)
+    18 glLinkProgram: T:9bb2368631c7baeccd38c272.v3dp (5 variants, 4160 bytes of code)
+    19 glLinkProgram: T:aa3584956f991c44102c0c48.v3dp (5 variants, 1464 bytes of code)
+    20 glLinkProgram: T:4c7c02d82f3194b9296d007c.v3dp (5 variants, 1720 bytes of code)
+    21 glLinkProgram: T:c27afcaa97e215583e38fef5.v3dp (5 variants, 2112 bytes of code)
+    22 glLinkProgram: T:1c50d9fad38db4f31aa69f47.v3dp (5 variants, 1656 bytes of code)
+    23 glLinkProgram: T:40f2ce5d962f1ed81abba814.v3dp (5 variants, 1184 bytes of code)
+    24 glLinkProgram: T:55a1aeedca1d9cf3eecaa3ed.v3dp (5 variants, 1376 bytes of code)
+    25 glLinkProgram: T:1b0b17de68556c72f7699a9e.v3dp (5 variants, 1424 bytes of code)
+    26 glLinkProgram: T:302c2b123361c8afa339e989.v3dp (5 variants, 1488 bytes of code)
+    27 glLinkProgram: T:a8d299ad4e3e7ad8f12d617d.v3dp (5 variants, 1000 bytes of code)
+    28 job: depth and stencil kept across a mid-frame flush (logged once)
+    29 glCopyTexSubImage2D: copies from the default framebuffer drawn by the GPU (the first: 512x256)
+    30 periodic: frames to 256: 684839 us a frame, 262 jobs; per job 16902 us of CPU work, 77 us render list, 80 us cache, 6431 us render wait; 0 textures renamed; 62295892 bytes of GPU memory
+    31 periodic: per frame 339 draws, 10555 us in them, 310 us in glBuffer(Sub)Data, 298 us in glTex(Sub)Image2D
+    32 periodic: per frame in draws: 1700 us checks, 235 shaders, 2530 textures, 2364 uniforms, 1884 vertex data, 463 record, 512 indices, 890 binning list
+    33 aglDestroyContext: context 0x096C5A4C: freeing
+    34 device: context freed, 0 bytes of GPU memory still in use
+    35 aglDestroyContext: context 0x096C5A4C (496 frames, 0 dropped, 0 binning blocks added)
+    36 timing: 496 jobs, each on average: 31577 us of CPU work before its flush, 936 us waiting for binning, 9812 us for the render
+    37 timing: and in each flush 74 us building the render list, 80 us for the CPU cache before the GPU, 69 us after
+    38 timing: 490 swaps, 428658 us from one to the next on average, 12671 us of it presenting
+    39 timing: per frame 686 draws, 18552 us in them; in all 261 ms in glBuffer(Sub)Data, 76 ms in glTex(Sub)Image2D
+    40 timing: per frame in draws: 3447 us checks, 471 shaders, 2487 textures, 4768 uniforms, 3765 vertex data, 923 record, 1052 indices, 1677 binning list
+    41 timing: per draw 110 uniform stream words, 24 bytes of vertex data, 148 indices

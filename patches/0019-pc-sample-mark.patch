@@ -1,0 +1,32 @@
+diff --git a/neo/framework/Session.cpp b/neo/framework/Session.cpp
+index 8d0a190f..b6586813 100644
+--- a/neo/framework/Session.cpp
++++ b/neo/framework/Session.cpp
+@@ -2686,6 +2686,9 @@ extern int rf_count[5];			// and its counts
+ extern bool rf_timeStages;		// the front end's timers on
+ #ifdef __amigaos3__
+ extern unsigned int sys_clockReads;	// sys/amigaos3/amiga_main.cpp: Sys_MillisecondsPrecise's calls
++// ENV:d3bench is "counting" while the benchmark counts, then "done": the PC
++// sampler (tests/a1200/pc-sample) samples those seconds only (patch 0019)
++extern "C" void amiga_set_env( const char *name, const char *value );	// sys/amigaos3/amiga_os.c
+ #endif
+ 
+ static idCVar com_benchmarkSeconds( "com_benchmarkSeconds", "0", CVAR_SYSTEM | CVAR_INTEGER,
+@@ -2721,6 +2724,7 @@ static void BenchmarkFrame( bool mapRunning, int gameTics ) {
+ 		rf_timeStages = true;	// only while counting
+ #ifdef __amigaos3__
+ 		startReads = sys_clockReads;
++		amiga_set_env( "d3bench", "counting" );
+ #endif
+ 		if ( cvarSystem->GetCVarBool( "g_profileThink" ) ) {
+ 			cmdSystem->BufferCommandText( CMD_EXEC_NOW, "gameProfile reset\n" );	// the game's profile: these seconds only
+@@ -2733,6 +2737,9 @@ static void BenchmarkFrame( bool mapRunning, int gameTics ) {
+ 	sumFront += time_frontend;	// the last EndFrame's
+ 	sumBack += time_backend;
+ 	if ( now - startMsec >= seconds * 1000 ) {
++#ifdef __amigaos3__
++		amiga_set_env( "d3bench", "done" );
++#endif
+ 		float secs = ( now - startMsec ) * 0.001f;
+ 		common->Printf( "benchmark: %i frames rendered in %3.1f seconds = %3.1f fps\n", frames, secs, frames / secs );
+ 		common->Printf( "benchmark: per frame %3.1f ms game, %3.1f ms renderer front end, %3.1f ms back end; %3.1f game tics a second\n",

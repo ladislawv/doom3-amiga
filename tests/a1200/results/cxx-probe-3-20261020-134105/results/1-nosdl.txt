@@ -1,0 +1,6 @@
+cxx_probe: GCC 16.2.0, libnix
+-- C++ runtime
+static constructor ran                       ok   
+exception through 3 frames                   ok   
+destructors ran while unwinding              ok   
+Program aborted

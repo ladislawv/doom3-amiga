@@ -10,3 +10,10 @@
   `build_sdl2.sh`; ogles2 builds them with GCC 6.5 and clib2. Changes this port
   needs go into new patches here (`0100-...`), not into the copies, so a newer
   ogles2 version can replace the copies.
+- `patches/0101-os3-relative-mouse.patch` (this port, 2026-10-20): SDL's
+  relative mouse mode for the amigaos3 video driver. The driver had none, and
+  its `WarpMouse` is a stub, so SDL's fallback (warping the pointer back to the
+  centre) did nothing: the hidden pointer stopped at the screen's edge, and so
+  did a game's mouse look. Now the event pump sets `IDCMP_DELTAMOVE` on its
+  windows while the mode is on, and sends Intuition's movement deltas as
+  relative motion.

@@ -1,11 +1,16 @@
 ; Run-Probe - Doom 3 port, phase 2: what the port needs from GCC 16.2,
-; libnix and SDL2 (PLAN.md section 8). Watch the screen: a small window shows
-; red, green and blue for a second each, then a quiet tone plays for a second.
+; libnix and SDL2 (PLAN.md section 8). Two steps, each with its own result
+; file, so a crash shows how far it got. The 8 MB stack comes from the Shell's
+; Stack command (libnix's own stack swap hung at exit on the A1200).
+;   1  results/1-nosdl.txt  C++, CPU, stack, memory, files; no SDL
+;   2  results/2-full.txt   everything: a small window shows red, green and
+;                           blue for a second each, then a quiet tone plays
 ;   CD to this directory, then:   Execute Run-Probe
+;   Only step 2:                   Execute Run-Probe FROM=2
 ;   With a large file to time:     Execute Run-Probe FILE=<path of a pk4>
-; Output goes to results/probe.txt.
-.key FILE/K
+.key FILE/K,FROM/K
 .def FILE ""
+.def FROM 1
 .bra {
 .ket }
 
@@ -17,14 +22,25 @@ EndIf
 MakeDir results >NIL:
 Avail FLUSH >NIL:
 Avail >results/avail-before.txt
-List LIBS:ogles2#? LIBS:v3dglslc >results/libs.txt
-Echo "cxx_probe: C++, stack, memory, files, then a GL window (red, green, blue) and a tone"
-If "{FILE}" EQ ""
-  cxx_probe >results/probe.txt
-Else
-  cxx_probe --file "{FILE}" >results/probe.txt
+List LIBS:ogles2#? >results/libs.txt
+List libs >>results/libs.txt
+Stack 9000000
+
+If NOT {FROM} GT 1 VAL
+  Echo "step 1: no SDL"
+  If "{FILE}" EQ ""
+    cxx_probe --nosdl >results/1-nosdl.txt
+  Else
+    cxx_probe --nosdl --file "{FILE}" >results/1-nosdl.txt
+  EndIf
+  Echo "exit code $RC" >>results/1-nosdl.txt
+  Type results/1-nosdl.txt
 EndIf
-Echo "exit code $RC" >>results/probe.txt
-Type results/probe.txt
+If NOT {FROM} GT 2 VAL
+  Echo "step 2: everything; watch the window (red, green, blue) and listen (a tone)"
+  cxx_probe >results/2-full.txt
+  Echo "exit code $RC" >>results/2-full.txt
+  Type results/2-full.txt
+EndIf
 Avail FLUSH >NIL:
 Avail >results/avail-after.txt

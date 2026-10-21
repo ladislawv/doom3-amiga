@@ -1,0 +1,103 @@
+diff --git a/neo/renderer/draw_gles2.cpp b/neo/renderer/draw_gles2.cpp
+index b54e6cc8..b7dd05e3 100644
+--- a/neo/renderer/draw_gles2.cpp
++++ b/neo/renderer/draw_gles2.cpp
+@@ -55,12 +55,41 @@ void GL_UseProgram(shaderProgram_t* program) {
+ 	backEnd.glState.currentProgram = program;
+ }
+ 
++/*
++====================
++GL_UniformUnchanged
++
++True when the current program's uniform at `location` (an offset into
++shaderProgram_t, as the GL_Uniform* helpers take it) already holds these
++`count` 32-bit values; otherwise they are remembered and false is returned.
++Per-light values (light origin, projection, view origin) were sent again for
++every surface, and every call costs on a slow CPU: the A1200's back end made
++about 20,000 GL calls a frame.
++====================
++*/
++static bool GL_UniformUnchanged( GLint location, const void* value, int count ) {
++	shaderProgram_t* p = backEnd.glState.currentProgram;
++	int slot = ( location - (int)offsetof( shaderProgram_t, glColor ) ) / (int)sizeof( GLint );
++	if ( !p || slot < 0 || slot >= 24 || count > 16 ) {
++		return false;	// not one of the cached fields
++	}
++	if ( p->uniformCacheValid[slot] && memcmp( p->uniformCache[slot], value, count * 4 ) == 0 ) {
++		return true;
++	}
++	memcpy( p->uniformCache[slot], value, count * 4 );
++	p->uniformCacheValid[slot] = true;
++	return false;
++}
++
+ /*
+ ====================
+ GL_Uniform1fv
+ ====================
+ */
+ static void GL_Uniform1fv(GLint location, const GLfloat* value) {
++	if ( GL_UniformUnchanged( location, value, 1 ) ) {
++		return;
++	}
+ 	qglUniform1fv(*( GLint * )((char*) backEnd.glState.currentProgram + location), 1, value);
+ }
+ 
+@@ -70,6 +99,9 @@ GL_Uniform1iv
+ ====================
+ */
+ static void GL_Uniform1iv(GLint location, const GLint* value) {
++	if ( GL_UniformUnchanged( location, value, 1 ) ) {
++		return;
++	}
+ 	qglUniform1iv(*( GLint * )((char*) backEnd.glState.currentProgram + location), 1, value);
+ }
+ 
+@@ -79,6 +111,9 @@ GL_Uniform4fv
+ ====================
+ */
+ static void GL_Uniform4fv(GLint location, const GLfloat* value) {
++	if ( GL_UniformUnchanged( location, value, 4 ) ) {
++		return;
++	}
+ 	qglUniform4fv(*( GLint * )((char*) backEnd.glState.currentProgram + location), 1, value);
+ }
+ 
+@@ -88,6 +123,9 @@ GL_UniformMatrix4fv
+ ====================
+ */
+ static void GL_UniformMatrix4fv(GLint location, const GLfloat* value) {
++	if ( GL_UniformUnchanged( location, value, 16 ) ) {
++		return;
++	}
+ 	qglUniformMatrix4fv(*( GLint * )((char*) backEnd.glState.currentProgram + location), 1, GL_FALSE, value);
+ }
+ 
+@@ -230,6 +268,9 @@ static void RB_GLSL_GetUniformLocations(shaderProgram_t* shader) {
+ 
+ 	GL_UseProgram(shader);
+ 
++	// a (re)linked program holds no values yet that the cache could know
++	memset( shader->uniformCacheValid, 0, sizeof( shader->uniformCacheValid ) );
++
+ 	shader->localLightOrigin = qglGetUniformLocation(shader->program, "u_lightOrigin");
+ 	shader->localViewOrigin = qglGetUniformLocation(shader->program, "u_viewOrigin");
+ 	shader->lightProjection = qglGetUniformLocation(shader->program, "u_lightProjection");
+diff --git a/neo/renderer/tr_local.h b/neo/renderer/tr_local.h
+index 02c33db3..c484bfcf 100644
+--- a/neo/renderer/tr_local.h
++++ b/neo/renderer/tr_local.h
+@@ -1304,6 +1304,12 @@ typedef struct shaderProgram_s {
+ 
+ 	GLint		u_fragmentMap[MAX_FRAGMENT_IMAGES];
+ 	GLint		u_fragmentCubeMap[MAX_FRAGMENT_IMAGES];
++
++	// the last value sent to each uniform from glColor to clipPlane (one slot
++	// per field, up to a 4x4 matrix), so the back end skips glUniform calls
++	// that would not change anything (draw_gles2.cpp, GL_Uniform*)
++	float		uniformCache[24][16];
++	bool		uniformCacheValid[24];
+ } shaderProgram_t;
+ 
+ void R_ReloadGLSLPrograms_f(const idCmdArgs &args);

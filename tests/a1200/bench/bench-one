@@ -1,0 +1,43 @@
+; bench-one - one build of Run-Bench: runs EXE on MAP and keeps its console
+; in results/<EXE>.txt and its log in results/<EXE>.log. A file <EXE>.args
+; next to it adds console commands for this build only (one line, e.g.
+; "+set com_gameHz 30"), so one executable can run under two names.
+; Mouse look is off (sensitivity 0): moving the mouse turns the camera, which changes the
+; frame rate a lot (the developer moved it during early runs).
+.key EXE/A,MAP/A,WARMUP/A,SECS/A,DATA/A
+.bra {
+.ket }
+
+FailAt 21
+Set args ""
+If EXISTS {EXE}.args
+  Set args `Type {EXE}.args`
+EndIf
+; a <EXE>.dump file next to it: the OpenAL subset's diagnostic (D3AL_DUMP):
+; results/<EXE>-snd.raw (the mixed output) and results/<EXE>-snd.txt (the buffers)
+If EXISTS {EXE}.dump
+  SetEnv D3AL_DUMP results/{EXE}-snd
+EndIf
+; a bench.cfg in the package (e.g. tests/a1200/play/low.cfg) is run first by
+; every build: the game finds it in its save directory
+If EXISTS bench.cfg
+  MakeDir save save/demo >NIL:
+  Copy bench.cfg save/demo/ QUIET
+  Set args "+exec bench.cfg $args"
+EndIf
+Echo "{EXE}: loading {MAP} ($args)"
+Avail FLUSH >NIL:
+Avail >results/{EXE}-avail-before.txt
+; a package with the PC sampler (tests/a1200/pc-sample) samples the counted
+; seconds into results/<EXE>-pc.txt (ENV:d3bench: patch 0019)
+If EXISTS pc_sample
+  SetEnv d3bench none
+  Run >NIL: pc_sample {EXE} results/{EXE}-pc.txt d3bench
+EndIf
+{EXE} +set fs_basepath "{DATA}" +set s_noSound 1 +set image_usePrecompressedTextures 1 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth 640 +set r_customHeight 480 +set com_benchmarkWarmup {WARMUP} +set com_benchmarkSeconds {SECS} +set sensitivity 0 $args +map {MAP} >results/{EXE}.txt
+Echo "exit code $RC" >>results/{EXE}.txt
+UnSetEnv D3AL_DUMP
+Copy save/dhewm3log.txt results/{EXE}.log QUIET
+Avail FLUSH >NIL:
+Avail >results/{EXE}-avail-after.txt
+Search results/{EXE}.txt "benchmark:" NONUM

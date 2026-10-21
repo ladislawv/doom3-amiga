@@ -1,0 +1,408 @@
+diff --git a/neo/framework/minizip/ioapi.c b/neo/framework/minizip/ioapi.c
+index f59b904a..9fc97bd0 100644
+--- a/neo/framework/minizip/ioapi.c
++++ b/neo/framework/minizip/ioapi.c
+@@ -86,108 +86,280 @@ void fill_zlib_filefunc64_32_def_from_filefunc32(zlib_filefunc64_32_def* p_filef
+ }
+ 
+ 
++/*
++ * Port (patch 0017): a read cache over the file. minizip reads a zip's central
++ * directory and every local header a few bytes at a time after a seek, and
++ * stdio answers each such seek with a fresh buffer load: opening the 484 MB
++ * demo pk4 (12,234 entries) took 70 s on the A1200, and every file opened in
++ * it read 64 KB to get its 30-byte header (libnix's buffer is 64 KB; a random
++ * seek and a 64 KB read cost 3.1 ms there, a seek and a 64-byte read 0.47 ms:
++ * tests/a1200/io-probe). Here a seek only moves the position; small reads come
++ * from a block read at once, reads of a block or more go straight to the
++ * caller. On AmigaOS the file is read through dos.library (no stdio buffer
++ * in between), without a Seek when a read goes straight on, and the streams
++ * opened on the same file share one handle (the port runs in one task; each
++ * read seeks for itself): a new stream costs no Open (0.3 ms). Streams opened
++ * for writing pass through to stdio unchanged.
++ */
++#include <string.h>
++
++#ifdef __amigaos3__
++#include <dos/dos.h>
++#include <proto/dos.h>
++#define ZCACHE_SIZE 8192
++#else
++#define ZCACHE_SIZE 65536
++#endif
+ 
+-static voidpf  ZCALLBACK fopen_file_func OF((voidpf opaque, const char* filename, int mode));
+-static uLong   ZCALLBACK fread_file_func OF((voidpf opaque, voidpf stream, void* buf, uLong size));
+-static uLong   ZCALLBACK fwrite_file_func OF((voidpf opaque, voidpf stream, const void* buf,uLong size));
+-static ZPOS64_T ZCALLBACK ftell64_file_func OF((voidpf opaque, voidpf stream));
+-static long    ZCALLBACK fseek64_file_func OF((voidpf opaque, voidpf stream, ZPOS64_T offset, int origin));
+-static int     ZCALLBACK fclose_file_func OF((voidpf opaque, voidpf stream));
+-static int     ZCALLBACK ferror_file_func OF((voidpf opaque, voidpf stream));
++/* ---- the file under the cache: read at a position, its length ---- */
++#ifdef __amigaos3__
++typedef struct zshared_file {
++    struct zshared_file * next;
++    char *              name;
++    BPTR                fh;
++    int                 refs;
++    long                filePos;    /* where the handle is: no Seek to go on from there */
++} zshared_file;
+ 
+-static voidpf ZCALLBACK fopen_file_func (voidpf opaque, const char* filename, int mode)
++static zshared_file* zshared_list;
++
++static void* zll_open (const char* name)
+ {
+-    FILE* file = NULL;
+-    const char* mode_fopen = NULL;
+-    if ((mode & ZLIB_FILEFUNC_MODE_READWRITEFILTER)==ZLIB_FILEFUNC_MODE_READ)
+-        mode_fopen = "rb";
+-    else
+-    if (mode & ZLIB_FILEFUNC_MODE_EXISTING)
+-        mode_fopen = "r+b";
+-    else
+-    if (mode & ZLIB_FILEFUNC_MODE_CREATE)
+-        mode_fopen = "wb";
++    zshared_file* s;
++    for (s = zshared_list; s != NULL; s = s->next)
++        if (strcmp(s->name, name) == 0)
++        {
++            s->refs++;
++            return s;
++        }
++    s = (zshared_file*)malloc(sizeof(zshared_file));
++    if (s == NULL)
++        return NULL;
++    s->name = (char*)malloc(strlen(name) + 1);
++    s->fh = s->name != NULL ? Open((CONST_STRPTR)name, MODE_OLDFILE) : 0;
++    if (s->fh == 0)
++    {
++        free(s->name);
++        free(s);
++        return NULL;
++    }
++    strcpy(s->name, name);
++    s->refs = 1;
++    s->filePos = 0;
++    s->next = zshared_list;
++    zshared_list = s;
++    return s;
++}
+ 
+-    if ((filename!=NULL) && (mode_fopen != NULL))
+-        file = fopen(filename, mode_fopen);
+-    return file;
++static long zll_read (void* h, ZPOS64_T pos, void* buf, long len)
++{
++    zshared_file* s = (zshared_file*)h;
++    long n;
++    if (s->filePos != (long)pos)
++    {
++        if (Seek(s->fh, (long)pos, OFFSET_BEGINNING) < 0)
++        {
++            s->filePos = -1;
++            return -1;
++        }
++        s->filePos = (long)pos;
++    }
++    n = Read(s->fh, buf, len);
++    s->filePos = n >= 0 ? s->filePos + n : -1;
++    return n;
+ }
+ 
+-static voidpf ZCALLBACK fopen64_file_func (voidpf opaque, const void* filename, int mode)
++static long zll_length (void* h)
+ {
+-    FILE* file = NULL;
+-    const char* mode_fopen = NULL;
+-    if ((mode & ZLIB_FILEFUNC_MODE_READWRITEFILTER)==ZLIB_FILEFUNC_MODE_READ)
+-        mode_fopen = "rb";
+-    else
+-    if (mode & ZLIB_FILEFUNC_MODE_EXISTING)
+-        mode_fopen = "r+b";
+-    else
+-    if (mode & ZLIB_FILEFUNC_MODE_CREATE)
+-        mode_fopen = "wb";
++    zshared_file* s = (zshared_file*)h;
++    long len;
++    s->filePos = -1;
++    if (Seek(s->fh, 0, OFFSET_END) < 0)
++        return -1;
++    len = Seek(s->fh, 0, OFFSET_CURRENT);
++    return len;
++}
+ 
+-    if ((filename!=NULL) && (mode_fopen != NULL))
+-        file = FOPEN_FUNC((const char*)filename, mode_fopen);
+-    return file;
++static int zll_close (void* h)
++{
++    zshared_file* s = (zshared_file*)h;
++    zshared_file** p;
++    if (--s->refs > 0)
++        return 0;
++    for (p = &zshared_list; *p != NULL; p = &(*p)->next)
++        if (*p == s)
++        {
++            *p = s->next;
++            break;
++        }
++    Close(s->fh);
++    free(s->name);
++    free(s);
++    return 0;
++}
++#else
++static void* zll_open (const char* name)
++{
++    return FOPEN_FUNC(name, "rb");
+ }
+ 
++static long zll_read (void* h, ZPOS64_T pos, void* buf, long len)
++{
++    if (FSEEKO_FUNC((FILE*)h, pos, SEEK_SET) != 0)
++        return -1;
++    return (long)fread(buf, 1, (size_t)len, (FILE*)h);
++}
+ 
+-static uLong ZCALLBACK fread_file_func (voidpf opaque, voidpf stream, void* buf, uLong size)
++static long zll_length (void* h)
+ {
+-    uLong ret;
+-    ret = (uLong)fread(buf, 1, (size_t)size, (FILE *)stream);
+-    return ret;
++    if (FSEEKO_FUNC((FILE*)h, 0, SEEK_END) != 0)
++        return -1;
++    return (long)FTELLO_FUNC((FILE*)h);
+ }
+ 
+-static uLong ZCALLBACK fwrite_file_func (voidpf opaque, voidpf stream, const void* buf, uLong size)
++static int zll_close (void* h)
+ {
+-    uLong ret;
+-    ret = (uLong)fwrite(buf, 1, (size_t)size, (FILE *)stream);
+-    return ret;
++    return fclose((FILE*)h);
+ }
++#endif
+ 
+-static long ZCALLBACK ftell_file_func (voidpf opaque, voidpf stream)
++/* ---- the stream minizip sees ---- */
++typedef struct {
++    void *          ll;         /* read: the file under the cache */
++    FILE *          f;          /* write: a stdio stream, no cache */
++    unsigned char * buf;
++    ZPOS64_T        bufStart;   /* file position of buf[0] */
++    uLong           bufLen;     /* bytes valid in buf */
++    ZPOS64_T        pos;        /* the stream's position */
++    int             err;
++} zcache_file;
++
++static const char* zcache_mode (int mode)
+ {
+-    long ret;
+-    ret = ftell((FILE *)stream);
+-    return ret;
++    if ((mode & ZLIB_FILEFUNC_MODE_READWRITEFILTER)==ZLIB_FILEFUNC_MODE_READ)
++        return "rb";
++    if (mode & ZLIB_FILEFUNC_MODE_EXISTING)
++        return "r+b";
++    if (mode & ZLIB_FILEFUNC_MODE_CREATE)
++        return "wb";
++    return NULL;
+ }
+ 
++static voidpf ZCALLBACK fopen_file_func (voidpf opaque, const char* filename, int mode)
++{
++    zcache_file* zf;
++    const char* mode_fopen = zcache_mode(mode);
++    if ((filename==NULL) || (mode_fopen == NULL))
++        return NULL;
++    zf = (zcache_file*)malloc(sizeof(zcache_file));
++    if (zf == NULL)
++        return NULL;
++    memset(zf, 0, sizeof(*zf));
++    if ((mode & ZLIB_FILEFUNC_MODE_READWRITEFILTER)==ZLIB_FILEFUNC_MODE_READ)
++    {
++        zf->buf = (unsigned char*)malloc(ZCACHE_SIZE);
++        zf->ll = zf->buf != NULL ? zll_open(filename) : NULL;
++        if (zf->ll == NULL)
++        {
++            free(zf->buf);
++            free(zf);
++            return NULL;
++        }
++    }
++    else
++    {
++        zf->f = FOPEN_FUNC(filename, mode_fopen);
++        if (zf->f == NULL)
++        {
++            free(zf);
++            return NULL;
++        }
++    }
++    return zf;
++}
+ 
+-static ZPOS64_T ZCALLBACK ftell64_file_func (voidpf opaque, voidpf stream)
++static voidpf ZCALLBACK fopen64_file_func (voidpf opaque, const void* filename, int mode)
+ {
+-    ZPOS64_T ret;
+-    ret = FTELLO_FUNC((FILE *)stream);
+-    return ret;
++    return fopen_file_func(opaque, (const char*)filename, mode);
+ }
+ 
+-static long ZCALLBACK fseek_file_func (voidpf  opaque, voidpf stream, uLong offset, int origin)
++static uLong ZCALLBACK fread_file_func (voidpf opaque, voidpf stream, void* buf, uLong size)
+ {
+-    int fseek_origin=0;
+-    long ret;
+-    switch (origin)
++    zcache_file* zf = (zcache_file*)stream;
++    unsigned char* dst = (unsigned char*)buf;
++    uLong done = 0, n;
++    long got;
++
++    if (zf->ll == NULL)
++        return (uLong)fread(buf, 1, (size_t)size, zf->f);
++    while (done < size)
+     {
+-    case ZLIB_FILEFUNC_SEEK_CUR :
+-        fseek_origin = SEEK_CUR;
+-        break;
+-    case ZLIB_FILEFUNC_SEEK_END :
+-        fseek_origin = SEEK_END;
+-        break;
+-    case ZLIB_FILEFUNC_SEEK_SET :
+-        fseek_origin = SEEK_SET;
+-        break;
+-    default: return -1;
++        if (zf->pos >= zf->bufStart && zf->pos < zf->bufStart + zf->bufLen)
++        {
++            /* from the cached block */
++            uLong off = (uLong)(zf->pos - zf->bufStart);
++            n = zf->bufLen - off;
++            if (n > size - done)
++                n = size - done;
++            memcpy(dst + done, zf->buf + off, n);
++            done += n;
++            zf->pos += n;
++            continue;
++        }
++        if (size - done >= ZCACHE_SIZE)
++        {
++            /* a block or more: straight into the caller's buffer */
++            got = zll_read(zf->ll, zf->pos, dst + done, (long)(size - done));
++            if (got < 0)
++            {
++                zf->err = 1;
++                break;
++            }
++            done += (uLong)got;
++            zf->pos += (uLong)got;
++            break;
++        }
++        got = zll_read(zf->ll, zf->pos, zf->buf, ZCACHE_SIZE);
++        if (got < 0)
++        {
++            zf->err = 1;
++            zf->bufLen = 0;
++            break;
++        }
++        zf->bufStart = zf->pos;
++        zf->bufLen = (uLong)got;
++        if (got == 0)
++            break;  /* end of file */
+     }
+-    ret = 0;
+-    if (fseek((FILE *)stream, offset, fseek_origin) != 0)
+-        ret = -1;
+-    return ret;
++    return done;
++}
++
++static uLong ZCALLBACK fwrite_file_func (voidpf opaque, voidpf stream, const void* buf, uLong size)
++{
++    zcache_file* zf = (zcache_file*)stream;
++    if (zf->f == NULL)
++        return 0;   /* opened for reading */
++    return (uLong)fwrite(buf, 1, (size_t)size, zf->f);
++}
++
++static ZPOS64_T ZCALLBACK ftell64_file_func (voidpf opaque, voidpf stream)
++{
++    zcache_file* zf = (zcache_file*)stream;
++    if (zf->f != NULL)
++        return (ZPOS64_T)FTELLO_FUNC(zf->f);
++    return zf->pos;
++}
++
++static long ZCALLBACK ftell_file_func (voidpf opaque, voidpf stream)
++{
++    return (long)ftell64_file_func(opaque, stream);
+ }
+ 
+ static long ZCALLBACK fseek64_file_func (voidpf  opaque, voidpf stream, ZPOS64_T offset, int origin)
+ {
++    zcache_file* zf = (zcache_file*)stream;
+     int fseek_origin=0;
+-    long ret;
++    long len;
+     switch (origin)
+     {
+     case ZLIB_FILEFUNC_SEEK_CUR :
+@@ -201,27 +373,41 @@ static long ZCALLBACK fseek64_file_func (voidpf  opaque, voidpf stream, ZPOS64_T
+         break;
+     default: return -1;
+     }
+-    ret = 0;
+-
+-    if(FSEEKO_FUNC((FILE *)stream, offset, fseek_origin) != 0)
+-                        ret = -1;
+-
+-    return ret;
++    if (zf->f != NULL)
++        return FSEEKO_FUNC(zf->f, offset, fseek_origin) != 0 ? -1 : 0;
++    if (fseek_origin == SEEK_SET)
++        zf->pos = offset;
++    else if (fseek_origin == SEEK_CUR)
++        zf->pos += offset;
++    else
++    {
++        /* from the end: the file's length (offset is 0 or negative there) */
++        len = zll_length(zf->ll);
++        if (len < 0)
++            return -1;
++        zf->pos = (ZPOS64_T)len + offset;
++    }
++    return 0;
+ }
+ 
++static long ZCALLBACK fseek_file_func (voidpf  opaque, voidpf stream, uLong offset, int origin)
++{
++    return fseek64_file_func(opaque, stream, (ZPOS64_T)offset, origin);
++}
+ 
+ static int ZCALLBACK fclose_file_func (voidpf opaque, voidpf stream)
+ {
+-    int ret;
+-    ret = fclose((FILE *)stream);
++    zcache_file* zf = (zcache_file*)stream;
++    int ret = zf->f != NULL ? fclose(zf->f) : zll_close(zf->ll);
++    free(zf->buf);
++    free(zf);
+     return ret;
+ }
+ 
+ static int ZCALLBACK ferror_file_func (voidpf opaque, voidpf stream)
+ {
+-    int ret;
+-    ret = ferror((FILE *)stream);
+-    return ret;
++    zcache_file* zf = (zcache_file*)stream;
++    return zf->err || (zf->f != NULL && ferror(zf->f));
+ }
+ 
+ void fill_fopen_filefunc (pzlib_filefunc_def)

@@ -10,25 +10,31 @@ OGLES2_BUILD=${OGLES2_BUILD:-$HOME/ogles2-build/m68k}
 SDL=${SDL:-$HOME/doom3-build/m68k/sdl2}
 PKG=${PKG:-$HOME/doom3-build/m68k/pkg/cxx-probe}
 
+DEPS=${DEPS_OUT:-$HOME/doom3-build/m68k/deps}
 [ -f "$SDL/libSDL2.a" ] || { echo "no $SDL/libSDL2.a: run build_sdl2.sh first"; exit 1; }
+[ -f "$DEPS/lib/libd3amiga.a" ] || { echo "no $DEPS/lib/libd3amiga.a: run build_deps.sh first"; exit 1; }
 rm -rf "$PKG"
 mkdir -p "$PKG"
 
 # D2's flags: -m68020 -m68881 (fintrz for float-to-int), libnix, no strict aliasing.
-"$TC16/bin/m68k-amigaos-g++" -std=gnu++17 -O2 -mcpu=68020 -m68881 -noixemul -fno-strict-aliasing \
-    -Wall -Wno-format -I"$SDL/inc/SDL2" -I"$SDL/inc" \
-    "$HERE/cxx-probe/src/cxx_probe.cpp" -x c "$HERE/../../src/amiga/libnix_shims.c" -x none -o "$PKG/cxx_probe" \
-    -Wl,-u,___stkinit \
-    -L"$SDL" -lSDL2 -L"$OGLES2_BUILD" -logles2 -L"$SDL/pistorm3d-sdk/lib" -lminigl -ldebug -lamiga -lm
-# -u ___stkinit: libnix's swapstack.o (which reads __stack and registers itself in
-# the init list) is otherwise not linked, since nothing refers to it.
+# No libnix stack swap: linked in (-Wl,-u,___stkinit), it gave main() its 8 MB
+# stack on the A1200 but hung in its exit code (run 2, 2026-10-20). The Shell's
+# Stack command gives the stack instead (Run-Probe). SWAP=1 builds the swap
+# variant too, as cxx_probe_swap, to look at that hang again.
+VARIANTS="cxx_probe:"
+[ -n "${SWAP:-}" ] && VARIANTS="$VARIANTS cxx_probe_swap:-Wl,-u,___stkinit"
+for v in $VARIANTS; do
+    "$TC16/bin/m68k-amigaos-g++" -std=gnu++17 -O2 -mcpu=68020 -m68881 -noixemul -fno-strict-aliasing \
+        -Wall -Wno-format -I"$SDL/inc/SDL2" -I"$SDL/inc" \
+        "$HERE/cxx-probe/src/cxx_probe.cpp" -o "$PKG/${v%%:*}" \
+        ${v#*:} \
+        -Wl,-u,___xpg_strerror_r -L"$DEPS/lib" -ld3amiga \
+        -L"$SDL" -lSDL2 -L"$OGLES2_BUILD" -logles2 -L"$SDL/pistorm3d-sdk/lib" -lminigl -ldebug -lm
+done
 cp "$HERE/cxx-probe/Run-Probe" "$PKG/"
+# ogles2.library in libs/, which OGLES2Open finds when LIBS: has none (an
+# installed one in LIBS: wins; Run-Probe records which).
+mkdir -p "$PKG/libs"
+cp "$OGLES2_BUILD/ogles2.library" "$PKG/libs/"
 
-# The stack swap is in libnix's swapstack.o, linked only when referenced:
-# report whether it made it in (the probe checks the size on the Amiga).
-if "$TC16/bin/m68k-amigaos-nm" "$PKG/cxx_probe" 2>/dev/null | grep -q "___stkinit"; then
-    echo "stack swap linked (___stkinit present)"
-else
-    echo "WARNING: ___stkinit not linked: __stack will have no effect"
-fi
 ls -l "$PKG"

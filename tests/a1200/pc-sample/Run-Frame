@@ -1,0 +1,7 @@
+; Run-Frame - where exec keeps a preempted task's registers (frame_probe):
+; dumps the saved frame of a busy task six times. Nothing to watch.
+;   CD to this directory, then:   Execute Run-Frame
+FailAt 21
+MakeDir results >NIL:
+frame_probe 6 >results/frame.txt
+Type results/frame.txt

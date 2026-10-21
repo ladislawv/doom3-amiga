@@ -1,0 +1,55 @@
+frame_probe: busy 09a97110, loop 09a9717a, end 09a97186; stack 09ab0478-09ab2478
+sample 0: state 3, tc_SPReg 09ab23be (top - 186), spin 215248
+  +00 ffff0000  +04 00000000  +08 00000000  +0c 00007fff  +10 0000ffff  +14 ffffffff
+  +18 ffff3fff  +1c 0000c000  +20 00000000  +24 00003fff  +28 0000c000  +2c 00000000
+  +30 00007fff  +34 0000ffff  +38 ffffffff  +3c ffff7fff  +40 0000ffff  +44 ffffffff
+  +48 ffff7fff  +4c 0000ffff  +50 ffffffff  +54 ffff7fff  +58 0000ffff  +5c ffffffff
+  +60 ffff7fff  +64 0000ffff  +68 ffffffff  +6c ffffffff  +70 41000000  +74 09a9717a
+  +78 0000d0d0  +7c d0d0d1d1  +80 d1d1d2d2  +84 d2d2d3d3  +88 d3d3d4d4  +8c d4d4d5d5
+  +90 d5d5d6d6  +94 d6d6d7d7  +98 d7d7a0a0  +9c a0a0a1a1  +a0 a1a1a2a2  +a4 a2a2a3a3
+  +a8 a3a3a4a4  +ac a4a4a5a5  +b0 a5a5a6a6  +b4 a6a600f8  +b8 27c209ad  +bc 51680000
+sample 1: state 3, tc_SPReg 09ab23be (top - 186), spin 471432
+  +00 ffff0000  +04 00000000  +08 00000000  +0c 00007fff  +10 0000ffff  +14 ffffffff
+  +18 ffff3fff  +1c 0000c000  +20 00000000  +24 00003fff  +28 0000c000  +2c 00000000
+  +30 00007fff  +34 0000ffff  +38 ffffffff  +3c ffff7fff  +40 0000ffff  +44 ffffffff
+  +48 ffff7fff  +4c 0000ffff  +50 ffffffff  +54 ffff7fff  +58 0000ffff  +5c ffffffff
+  +60 ffff7fff  +64 0000ffff  +68 ffffffff  +6c ffffffff  +70 41000000  +74 09a9717a
+  +78 0000d0d0  +7c d0d0d1d1  +80 d1d1d2d2  +84 d2d2d3d3  +88 d3d3d4d4  +8c d4d4d5d5
+  +90 d5d5d6d6  +94 d6d6d7d7  +98 d7d7a0a0  +9c a0a0a1a1  +a0 a1a1a2a2  +a4 a2a2a3a3
+  +a8 a3a3a4a4  +ac a4a4a5a5  +b0 a5a5a6a6  +b4 a6a600f8  +b8 27c209ad  +bc 51680000
+sample 2: state 3, tc_SPReg 09ab23be (top - 186), spin 759856
+  +00 ffff0000  +04 00000000  +08 00000000  +0c 00007fff  +10 0000ffff  +14 ffffffff
+  +18 ffff3fff  +1c 0000c000  +20 00000000  +24 00003fff  +28 0000c000  +2c 00000000
+  +30 00007fff  +34 0000ffff  +38 ffffffff  +3c ffff7fff  +40 0000ffff  +44 ffffffff
+  +48 ffff7fff  +4c 0000ffff  +50 ffffffff  +54 ffff7fff  +58 0000ffff  +5c ffffffff
+  +60 ffff7fff  +64 0000ffff  +68 ffffffff  +6c ffffffff  +70 41000000  +74 09a9717a
+  +78 0000d0d0  +7c d0d0d1d1  +80 d1d1d2d2  +84 d2d2d3d3  +88 d3d3d4d4  +8c d4d4d5d5
+  +90 d5d5d6d6  +94 d6d6d7d7  +98 d7d7a0a0  +9c a0a0a1a1  +a0 a1a1a2a2  +a4 a2a2a3a3
+  +a8 a3a3a4a4  +ac a4a4a5a5  +b0 a5a5a6a6  +b4 a6a600f8  +b8 27c209ad  +bc 51680000
+sample 3: state 3, tc_SPReg 09ab23be (top - 186), spin 1080296
+  +00 ffff0000  +04 00000000  +08 00000000  +0c 00007fff  +10 0000ffff  +14 ffffffff
+  +18 ffff3fff  +1c 0000c000  +20 00000000  +24 00003fff  +28 0000c000  +2c 00000000
+  +30 00007fff  +34 0000ffff  +38 ffffffff  +3c ffff7fff  +40 0000ffff  +44 ffffffff
+  +48 ffff7fff  +4c 0000ffff  +50 ffffffff  +54 ffff7fff  +58 0000ffff  +5c ffffffff
+  +60 ffff7fff  +64 0000ffff  +68 ffffffff  +6c ffffffff  +70 41000000  +74 09a9717a
+  +78 0000d0d0  +7c d0d0d1d1  +80 d1d1d2d2  +84 d2d2d3d3  +88 d3d3d4d4  +8c d4d4d5d5
+  +90 d5d5d6d6  +94 d6d6d7d7  +98 d7d7a0a0  +9c a0a0a1a1  +a0 a1a1a2a2  +a4 a2a2a3a3
+  +a8 a3a3a4a4  +ac a4a4a5a5  +b0 a5a5a6a6  +b4 a6a600f8  +b8 27c209ad  +bc 51680000
+sample 4: state 3, tc_SPReg 09ab23be (top - 186), spin 1357456
+  +00 ffff0000  +04 00000000  +08 00000000  +0c 00007fff  +10 0000ffff  +14 ffffffff
+  +18 ffff3fff  +1c 0000c000  +20 00000000  +24 00003fff  +28 0000c000  +2c 00000000
+  +30 00007fff  +34 0000ffff  +38 ffffffff  +3c ffff7fff  +40 0000ffff  +44 ffffffff
+  +48 ffff7fff  +4c 0000ffff  +50 ffffffff  +54 ffff7fff  +58 0000ffff  +5c ffffffff
+  +60 ffff7fff  +64 0000ffff  +68 ffffffff  +6c ffffffff  +70 41000000  +74 09a9717a
+  +78 0000d0d0  +7c d0d0d1d1  +80 d1d1d2d2  +84 d2d2d3d3  +88 d3d3d4d4  +8c d4d4d5d5
+  +90 d5d5d6d6  +94 d6d6d7d7  +98 d7d7a0a0  +9c a0a0a1a1  +a0 a1a1a2a2  +a4 a2a2a3a3
+  +a8 a3a3a4a4  +ac a4a4a5a5  +b0 a5a5a6a6  +b4 a6a600f8  +b8 27c209ad  +bc 51680000
+sample 5: state 3, tc_SPReg 09ab23be (top - 186), spin 1741680
+  +00 ffff0000  +04 00000000  +08 00000000  +0c 00007fff  +10 0000ffff  +14 ffffffff
+  +18 ffff3fff  +1c 0000c000  +20 00000000  +24 00003fff  +28 0000c000  +2c 00000000
+  +30 00007fff  +34 0000ffff  +38 ffffffff  +3c ffff7fff  +40 0000ffff  +44 ffffffff
+  +48 ffff7fff  +4c 0000ffff  +50 ffffffff  +54 ffff7fff  +58 0000ffff  +5c ffffffff
+  +60 ffff7fff  +64 0000ffff  +68 ffffffff  +6c ffffffff  +70 41000000  +74 09a9717a
+  +78 0000d0d0  +7c d0d0d1d1  +80 d1d1d2d2  +84 d2d2d3d3  +88 d3d3d4d4  +8c d4d4d5d5
+  +90 d5d5d6d6  +94 d6d6d7d7  +98 d7d7a0a0  +9c a0a0a1a1  +a0 a1a1a2a2  +a4 a2a2a3a3
+  +a8 a3a3a4a4  +ac a4a4a5a5  +b0 a5a5a6a6  +b4 a6a600f8  +b8 27c209ad  +bc 51680000

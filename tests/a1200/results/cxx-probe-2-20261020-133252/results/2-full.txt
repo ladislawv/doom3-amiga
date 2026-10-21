@@ -1,0 +1,31 @@
+cxx_probe: GCC 16.2.0, libnix
+-- C++ runtime
+static constructor ran                       ok   
+exception through 3 frames                   ok   
+destructors ran while unwinding              ok   
+dynamic_cast and typeid                      ok   
+std::string and std::vector                  ok   
+-- CPU and FPU
+float to int truncates                       ok   
+sqrtf, sinf, atan2f                          ok   
+big-endian                                   ok   
+sizes (int 4, long 4, pointer 4)             ok   
+-- stack
+stack at least 8 MB (__stack)                ok   9000000 bytes
+alloca of 1 MB                               ok   
+-- SDL_Init
+-- memory
+new/delete of small blocks                   ok   new 81 ms, delete 4535 ms (100000 blocks)
+malloc of 256 MB                             ok   
+-- files
+read a large file                            skip (no --file)
+-- SDL GL ES
+SDL GL ES 2.0 context                        ok   V3D 4.2.14 (PiStorm), 8 QPUs, 64 KB VPM, depth 24, stencil 8
+  window shows red for a second
+  window shows green for a second
+  window shows blue for a second
+-- SDL audio
+  a quiet 440 Hz tone plays for a second
+SDL audio (a 440 Hz tone, 1 s)               ok   paula, 22050 Hz, 22 callbacks (about 21 expected)
+cxx_probe: 0 failure(s)
+exit code 0

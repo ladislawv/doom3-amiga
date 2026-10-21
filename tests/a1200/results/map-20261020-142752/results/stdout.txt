@@ -1,0 +1,1419 @@
+dhewm3 1.5.3pre.1305 amigaos-m68k Oct 20 2026 14:17:29 using SDL v2.33.0
+SDL video driver: amigaos3
+1864 MB System Memory (1757 MB free)
+stack: 9000000 bytes
+no networking on this platform (single player only)
+----- Initializing File System -----
+Current search path:
+Stuff:amictld/work/map/save/base
+Stuff:doom3/base
+Addon pk4s:
+WARNING: Couldn't find default.cfg in base/, trying again with demo/
+
+----- Initializing File System -----
+Loaded pk4 Stuff:doom3/demo/demo00.pk4 with checksum 0xfe75bbef
+Current search path:
+Stuff:amictld/work/map/save/demo
+Stuff:doom3/demo
+Stuff:doom3/demo/demo00.pk4 (12234 files)
+Stuff:amictld/work/map/save/base
+Stuff:doom3/base
+Addon pk4s:
+----- Initializing Decls -----
+5151 strings read from strings/english.lang
+Couldn't open journal files
+couldn't exec editor.cfg
+execing default.cfg
+execing dhewm.cfg
+couldn't exec autoexec.cfg
+5151 strings read from strings/english.lang
+----- Initializing OpenAL -----
+Sound disabled with s_noSound 1 !
+----- Initializing OpenGL -----
+Initializing OpenGL subsystem
+Will create a fullscreen-window with resolution 640x480 (r_mode = -1)
+SDL detected 1 displays: 
+ 0: 640x480 at (0, 0) to (640, 480)
+Will use display 0 because mouse cursor is at (0, 0).
+Requested 8 color bits per chan, 8 alpha 24 depth, 8 stencil
+Got 8 stencil bits, 24 depth bits, color bits: r8 g8 b8 a8
+Detected keyboard layout as "english"
+OpenGL vendor: ogles2.library
+OpenGL renderer: V3D 4.2.14 (PiStorm), 8 QPUs, 64 KB VPM
+OpenGL version: OpenGL ES 2.0 ogles2.library 1.3
+...using GL_EXT_texture_filter_anisotropic
+...using GL_OES_texture_npot
+ npotAvailable: 1
+...using GL_OES_packed_depth_stencil
+ depthStencilAvailable: 1
+...using GL_EXT_texture_compression_s3tc
+ textureCompressionAvailable: 1
+   maxTextureAnisotropy: 16.000000
+----- R_ReloadGLSLPrograms -----
+Loading main interaction shader
+Loading main interaction shader (Phong) 
+Loading default diffuse shader
+Loading skybox cubemap shader
+Loading reflection cubemap shader
+Loading diffuse cubemap shader
+Loading Zfill shader
+Loading Zfill shader (Clip plane version)
+Loading Fog shader
+Loading BlendLight shader
+Loading Stencil shadow shader
+-------------------------------
+Init Vertex Cache
+using GLSL renderSystem
+----- OpenGL Initialization complete-----
+R_InitFrameBuffer Real[640, 480] -> Framebuffer[640,480]
+Not using framebuffer
+----- Initializing Game -----
+gamename: baseDOOM-1
+gamedate: Oct 20 2026
+Initializing event system
+...473 event definitions
+Initializing class hierarchy
+...142 classes, 382184 bytes for event callbacks
+Initializing scripts
+Compiled 'script/doom_main.script': 7025 ms
+----- Compile stats -----
+Memory usage:
+     Strings: 79, 9648 bytes
+  Statements: 67783, 1355660 bytes
+   Functions: 2108, 250452 bytes
+   Variables: 147320 bytes
+    Mem used: 2573396 bytes
+ Static data: 2477552 bytes
+   Allocated: 3480492 bytes
+ Thread size: 13210 bytes
+...6 aas types
+----- Initializing Session -----
+WARNING: Couldn't load gui: 'guis/mainmenu.gui'
+----- Warnings -----
+during dhewm 3 initialization...
+WARNING: Couldn't find default.cfg in base/, trying again with demo/
+
+WARNING: Couldn't load gui: 'guis/mainmenu.gui'
+2 warnings
+in_grabKeyboard: Will *not* grab the keyboard if mouse is grabbed, so global keyboard-shortcuts (like Alt-Tab) will still work
+----- Game Map Shutdown -----
+reloading guis/demo_mainmenu.gui.
+reloading guis/restart.gui.
+reloading guis/gameover.gui.
+reloading guis/msg.gui.
+reloading guis/takeNotes.gui.
+reloading guis/intro.gui.
+----- Map Initialization -----
+Map: game/demo_mc_underground
+----- Game Map Init -----
+collision data:
+   721 models
+ 69250 vertices (1623 KB)
+128065 edges (4502 KB)
+ 55477 polygons (3881 KB)
+  5639 brushes (777 KB)
+ 24881 nodes (680 KB)
+100541 polygon refs (785 KB)
+ 26540 brush refs (207 KB)
+ 38026 internal edges
+  4376 sharp edges
+     0 contained polygons removed
+     0 polygons merged
+ 12457 KB total memory used
+4455 msec to load collision data.
+map bounds are (6152.0, 5344.0, 2560.0)
+max clip sector is (192.3, 334.0, 320.0)
+    4 KB passage memory used to build PVS
+   16 msec to calculate PVS
+   58 areas
+  134 portals
+    9 areas visible on average
+  464 bytes PVS data
+[Load AAS]
+loading maps/game/demo_mc_underground.aas48
+done.
+[Load AAS]
+loading maps/game/demo_mc_underground.aas96
+[Load AAS]
+loading maps/game/demo_mc_underground.aas_guardian
+[Load AAS]
+loading maps/game/demo_mc_underground.aas_mancubus
+[Load AAS]
+loading maps/game/demo_mc_underground.aas_sabaoth
+[Load AAS]
+loading maps/game/demo_mc_underground.aas_cyberdemon
+Entering doom_main()
+Exiting doom_main()
+Spawning entities
+loaded collision model models/mapobjects/cpu/comrack.lwo
+loaded collision model models/mapobjects/utility/binplug/binplug_c.lwo
+loaded collision model models/mapobjects/doors/techdoor1/techdr1rt.lwo
+loaded collision model models/mapobjects/doors/delelev/delelevrt.lwo
+loaded collision model models/mapobjects/elevators/elevator_door.lwo
+loaded collision model models/mapobjects/elevators/elevator.lwo
+loaded collision model models/mapobjects/signs/marquee/marquee.lwo
+loaded collision model models/mapobjects/mc_underground/mcucave.ASE
+loaded collision model models/mapobjects/filler/tbox8.ase
+loaded collision model models/mapobjects/filler/tbox2.ase
+loaded collision model models/mapobjects/filler/mkeyboard.lwo
+loaded collision model models/mapobjects/guiobjects/techdrpanel1/techdrpanel1.lwo
+loaded collision model models/mapobjects/doors/techdoor1/techdr1frame.lwo
+loaded collision model models/mapobjects/doors/techdoor1/techdr1lft.lwo
+loaded collision model models/mapobjects/filler/cola1.lwo
+loaded collision model models/mapobjects/airlock/airlockcomp.lwo
+loaded collision model models/mapobjects/mc_underground/outside/mc_ug_out.lwo
+loaded collision model models/mapobjects/lights/klaxon/klaxon.lwo
+loaded collision model models/mapobjects/guiobjects/mc_constand/mc_constand.lwo
+loaded collision model models/mapobjects/skmachines/skcube.lwo
+loaded collision model models/mapobjects/doors/techdoor2/techdr2rt.lwo
+removed 4 degenerate triangles
+loaded collision model models/mapobjects/delta1/warfoot/warfoot.lwo
+loaded collision model models/mapobjects/doors/delelev/delelevlf.lwo
+loaded collision model models/mapobjects/airlock/airlockdoorgui.lwo
+loaded collision model models/mapobjects/airlock/airlockdoor.lwo
+loaded collision model models/mapobjects/filler/toolchest.lwo
+loaded collision model models/mapobjects/healthgui/healthgui.lwo
+loaded collision model models/mapobjects/swinglights/swinglight_long_wbulbs_bulb.ase
+loaded collision model models/mapobjects/swinglights/swinglight_long_wbulbs_bulb_broken.ase
+loaded collision model models/mapobjects/cpu/serverplate.lwo
+loaded collision model models/mapobjects/cpu/cpufloorinsert2.lwo
+loaded collision model models/mapobjects/utility/trapbra/trapbra.lwo
+loaded collision model models/mapobjects/swinglights/swinglight1c.lwo
+loaded collision model models/mapobjects/doors/techdoor2/techdr2frame.lwo
+loaded collision model models/mapobjects/doors/techdoor2/techdr2lft.lwo
+loaded collision model models/mapobjects/matt_test/mc_underthing1.ASE
+loaded collision model models/mapobjects/mcity/mc_underarm/underarmhand.lwo
+loaded collision model models/mapobjects/mcity/mc_underarm/underarmfingers.lwo
+loaded collision model models/mapobjects/mcity/mc_underarm/underarmbase.lwo
+loaded collision model models/mapobjects/mcity/mc_underarm/underarmarm.lwo
+loaded collision model models/mapobjects/lab/mfscomp/mfscompcell.lwo
+loaded collision model models/mapobjects/airlock/airlockvertlock.lwo
+loaded collision model models/mapobjects/airlock/airlockbrace.lwo
+loaded collision model models/mapobjects/shipping_crates/shipping_crates.lwo
+loaded collision model models/mapobjects/airlock/airlockhallgui.lwo
+loaded collision model models/mapobjects/com/modconsole3.lwo
+loaded collision model models/mapobjects/com/modconsole2.lwo
+loaded collision model models/mapobjects/com/modconsole6.lwo
+loaded collision model models/mapobjects/com/modconsole1.lwo
+loaded collision model models/mapobjects/utility/binplug/binplug_o.lwo
+loaded collision model models/mapobjects/utility/tecknob2/tecknob2.lwo
+loaded collision model models/mapobjects/cpu/cpuoverdoor.lwo
+loaded collision model models/mapobjects/lab/diamondbox/diamondbox_sm.lwo
+loaded collision model models/mapobjects/mc_underground/outside/mc_ug_out2.lwo
+loaded collision model models/mapobjects/com/joint/joint.lwo
+loaded collision model models/mapobjects/caves/crane/cranecomp.lwo
+loaded collision model models/mapobjects/mc_underground/mcucave_b.ASE
+loaded collision model models/mapobjects/mc_underground/mcucave_c.ASE
+loaded collision model models/mapobjects/storagecab/wallcabinet/wallcabinetdoor.lwo
+loaded collision model models/mapobjects/storagecab/pegmount/pegmount.lwo
+loaded collision model models/mapobjects/com/platguistand/platguistand.lwo
+loaded collision model models/mapobjects/mcity/deskcomp/deskcomp.lwo
+loaded collision model models/mapobjects/filler/lunchbag.lwo
+loaded collision model models/mapobjects/filler/tbox1.ase
+loaded collision model models/mapobjects/shelf/shelf.lwo
+loaded collision model models/mapobjects/monitors/hangingmonitor.lwo
+loaded collision model models/mapobjects/mc_underground/outside/mc_ug_out3.lwo
+WARNING: underground_cin_player_1 has no AAS file
+...2533 entities spawned, 18 inhibited
+
+==== Processing events ====
+SpawnPlayer: 0
+loaded collision model models/weapons/shell1/mshell_lo.lwo
+loaded collision model models/weapons/shell1/sshell_bigger.lwo
+----- idRenderModelManagerLocal::EndLevelLoad -----
+    0 models purged from previous level,  1261 models kept.
+----- idImageManager::EndLevelLoad -----
+   10 purged from previous
+  157 kept from previous
+ 1793 new loaded
+all images loaded in   0.0 seconds
+16: entity 'player1': 3.0 ms
+16: entity 'env_ragdoll_maint_0': 10.0 ms
+16: entity 'underground_maint_asian_1': 2.0 ms
+16: entity 'monster_zombie_maint_bald_5': 2.0 ms
+16: entity 'env_ragdoll_zsecm_0': 10.0 ms
+16: entity 'crane_main': 2.0 ms
+16: entity 'monster_zombie_maint_3': 2.0 ms
+16: entity 'swinglight_mover': 3.0 ms
+16: entity 'underground_security_helmet_mark_3': 2.0 ms
+16: entity 'env_gibs_leftarm_1': 5.0 ms
+16: entity 'env_gibs_leftleg_0': 3.0 ms
+16: entity 'env_gibs_torso_0': 5.0 ms
+16: entity 'env_gibs_leftarm_0': 5.0 ms
+16: entity 'env_gibs_spine_0': 6.0 ms
+16: entity 'env_gibs_torso_1': 4.0 ms
+16: entity 'env_gibs_leftleg_1': 5.0 ms
+16: entity 'env_gibs_leftarm_2': 5.0 ms
+16: entity 'env_gibs_leftleg_2': 4.0 ms
+game 16: all:59151 th:59118 ev:33 2587 ents 
+32: entity 'crane_main': 2.0 ms
+32: entity 'oldcommele': 2.0 ms
+32: entity 'player1': 3.0 ms
+32: entity 'monster_zombie_maint_no_jaw_1': 2.0 ms
+32: entity 'env_ragdoll_zsecm_0': 6.0 ms
+32: entity 'env_ragdoll_maint_0': 6.0 ms
+32: entity 'env_gibs_leftleg_0': 2.0 ms
+32: entity 'env_gibs_torso_1': 4.0 ms
+game 32: all:101 th:101 ev:0 218 ents 
+48: entity 'crane_main': 2.0 ms
+48: entity 'player1': 3.0 ms
+48: entity 'env_ragdoll_zsecm_0': 6.0 ms
+48: entity 'env_ragdoll_maint_0': 6.0 ms
+48: entity 'env_gibs_leftarm_1': 2.0 ms
+48: entity 'env_gibs_leftleg_1': 2.0 ms
+game 48: all:76 th:76 ev:0 198 ents 
+64: entity 'crane_main': 2.0 ms
+64: entity 'player1': 3.0 ms
+64: entity 'env_ragdoll_zsecm_0': 6.0 ms
+64: entity 'env_ragdoll_maint_0': 6.0 ms
+64: entity 'env_gibs_leftarm_1': 2.0 ms
+64: entity 'env_gibs_torso_1': 2.0 ms
+game 64: all:89 th:89 ev:0 196 ents 
+80: entity 'crane_main': 2.0 ms
+80: entity 'player1': 3.0 ms
+80: entity 'env_ragdoll_zsecm_0': 6.0 ms
+80: entity 'env_ragdoll_maint_0': 6.0 ms
+80: entity 'env_gibs_leftarm_1': 2.0 ms
+80: entity 'env_gibs_torso_1': 2.0 ms
+game 80: all:49 th:49 ev:0 192 ents 
+96: entity 'crane_main': 2.0 ms
+96: entity 'player1': 3.0 ms
+96: entity 'env_ragdoll_zsecm_0': 6.0 ms
+96: entity 'env_ragdoll_maint_0': 6.0 ms
+96: entity 'env_gibs_leftarm_1': 2.0 ms
+96: entity 'env_gibs_torso_1': 2.0 ms
+game 96: all:71 th:71 ev:0 192 ents 
+112: entity 'crane_main': 2.0 ms
+112: entity 'player1': 2.0 ms
+112: entity 'env_ragdoll_zsecm_0': 6.0 ms
+112: entity 'env_ragdoll_maint_0': 5.0 ms
+112: entity 'env_gibs_leftarm_1': 2.0 ms
+112: entity 'env_gibs_torso_1': 2.0 ms
+game 112: all:70 th:70 ev:0 192 ents 
+128: entity 'crane_main': 2.0 ms
+128: entity 'player1': 3.0 ms
+128: entity 'env_ragdoll_zsecm_0': 6.0 ms
+128: entity 'env_ragdoll_maint_0': 6.0 ms
+128: entity 'env_gibs_leftarm_1': 2.0 ms
+128: entity 'env_gibs_torso_1': 2.0 ms
+game 128: all:56 th:55 ev:1 192 ents 
+144: entity 'crane_main': 2.0 ms
+144: entity 'player1': 3.0 ms
+144: entity 'env_ragdoll_zsecm_0': 6.0 ms
+144: entity 'env_ragdoll_maint_0': 5.0 ms
+144: entity 'env_gibs_leftarm_1': 3.0 ms
+144: entity 'env_gibs_torso_1': 2.0 ms
+game 144: all:74 th:74 ev:0 192 ents 
+160: entity 'crane_main': 2.0 ms
+160: entity 'player1': 3.0 ms
+160: entity 'env_ragdoll_zsecm_0': 6.0 ms
+160: entity 'env_ragdoll_maint_0': 6.0 ms
+160: entity 'env_gibs_leftarm_1': 2.0 ms
+160: entity 'env_gibs_torso_1': 2.0 ms
+game 160: all:54 th:54 ev:0 192 ents 
+136515 msec to load game/demo_mc_underground
+idRenderWorld::GenerateAllInteractions, msec = 103, staticAllocCount = 0.
+interactionTable size: 4028556 bytes
+41968 interaction take 4700416 bytes
+benchmark: counting frames for 10 seconds
+1 176: entity 'crane_main': 2.0 ms
+176: entity 'player1': 3.0 ms
+176: entity 'env_ragdoll_zsecm_0': 6.0 ms
+176: entity 'env_ragdoll_maint_0': 6.0 ms
+176: entity 'env_gibs_leftarm_1': 2.0 ms
+176: entity 'env_gibs_torso_1': 2.0 ms
+game 176: all:55 th:55 ev:0 192 ents 
+8 192: entity 'crane_main': 2.0 ms
+192: entity 'player1': 3.0 ms
+192: entity 'env_ragdoll_zsecm_0': 7.0 ms
+192: entity 'env_ragdoll_maint_0': 6.0 ms
+192: entity 'env_gibs_leftarm_1': 2.0 ms
+game 192: all:49 th:49 ev:0 192 ents 
+208: entity 'crane_main': 3.0 ms
+208: entity 'player1': 3.0 ms
+208: entity 'env_ragdoll_zsecm_0': 6.0 ms
+208: entity 'env_ragdoll_maint_0': 6.0 ms
+208: entity 'env_gibs_leftarm_1': 3.0 ms
+208: entity 'env_gibs_torso_1': 2.0 ms
+game 208: all:52 th:52 ev:0 192 ents 
+224: entity 'crane_main': 2.0 ms
+224: entity 'player1': 2.0 ms
+224: entity 'env_ragdoll_zsecm_0': 6.0 ms
+224: entity 'env_ragdoll_maint_0': 6.0 ms
+224: entity 'env_gibs_torso_1': 2.0 ms
+game 224: all:45 th:44 ev:1 191 ents 
+240: entity 'crane_main': 2.0 ms
+240: entity 'player1': 2.0 ms
+240: entity 'env_ragdoll_zsecm_0': 6.0 ms
+240: entity 'env_ragdoll_maint_0': 6.0 ms
+240: entity 'env_gibs_torso_1': 2.0 ms
+game 240: all:49 th:49 ev:0 190 ents 
+256: entity 'crane_main': 2.0 ms
+256: entity 'player1': 2.0 ms
+256: entity 'env_ragdoll_zsecm_0': 6.0 ms
+256: entity 'env_ragdoll_maint_0': 6.0 ms
+256: entity 'env_gibs_torso_1': 2.0 ms
+game 256: all:439 th:54 ev:385 190 ents 
+272: entity 'crane_main': 2.0 ms
+272: entity 'player1': 3.0 ms
+272: entity 'env_ragdoll_zsecm_0': 7.0 ms
+272: entity 'env_ragdoll_maint_0': 6.0 ms
+game 272: all:42 th:42 ev:0 190 ents 
+288: entity 'crane_main': 3.0 ms
+288: entity 'player1': 2.0 ms
+288: entity 'env_ragdoll_zsecm_0': 6.0 ms
+288: entity 'env_ragdoll_maint_0': 6.0 ms
+288: entity 'env_gibs_torso_1': 2.0 ms
+game 288: all:46 th:46 ev:0 190 ents 
+304: entity 'crane_main': 3.0 ms
+304: entity 'player1': 3.0 ms
+304: entity 'env_ragdoll_zsecm_0': 6.0 ms
+304: entity 'env_ragdoll_maint_0': 5.0 ms
+304: entity 'env_gibs_torso_1': 2.0 ms
+game 304: all:45 th:45 ev:0 190 ents 
+10 320: entity 'crane_main': 3.0 ms
+320: entity 'player1': 3.0 ms
+320: entity 'env_ragdoll_zsecm_0': 7.0 ms
+320: entity 'env_ragdoll_maint_0': 6.0 ms
+320: entity 'env_gibs_torso_1': 2.0 ms
+game 320: all:49 th:49 ev:0 190 ents 
+336: entity 'crane_main': 3.0 ms
+336: entity 'player1': 2.0 ms
+336: entity 'env_ragdoll_zsecm_0': 6.0 ms
+336: entity 'env_ragdoll_maint_0': 6.0 ms
+336: entity 'env_gibs_torso_1': 2.0 ms
+game 336: all:45 th:45 ev:0 185 ents 
+352: entity 'crane_main': 3.0 ms
+352: entity 'player1': 3.0 ms
+352: entity 'env_ragdoll_zsecm_0': 7.0 ms
+352: entity 'env_ragdoll_maint_0': 6.0 ms
+352: entity 'env_gibs_torso_1': 2.0 ms
+game 352: all:55 th:55 ev:0 185 ents 
+368: entity 'crane_main': 3.0 ms
+368: entity 'player1': 3.0 ms
+368: entity 'env_ragdoll_zsecm_0': 6.0 ms
+368: entity 'env_ragdoll_maint_0': 6.0 ms
+368: entity 'env_gibs_torso_1': 2.0 ms
+game 368: all:45 th:45 ev:0 185 ents 
+384: entity 'crane_main': 2.0 ms
+384: entity 'player1': 3.0 ms
+384: entity 'env_ragdoll_zsecm_0': 6.0 ms
+384: entity 'env_ragdoll_maint_0': 6.0 ms
+384: entity 'env_gibs_torso_1': 2.0 ms
+game 384: all:44 th:44 ev:0 185 ents 
+400: entity 'crane_main': 3.0 ms
+400: entity 'player1': 3.0 ms
+400: entity 'env_ragdoll_zsecm_0': 6.0 ms
+400: entity 'env_ragdoll_maint_0': 5.0 ms
+game 400: all:41 th:41 ev:0 185 ents 
+416: entity 'crane_main': 3.0 ms
+416: entity 'player1': 3.0 ms
+416: entity 'env_ragdoll_zsecm_0': 6.0 ms
+416: entity 'env_ragdoll_maint_0': 6.0 ms
+416: entity 'env_gibs_torso_1': 2.0 ms
+game 416: all:45 th:44 ev:1 185 ents 
+432: entity 'crane_main': 2.0 ms
+432: entity 'player1': 4.0 ms
+432: entity 'env_ragdoll_zsecm_0': 6.0 ms
+432: entity 'env_ragdoll_maint_0': 6.0 ms
+432: entity 'env_gibs_torso_1': 2.0 ms
+432: entity 'env_ragdoll_zsecm_0_head': 2.0 ms
+game 432: all:58 th:57 ev:1 185 ents 
+448: entity 'crane_main': 2.0 ms
+448: entity 'player1': 2.0 ms
+448: entity 'env_ragdoll_zsecm_0': 6.0 ms
+448: entity 'env_ragdoll_maint_0': 6.0 ms
+448: entity 'env_gibs_torso_1': 2.0 ms
+game 448: all:44 th:44 ev:0 185 ents 
+464: entity 'crane_main': 3.0 ms
+464: entity 'player1': 3.0 ms
+464: entity 'env_ragdoll_zsecm_0': 7.0 ms
+464: entity 'env_ragdoll_maint_0': 6.0 ms
+464: entity 'env_gibs_torso_1': 2.0 ms
+game 464: all:51 th:50 ev:1 185 ents 
+10 480: entity 'crane_main': 2.0 ms
+480: entity 'player1': 3.0 ms
+480: entity 'env_ragdoll_zsecm_0': 6.0 ms
+480: entity 'env_ragdoll_maint_0': 6.0 ms
+480: entity 'env_gibs_torso_1': 2.0 ms
+game 480: all:45 th:45 ev:0 185 ents 
+496: entity 'crane_main': 2.0 ms
+496: entity 'player1': 4.0 ms
+496: entity 'env_ragdoll_zsecm_0': 6.0 ms
+496: entity 'env_ragdoll_maint_0': 6.0 ms
+496: entity 'env_gibs_torso_1': 2.0 ms
+game 496: all:49 th:49 ev:0 185 ents 
+512: entity 'crane_main': 2.0 ms
+512: entity 'player1': 3.0 ms
+512: entity 'env_ragdoll_zsecm_0': 7.0 ms
+512: entity 'env_ragdoll_maint_0': 7.0 ms
+512: entity 'env_gibs_torso_1': 2.0 ms
+game 512: all:53 th:53 ev:0 185 ents 
+528: entity 'crane_main': 3.0 ms
+528: entity 'player1': 3.0 ms
+528: entity 'env_ragdoll_zsecm_0': 6.0 ms
+528: entity 'env_ragdoll_maint_0': 5.0 ms
+528: entity 'env_gibs_torso_1': 2.0 ms
+game 528: all:45 th:45 ev:0 185 ents 
+544: entity 'crane_main': 2.0 ms
+544: entity 'player1': 3.0 ms
+544: entity 'env_ragdoll_zsecm_0': 7.0 ms
+544: entity 'env_ragdoll_maint_0': 6.0 ms
+544: entity 'env_gibs_torso_1': 3.0 ms
+game 544: all:44 th:44 ev:0 185 ents 
+560: entity 'crane_main': 3.0 ms
+560: entity 'player1': 3.0 ms
+560: entity 'env_ragdoll_zsecm_0': 6.0 ms
+560: entity 'env_ragdoll_maint_0': 5.0 ms
+560: entity 'env_gibs_torso_1': 2.0 ms
+game 560: all:45 th:45 ev:0 185 ents 
+576: entity 'crane_main': 2.0 ms
+576: entity 'player1': 3.0 ms
+576: entity 'env_ragdoll_zsecm_0': 6.0 ms
+576: entity 'env_ragdoll_maint_0': 7.0 ms
+576: entity 'env_gibs_torso_1': 2.0 ms
+game 576: all:50 th:49 ev:1 186 ents 
+592: entity 'crane_main': 2.0 ms
+592: entity 'player1': 3.0 ms
+592: entity 'env_ragdoll_zsecm_0': 6.0 ms
+592: entity 'env_ragdoll_maint_0': 6.0 ms
+592: entity 'env_gibs_torso_1': 2.0 ms
+game 592: all:44 th:44 ev:0 186 ents 
+608: entity 'crane_main': 2.0 ms
+608: entity 'player1': 3.0 ms
+608: entity 'env_ragdoll_zsecm_0': 7.0 ms
+608: entity 'env_ragdoll_maint_0': 6.0 ms
+608: entity 'env_gibs_torso_1': 2.0 ms
+game 608: all:49 th:49 ev:0 186 ents 
+624: entity 'crane_main': 3.0 ms
+624: entity 'player1': 3.0 ms
+624: entity 'env_ragdoll_zsecm_0': 6.0 ms
+624: entity 'env_ragdoll_maint_0': 6.0 ms
+624: entity 'env_gibs_torso_1': 2.0 ms
+game 624: all:45 th:44 ev:1 186 ents 
+10 640: entity 'crane_main': 2.0 ms
+640: entity 'player1': 3.0 ms
+640: entity 'env_ragdoll_zsecm_0': 7.0 ms
+640: entity 'env_ragdoll_maint_0': 6.0 ms
+640: entity 'env_gibs_torso_1': 2.0 ms
+game 640: all:50 th:50 ev:0 186 ents 
+656: entity 'crane_main': 2.0 ms
+656: entity 'player1': 3.0 ms
+656: entity 'env_ragdoll_zsecm_0': 6.0 ms
+656: entity 'env_ragdoll_maint_0': 6.0 ms
+656: entity 'env_gibs_torso_1': 2.0 ms
+game 656: all:44 th:44 ev:0 186 ents 
+672: entity 'crane_main': 2.0 ms
+672: entity 'player1': 3.0 ms
+672: entity 'env_ragdoll_zsecm_0': 7.0 ms
+672: entity 'env_ragdoll_maint_0': 6.0 ms
+672: entity 'env_gibs_torso_1': 3.0 ms
+game 672: all:45 th:45 ev:0 186 ents 
+688: entity 'crane_main': 2.0 ms
+688: entity 'player1': 3.0 ms
+688: entity 'env_ragdoll_zsecm_0': 6.0 ms
+688: entity 'env_ragdoll_maint_0': 5.0 ms
+688: entity 'env_gibs_torso_1': 2.0 ms
+game 688: all:49 th:48 ev:1 186 ents 
+704: entity 'crane_main': 2.0 ms
+704: entity 'player1': 3.0 ms
+704: entity 'env_ragdoll_zsecm_0': 7.0 ms
+704: entity 'env_ragdoll_maint_0': 6.0 ms
+704: entity 'env_gibs_torso_1': 2.0 ms
+game 704: all:44 th:44 ev:0 186 ents 
+720: entity 'crane_main': 2.0 ms
+720: entity 'player1': 3.0 ms
+720: entity 'env_ragdoll_zsecm_0': 6.0 ms
+720: entity 'env_ragdoll_maint_0': 5.0 ms
+game 720: all:41 th:41 ev:0 186 ents 
+736: entity 'crane_main': 2.0 ms
+736: entity 'player1': 2.0 ms
+736: entity 'env_ragdoll_zsecm_0': 6.0 ms
+736: entity 'env_ragdoll_maint_0': 6.0 ms
+736: entity 'env_gibs_torso_1': 2.0 ms
+game 736: all:44 th:44 ev:0 186 ents 
+752: entity 'crane_main': 2.0 ms
+752: entity 'player1': 3.0 ms
+752: entity 'env_ragdoll_zsecm_0': 6.0 ms
+752: entity 'env_ragdoll_maint_0': 6.0 ms
+752: entity 'env_gibs_torso_1': 2.0 ms
+game 752: all:50 th:50 ev:0 186 ents 
+768: entity 'crane_main': 2.0 ms
+768: entity 'player1': 3.0 ms
+768: entity 'env_ragdoll_zsecm_0': 6.0 ms
+768: entity 'env_ragdoll_maint_0': 6.0 ms
+768: entity 'env_gibs_torso_1': 2.0 ms
+game 768: all:45 th:45 ev:0 186 ents 
+784: entity 'crane_main': 2.0 ms
+784: entity 'player1': 3.0 ms
+784: entity 'env_ragdoll_zsecm_0': 6.0 ms
+784: entity 'env_ragdoll_maint_0': 6.0 ms
+784: entity 'env_gibs_torso_1': 2.0 ms
+game 784: all:45 th:44 ev:1 186 ents 
+10 800: entity 'crane_main': 2.0 ms
+800: entity 'player1': 3.0 ms
+800: entity 'env_ragdoll_zsecm_0': 6.0 ms
+800: entity 'env_ragdoll_maint_0': 5.0 ms
+800: entity 'env_gibs_torso_1': 2.0 ms
+game 800: all:48 th:48 ev:0 186 ents 
+816: entity 'crane_main': 2.0 ms
+816: entity 'player1': 3.0 ms
+816: entity 'env_ragdoll_zsecm_0': 6.0 ms
+816: entity 'env_ragdoll_maint_0': 6.0 ms
+816: entity 'env_gibs_torso_1': 2.0 ms
+game 816: all:44 th:44 ev:0 186 ents 
+832: entity 'crane_main': 2.0 ms
+832: entity 'player1': 3.0 ms
+832: entity 'env_ragdoll_zsecm_0': 7.0 ms
+832: entity 'env_ragdoll_maint_0': 6.0 ms
+832: entity 'env_gibs_torso_1': 2.0 ms
+game 832: all:57 th:57 ev:0 186 ents 
+848: entity 'crane_main': 2.0 ms
+848: entity 'player1': 3.0 ms
+848: entity 'env_ragdoll_zsecm_0': 6.0 ms
+848: entity 'env_ragdoll_maint_0': 5.0 ms
+848: entity 'env_gibs_torso_1': 2.0 ms
+game 848: all:43 th:43 ev:0 186 ents 
+864: entity 'crane_main': 2.0 ms
+864: entity 'player1': 2.0 ms
+864: entity 'env_ragdoll_zsecm_0': 6.0 ms
+864: entity 'env_ragdoll_maint_0': 5.0 ms
+864: entity 'env_gibs_torso_1': 2.0 ms
+game 864: all:49 th:49 ev:0 186 ents 
+880: entity 'crane_main': 2.0 ms
+880: entity 'player1': 3.0 ms
+880: entity 'env_ragdoll_zsecm_0': 6.0 ms
+880: entity 'env_ragdoll_maint_0': 5.0 ms
+880: entity 'env_gibs_torso_1': 3.0 ms
+game 880: all:45 th:45 ev:0 186 ents 
+896: entity 'crane_main': 2.0 ms
+896: entity 'player1': 3.0 ms
+896: entity 'env_ragdoll_zsecm_0': 7.0 ms
+896: entity 'env_ragdoll_maint_0': 5.0 ms
+896: entity 'env_gibs_torso_1': 2.0 ms
+game 896: all:44 th:44 ev:0 186 ents 
+912: entity 'crane_main': 2.0 ms
+912: entity 'player1': 2.0 ms
+912: entity 'env_ragdoll_zsecm_0': 7.0 ms
+912: entity 'env_ragdoll_maint_0': 5.0 ms
+912: entity 'env_gibs_torso_1': 2.0 ms
+game 912: all:43 th:43 ev:0 186 ents 
+928: entity 'crane_main': 2.0 ms
+928: entity 'player1': 2.0 ms
+928: entity 'env_ragdoll_zsecm_0': 7.0 ms
+928: entity 'env_ragdoll_maint_0': 5.0 ms
+928: entity 'env_gibs_torso_1': 2.0 ms
+game 928: all:44 th:44 ev:0 186 ents 
+944: entity 'crane_main': 2.0 ms
+944: entity 'player1': 4.0 ms
+944: entity 'env_ragdoll_zsecm_0': 6.0 ms
+944: entity 'env_ragdoll_maint_0': 6.0 ms
+944: entity 'env_gibs_torso_1': 2.0 ms
+game 944: all:44 th:44 ev:0 186 ents 
+10 960: entity 'crane_main': 2.0 ms
+960: entity 'player1': 3.0 ms
+960: entity 'env_ragdoll_zsecm_0': 6.0 ms
+960: entity 'env_ragdoll_maint_0': 5.0 ms
+960: entity 'env_gibs_torso_1': 2.0 ms
+game 960: all:43 th:43 ev:0 186 ents 
+976: entity 'crane_main': 2.0 ms
+976: entity 'player1': 3.0 ms
+976: entity 'env_ragdoll_zsecm_0': 6.0 ms
+976: entity 'env_ragdoll_maint_0': 6.0 ms
+game 976: all:45 th:45 ev:0 186 ents 
+992: entity 'crane_main': 2.0 ms
+992: entity 'player1': 2.0 ms
+992: entity 'env_ragdoll_zsecm_0': 7.0 ms
+992: entity 'env_ragdoll_maint_0': 6.0 ms
+992: entity 'env_gibs_torso_1': 2.0 ms
+game 992: all:44 th:44 ev:0 186 ents 
+1008: entity 'crane_main': 2.0 ms
+1008: entity 'player1': 2.0 ms
+1008: entity 'env_ragdoll_zsecm_0': 7.0 ms
+1008: entity 'env_ragdoll_maint_0': 6.0 ms
+1008: entity 'env_gibs_torso_1': 3.0 ms
+game 1008: all:45 th:45 ev:0 186 ents 
+1024: entity 'crane_main': 2.0 ms
+1024: entity 'player1': 3.0 ms
+1024: entity 'env_ragdoll_zsecm_0': 6.0 ms
+1024: entity 'env_ragdoll_maint_0': 5.0 ms
+1024: entity 'env_gibs_torso_1': 2.0 ms
+game 1024: all:44 th:44 ev:0 186 ents 
+1040: entity 'crane_main': 2.0 ms
+1040: entity 'player1': 3.0 ms
+1040: entity 'env_ragdoll_zsecm_0': 7.0 ms
+1040: entity 'env_ragdoll_maint_0': 5.0 ms
+game 1040: all:36 th:36 ev:0 165 ents 
+1056: entity 'crane_main': 2.0 ms
+1056: entity 'player1': 3.0 ms
+1056: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1056: all:38 th:38 ev:0 167 ents 
+1072: entity 'crane_main': 2.0 ms
+1072: entity 'player1': 2.0 ms
+1072: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1072: all:27 th:27 ev:0 163 ents 
+1088: entity 'crane_main': 2.0 ms
+1088: entity 'player1': 3.0 ms
+1088: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1088: all:33 th:33 ev:0 163 ents 
+1104: entity 'crane_main': 2.0 ms
+1104: entity 'player1': 3.0 ms
+1104: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1104: all:28 th:28 ev:0 163 ents 
+10 1120: entity 'crane_main': 2.0 ms
+1120: entity 'player1': 3.0 ms
+1120: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1120: all:40 th:40 ev:0 163 ents 
+1136: entity 'player1': 2.0 ms
+1136: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1136: all:25 th:25 ev:0 163 ents 
+1152: entity 'player1': 3.0 ms
+1152: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1152: all:26 th:26 ev:0 163 ents 
+1168: entity 'player1': 2.0 ms
+1168: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1168: all:25 th:25 ev:0 163 ents 
+1184: entity 'crane_main': 2.0 ms
+1184: entity 'player1': 3.0 ms
+1184: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1184: all:35 th:35 ev:0 163 ents 
+1200: entity 'crane_main': 2.0 ms
+1200: entity 'player1': 2.0 ms
+1200: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1200: all:28 th:28 ev:0 163 ents 
+1216: entity 'crane_main': 2.0 ms
+1216: entity 'player1': 3.0 ms
+1216: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1216: all:28 th:28 ev:0 163 ents 
+1232: entity 'player1': 2.0 ms
+1232: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1232: all:26 th:26 ev:0 163 ents 
+1248: entity 'player1': 2.0 ms
+1248: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1248: all:26 th:26 ev:0 163 ents 
+1264: entity 'crane_main': 2.0 ms
+1264: entity 'player1': 3.0 ms
+1264: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1264: all:28 th:28 ev:0 163 ents 
+10 1280: entity 'crane_main': 2.0 ms
+1280: entity 'player1': 2.0 ms
+1280: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1280: all:28 th:28 ev:0 163 ents 
+1296: entity 'crane_main': 2.0 ms
+1296: entity 'player1': 3.0 ms
+1296: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1296: all:34 th:34 ev:0 163 ents 
+1312: entity 'crane_main': 2.0 ms
+1312: entity 'player1': 3.0 ms
+1312: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1312: all:28 th:28 ev:0 163 ents 
+1328: entity 'crane_main': 2.0 ms
+1328: entity 'player1': 3.0 ms
+1328: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1328: all:29 th:29 ev:0 163 ents 
+1344: entity 'crane_main': 2.0 ms
+1344: entity 'player1': 3.0 ms
+1344: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1344: all:28 th:28 ev:0 163 ents 
+1360: entity 'player1': 2.0 ms
+1360: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1360: all:30 th:30 ev:0 163 ents 
+1376: entity 'crane_main': 3.0 ms
+1376: entity 'player1': 3.0 ms
+1376: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1376: all:29 th:29 ev:0 163 ents 
+1392: entity 'crane_main': 2.0 ms
+1392: entity 'player1': 4.0 ms
+1392: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1392: all:30 th:30 ev:0 163 ents 
+1408: entity 'crane_main': 2.0 ms
+1408: entity 'player1': 2.0 ms
+1408: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1408: all:28 th:28 ev:0 163 ents 
+1424: entity 'crane_main': 2.0 ms
+1424: entity 'player1': 2.0 ms
+1424: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1424: all:29 th:29 ev:0 163 ents 
+10 1440: entity 'crane_main': 2.0 ms
+1440: entity 'player1': 3.0 ms
+1440: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1440: all:29 th:29 ev:0 163 ents 
+1456: entity 'crane_main': 2.0 ms
+1456: entity 'player1': 3.0 ms
+1456: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1456: all:29 th:29 ev:0 163 ents 
+1472: entity 'crane_main': 2.0 ms
+1472: entity 'player1': 2.0 ms
+1472: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1472: all:32 th:32 ev:0 163 ents 
+1488: entity 'crane_main': 2.0 ms
+1488: entity 'player1': 3.0 ms
+1488: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1488: all:28 th:28 ev:0 163 ents 
+1504: entity 'player1': 3.0 ms
+1504: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1504: all:28 th:26 ev:2 163 ents 
+1520: entity 'player1': 3.0 ms
+1520: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1520: all:30 th:30 ev:0 163 ents 
+1536: entity 'crane_main': 2.0 ms
+1536: entity 'player1': 3.0 ms
+1536: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1536: all:32 th:32 ev:0 163 ents 
+1552: entity 'crane_main': 2.0 ms
+1552: entity 'player1': 3.0 ms
+1552: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1552: all:29 th:29 ev:0 163 ents 
+1568: entity 'player1': 2.0 ms
+1568: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1568: all:25 th:25 ev:0 163 ents 
+1584: entity 'crane_main': 2.0 ms
+1584: entity 'player1': 2.0 ms
+1584: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1584: all:29 th:29 ev:0 163 ents 
+Wrote screenshots/shot00001.tga
+10 1600: entity 'player1': 3.0 ms
+1600: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1600: all:27 th:27 ev:0 163 ents 
+1616: entity 'crane_main': 2.0 ms
+1616: entity 'player1': 3.0 ms
+1616: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1616: all:28 th:28 ev:0 163 ents 
+1632: entity 'crane_main': 2.0 ms
+1632: entity 'player1': 3.0 ms
+1632: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1632: all:28 th:28 ev:0 163 ents 
+1648: entity 'player1': 2.0 ms
+1648: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1648: all:31 th:31 ev:0 163 ents 
+1664: entity 'crane_main': 2.0 ms
+1664: entity 'player1': 3.0 ms
+1664: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1664: all:28 th:28 ev:0 163 ents 
+1680: entity 'crane_main': 2.0 ms
+1680: entity 'player1': 3.0 ms
+1680: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1680: all:29 th:29 ev:0 163 ents 
+1696: entity 'crane_main': 2.0 ms
+1696: entity 'player1': 3.0 ms
+1696: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1696: all:28 th:28 ev:0 163 ents 
+1712: entity 'crane_main': 2.0 ms
+1712: entity 'player1': 3.0 ms
+1712: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1712: all:33 th:33 ev:0 163 ents 
+1728: entity 'crane_main': 3.0 ms
+1728: entity 'player1': 2.0 ms
+1728: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1728: all:29 th:29 ev:0 163 ents 
+1744: entity 'crane_main': 2.0 ms
+1744: entity 'player1': 3.0 ms
+1744: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1744: all:28 th:28 ev:0 163 ents 
+10 1760: entity 'crane_main': 2.0 ms
+1760: entity 'player1': 3.0 ms
+1760: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1760: all:37 th:37 ev:0 163 ents 
+1776: entity 'crane_main': 2.0 ms
+1776: entity 'player1': 2.0 ms
+1776: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1776: all:28 th:28 ev:0 163 ents 
+1792: entity 'crane_main': 2.0 ms
+1792: entity 'player1': 3.0 ms
+1792: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1792: all:29 th:29 ev:0 163 ents 
+1808: entity 'crane_main': 2.0 ms
+1808: entity 'player1': 3.0 ms
+1808: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1808: all:29 th:29 ev:0 163 ents 
+1824: entity 'crane_main': 3.0 ms
+1824: entity 'player1': 3.0 ms
+1824: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1824: all:34 th:34 ev:0 163 ents 
+1840: entity 'crane_main': 2.0 ms
+1840: entity 'player1': 2.0 ms
+1840: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1840: all:29 th:29 ev:0 163 ents 
+1856: entity 'crane_main': 3.0 ms
+1856: entity 'player1': 3.0 ms
+1856: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1856: all:29 th:29 ev:0 163 ents 
+1872: entity 'crane_main': 3.0 ms
+1872: entity 'player1': 2.0 ms
+1872: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1872: all:33 th:33 ev:0 163 ents 
+1888: entity 'crane_main': 2.0 ms
+1888: entity 'player1': 2.0 ms
+1888: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1888: all:29 th:29 ev:0 163 ents 
+1904: entity 'crane_main': 2.0 ms
+1904: entity 'player1': 3.0 ms
+1904: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1904: all:29 th:29 ev:0 163 ents 
+10 1920: entity 'crane_main': 2.0 ms
+1920: entity 'player1': 3.0 ms
+1920: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1920: all:28 th:28 ev:0 163 ents 
+1936: entity 'crane_main': 2.0 ms
+1936: entity 'player1': 3.0 ms
+1936: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1936: all:33 th:33 ev:0 163 ents 
+1952: entity 'crane_main': 2.0 ms
+1952: entity 'player1': 3.0 ms
+1952: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1952: all:29 th:29 ev:0 163 ents 
+1968: entity 'crane_main': 2.0 ms
+1968: entity 'player1': 3.0 ms
+1968: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 1968: all:28 th:28 ev:0 163 ents 
+1984: entity 'crane_main': 3.0 ms
+1984: entity 'player1': 3.0 ms
+1984: entity 'env_ragdoll_zsecm_0': 6.0 ms
+game 1984: all:39 th:39 ev:0 163 ents 
+2000: entity 'crane_main': 3.0 ms
+2000: entity 'player1': 3.0 ms
+2000: entity 'env_ragdoll_zsecm_0': 7.0 ms
+game 2000: all:37 th:37 ev:0 163 ents 
+2016: entity 'crane_main': 2.0 ms
+2016: entity 'player1': 3.0 ms
+game 2016: all:18 th:18 ev:0 162 ents 
+2032: entity 'crane_main': 2.0 ms
+2032: entity 'player1': 2.0 ms
+game 2032: all:20 th:20 ev:0 176 ents 
+2048: entity 'crane_main': 2.0 ms
+2048: entity 'player1': 2.0 ms
+game 2048: all:20 th:20 ev:0 176 ents 
+2064: entity 'crane_main': 6.0 ms
+2064: entity 'player1': 3.0 ms
+game 2064: all:24 th:24 ev:0 176 ents 
+10 2080: entity 'crane_main': 3.0 ms
+2080: entity 'player1': 3.0 ms
+game 2080: all:22 th:22 ev:0 186 ents 
+2096: entity 'crane_main': 2.0 ms
+2096: entity 'player1': 3.0 ms
+game 2096: all:21 th:21 ev:0 184 ents 
+2112: entity 'crane_main': 2.0 ms
+2112: entity 'player1': 3.0 ms
+game 2112: all:21 th:21 ev:0 184 ents 
+2128: entity 'crane_main': 3.0 ms
+2128: entity 'player1': 3.0 ms
+game 2128: all:26 th:26 ev:0 184 ents 
+2144: entity 'crane_main': 2.0 ms
+2144: entity 'player1': 3.0 ms
+game 2144: all:21 th:21 ev:0 184 ents 
+2160: entity 'crane_main': 2.0 ms
+2160: entity 'player1': 3.0 ms
+game 2160: all:21 th:21 ev:0 184 ents 
+2176: entity 'crane_main': 2.0 ms
+2176: entity 'player1': 3.0 ms
+game 2176: all:22 th:22 ev:0 184 ents 
+2192: entity 'crane_main': 2.0 ms
+2192: entity 'player1': 3.0 ms
+game 2192: all:21 th:21 ev:0 184 ents 
+2208: entity 'crane_main': 2.0 ms
+2208: entity 'player1': 3.0 ms
+game 2208: all:21 th:21 ev:0 184 ents 
+2224: entity 'crane_main': 2.0 ms
+2224: entity 'player1': 3.0 ms
+game 2224: all:21 th:21 ev:0 184 ents 
+10 2240: entity 'crane_main': 2.0 ms
+2240: entity 'player1': 2.0 ms
+game 2240: all:22 th:22 ev:0 184 ents 
+2256: entity 'crane_main': 2.0 ms
+2256: entity 'player1': 3.0 ms
+game 2256: all:21 th:21 ev:0 184 ents 
+2272: entity 'crane_main': 2.0 ms
+2272: entity 'player1': 2.0 ms
+game 2272: all:21 th:21 ev:0 184 ents 
+2288: entity 'crane_main': 2.0 ms
+2288: entity 'player1': 3.0 ms
+game 2288: all:25 th:25 ev:0 184 ents 
+2304: entity 'crane_main': 2.0 ms
+2304: entity 'player1': 3.0 ms
+game 2304: all:21 th:21 ev:0 184 ents 
+2320: entity 'crane_main': 2.0 ms
+2320: entity 'player1': 3.0 ms
+game 2320: all:21 th:21 ev:0 184 ents 
+2336: entity 'crane_main': 2.0 ms
+2336: entity 'player1': 3.0 ms
+game 2336: all:21 th:21 ev:0 184 ents 
+2352: entity 'crane_main': 2.0 ms
+2352: entity 'player1': 3.0 ms
+game 2352: all:21 th:21 ev:0 184 ents 
+2368: entity 'crane_main': 2.0 ms
+2368: entity 'player1': 2.0 ms
+game 2368: all:25 th:25 ev:0 184 ents 
+2384: entity 'crane_main': 2.0 ms
+2384: entity 'player1': 4.0 ms
+game 2384: all:21 th:21 ev:0 184 ents 
+10 2400: entity 'crane_main': 2.0 ms
+2400: entity 'player1': 3.0 ms
+game 2400: all:21 th:21 ev:0 184 ents 
+2416: entity 'crane_main': 2.0 ms
+2416: entity 'player1': 3.0 ms
+game 2416: all:21 th:21 ev:0 184 ents 
+2432: entity 'crane_main': 2.0 ms
+2432: entity 'player1': 4.0 ms
+game 2432: all:21 th:21 ev:0 184 ents 
+2448: entity 'crane_main': 2.0 ms
+2448: entity 'player1': 2.0 ms
+game 2448: all:28 th:28 ev:0 184 ents 
+2464: entity 'crane_main': 2.0 ms
+2464: entity 'player1': 2.0 ms
+game 2464: all:25 th:25 ev:0 184 ents 
+2480: entity 'crane_main': 3.0 ms
+2480: entity 'player1': 3.0 ms
+game 2480: all:26 th:26 ev:0 184 ents 
+2496: entity 'crane_main': 2.0 ms
+2496: entity 'player1': 2.0 ms
+game 2496: all:21 th:21 ev:0 184 ents 
+2512: entity 'crane_main': 2.0 ms
+2512: entity 'player1': 3.0 ms
+game 2512: all:22 th:21 ev:1 184 ents 
+2528: entity 'crane_main': 2.0 ms
+2528: entity 'player1': 3.0 ms
+game 2528: all:21 th:21 ev:0 184 ents 
+2544: entity 'crane_main': 2.0 ms
+2544: entity 'player1': 3.0 ms
+game 2544: all:20 th:20 ev:0 177 ents 
+10 2560: entity 'crane_main': 2.0 ms
+2560: entity 'player1': 3.0 ms
+game 2560: all:20 th:20 ev:0 177 ents 
+2576: entity 'crane_main': 2.0 ms
+2576: entity 'player1': 3.0 ms
+game 2576: all:20 th:20 ev:0 177 ents 
+2592: entity 'crane_main': 2.0 ms
+2592: entity 'player1': 3.0 ms
+game 2592: all:21 th:21 ev:0 177 ents 
+2608: entity 'crane_main': 2.0 ms
+2608: entity 'player1': 3.0 ms
+game 2608: all:29 th:29 ev:0 177 ents 
+2624: entity 'crane_main': 2.0 ms
+2624: entity 'player1': 4.0 ms
+game 2624: all:21 th:21 ev:0 177 ents 
+2640: entity 'crane_main': 2.0 ms
+2640: entity 'player1': 3.0 ms
+game 2640: all:20 th:20 ev:0 177 ents 
+2656: entity 'crane_main': 2.0 ms
+2656: entity 'player1': 3.0 ms
+game 2656: all:20 th:20 ev:0 177 ents 
+2672: entity 'crane_main': 2.0 ms
+2672: entity 'player1': 3.0 ms
+game 2672: all:21 th:21 ev:0 177 ents 
+2688: entity 'crane_main': 2.0 ms
+2688: entity 'player1': 3.0 ms
+game 2688: all:24 th:24 ev:0 177 ents 
+2704: entity 'crane_main': 2.0 ms
+2704: entity 'player1': 3.0 ms
+game 2704: all:20 th:20 ev:0 177 ents 
+10 2720: entity 'crane_main': 2.0 ms
+2720: entity 'player1': 3.0 ms
+game 2720: all:21 th:21 ev:0 177 ents 
+2736: entity 'player1': 3.0 ms
+game 2736: all:18 th:18 ev:0 177 ents 
+2752: entity 'crane_main': 2.0 ms
+2752: entity 'player1': 4.0 ms
+game 2752: all:20 th:20 ev:0 177 ents 
+2768: entity 'crane_main': 2.0 ms
+2768: entity 'player1': 2.0 ms
+game 2768: all:25 th:25 ev:0 177 ents 
+2784: entity 'player1': 3.0 ms
+game 2784: all:18 th:18 ev:0 177 ents 
+2800: entity 'crane_main': 2.0 ms
+2800: entity 'player1': 3.0 ms
+game 2800: all:21 th:20 ev:1 177 ents 
+2816: entity 'crane_main': 2.0 ms
+2816: entity 'player1': 3.0 ms
+game 2816: all:20 th:20 ev:0 177 ents 
+2832: entity 'crane_main': 2.0 ms
+2832: entity 'player1': 3.0 ms
+game 2832: all:21 th:21 ev:0 177 ents 
+2848: entity 'crane_main': 2.0 ms
+2848: entity 'player1': 2.0 ms
+game 2848: all:25 th:25 ev:0 177 ents 
+2864: entity 'crane_main': 2.0 ms
+2864: entity 'player1': 2.0 ms
+game 2864: all:21 th:21 ev:0 177 ents 
+10 2880: entity 'crane_main': 2.0 ms
+2880: entity 'player1': 2.0 ms
+game 2880: all:21 th:21 ev:0 177 ents 
+2896: entity 'player1': 2.0 ms
+game 2896: all:18 th:18 ev:0 177 ents 
+2912: entity 'crane_main': 2.0 ms
+2912: entity 'player1': 2.0 ms
+game 2912: all:21 th:21 ev:0 177 ents 
+2928: entity 'crane_main': 2.0 ms
+2928: entity 'player1': 3.0 ms
+game 2928: all:21 th:21 ev:0 177 ents 
+2944: entity 'player1': 3.0 ms
+game 2944: all:18 th:18 ev:0 178 ents 
+2960: entity 'player1': 2.0 ms
+game 2960: all:17 th:17 ev:0 179 ents 
+2976: entity 'crane_main': 2.0 ms
+2976: entity 'player1': 3.0 ms
+game 2976: all:21 th:21 ev:0 179 ents 
+2992: entity 'crane_main': 2.0 ms
+2992: entity 'player1': 3.0 ms
+game 2992: all:21 th:21 ev:0 179 ents 
+3008: entity 'crane_main': 2.0 ms
+3008: entity 'player1': 3.0 ms
+game 3008: all:21 th:21 ev:0 179 ents 
+3024: entity 'crane_main': 2.0 ms
+3024: entity 'player1': 2.0 ms
+game 3024: all:27 th:27 ev:0 179 ents 
+10 3040: entity 'player1': 2.0 ms
+game 3040: all:22 th:22 ev:0 179 ents 
+3056: entity 'player1': 3.0 ms
+game 3056: all:19 th:19 ev:0 179 ents 
+3072: entity 'crane_main': 2.0 ms
+3072: entity 'player1': 3.0 ms
+game 3072: all:21 th:20 ev:1 179 ents 
+3088: entity 'crane_main': 2.0 ms
+3088: entity 'player1': 3.0 ms
+game 3088: all:21 th:21 ev:0 177 ents 
+3104: entity 'player1': 2.0 ms
+game 3104: all:16 th:16 ev:0 174 ents 
+3120: entity 'crane_main': 3.0 ms
+3120: entity 'player1': 3.0 ms
+game 3120: all:25 th:25 ev:0 174 ents 
+3136: entity 'crane_main': 2.0 ms
+3136: entity 'player1': 3.0 ms
+game 3136: all:19 th:19 ev:0 174 ents 
+3152: entity 'player1': 3.0 ms
+game 3152: all:21 th:21 ev:0 174 ents 
+3168: entity 'player1': 2.0 ms
+game 3168: all:17 th:17 ev:0 174 ents 
+3184: entity 'crane_main': 2.0 ms
+3184: entity 'player1': 3.0 ms
+game 3184: all:20 th:20 ev:0 174 ents 
+10 3200: entity 'crane_main': 2.0 ms
+3200: entity 'player1': 3.0 ms
+game 3200: all:21 th:21 ev:0 174 ents 
+3216: entity 'crane_main': 2.0 ms
+3216: entity 'player1': 4.0 ms
+game 3216: all:20 th:20 ev:0 174 ents 
+3232: entity 'player1': 3.0 ms
+game 3232: all:18 th:18 ev:0 174 ents 
+3248: entity 'crane_main': 2.0 ms
+3248: entity 'player1': 3.0 ms
+game 3248: all:20 th:20 ev:0 174 ents 
+3264: entity 'crane_main': 2.0 ms
+3264: entity 'player1': 3.0 ms
+game 3264: all:20 th:20 ev:0 175 ents 
+3280: entity 'crane_main': 2.0 ms
+3280: entity 'player1': 3.0 ms
+game 3280: all:20 th:20 ev:0 175 ents 
+3296: entity 'crane_main': 2.0 ms
+3296: entity 'player1': 4.0 ms
+game 3296: all:26 th:26 ev:0 176 ents 
+3312: entity 'crane_main': 2.0 ms
+3312: entity 'player1': 2.0 ms
+game 3312: all:20 th:20 ev:0 176 ents 
+3328: entity 'crane_main': 2.0 ms
+3328: entity 'player1': 2.0 ms
+game 3328: all:20 th:20 ev:0 176 ents 
+3344: entity 'crane_main': 2.0 ms
+3344: entity 'player1': 3.0 ms
+game 3344: all:20 th:20 ev:0 176 ents 
+10 3360: entity 'crane_main': 2.0 ms
+3360: entity 'player1': 3.0 ms
+game 3360: all:20 th:20 ev:0 176 ents 
+3376: entity 'crane_main': 2.0 ms
+3376: entity 'player1': 3.0 ms
+game 3376: all:20 th:20 ev:0 176 ents 
+3392: entity 'crane_main': 2.0 ms
+3392: entity 'player1': 3.0 ms
+game 3392: all:21 th:21 ev:0 176 ents 
+3408: entity 'crane_main': 2.0 ms
+3408: entity 'player1': 3.0 ms
+game 3408: all:20 th:20 ev:0 176 ents 
+3424: entity 'crane_main': 2.0 ms
+3424: entity 'player1': 3.0 ms
+game 3424: all:21 th:21 ev:0 176 ents 
+3440: entity 'crane_main': 2.0 ms
+3440: entity 'player1': 2.0 ms
+game 3440: all:20 th:20 ev:0 176 ents 
+3456: entity 'crane_main': 2.0 ms
+3456: entity 'player1': 4.0 ms
+game 3456: all:21 th:21 ev:0 176 ents 
+3472: entity 'crane_main': 2.0 ms
+3472: entity 'player1': 3.0 ms
+game 3472: all:20 th:20 ev:0 176 ents 
+3488: entity 'crane_main': 2.0 ms
+3488: entity 'player1': 3.0 ms
+game 3488: all:20 th:20 ev:0 176 ents 
+3504: entity 'crane_main': 2.0 ms
+3504: entity 'player1': 3.0 ms
+game 3504: all:20 th:20 ev:0 176 ents 
+10 3520: entity 'crane_main': 2.0 ms
+3520: entity 'player1': 3.0 ms
+game 3520: all:21 th:21 ev:0 176 ents 
+3536: entity 'crane_main': 2.0 ms
+3536: entity 'player1': 3.0 ms
+game 3536: all:20 th:20 ev:0 176 ents 
+3552: entity 'crane_main': 2.0 ms
+3552: entity 'player1': 3.0 ms
+game 3552: all:24 th:24 ev:0 176 ents 
+3568: entity 'crane_main': 2.0 ms
+3568: entity 'player1': 3.0 ms
+game 3568: all:20 th:20 ev:0 176 ents 
+3584: entity 'player1': 3.0 ms
+game 3584: all:17 th:17 ev:0 177 ents 
+3600: entity 'crane_main': 2.0 ms
+3600: entity 'player1': 3.0 ms
+game 3600: all:21 th:21 ev:0 177 ents 
+3616: entity 'player1': 3.0 ms
+game 3616: all:17 th:17 ev:0 177 ents 
+3632: entity 'player1': 3.0 ms
+game 3632: all:18 th:18 ev:0 177 ents 
+3648: entity 'crane_main': 2.0 ms
+3648: entity 'monster_demon_imp_74': 2.0 ms
+3648: entity 'player1': 4.0 ms
+game 3648: all:32 th:32 ev:0 177 ents 
+3664: entity 'crane_main': 2.0 ms
+3664: entity 'player1': 3.0 ms
+game 3664: all:20 th:20 ev:0 177 ents 
+10 3680: entity 'player1': 3.0 ms
+game 3680: all:17 th:17 ev:0 177 ents 
+3696: entity 'crane_main': 2.0 ms
+3696: entity 'player1': 3.0 ms
+game 3696: all:26 th:26 ev:0 177 ents 
+3712: entity 'crane_main': 2.0 ms
+3712: entity 'player1': 3.0 ms
+game 3712: all:19 th:19 ev:0 177 ents 
+3728: entity 'crane_main': 2.0 ms
+3728: entity 'player1': 3.0 ms
+game 3728: all:20 th:20 ev:0 177 ents 
+3744: entity 'crane_main': 3.0 ms
+3744: entity 'player1': 3.0 ms
+game 3744: all:20 th:20 ev:0 177 ents 
+3760: entity 'crane_main': 2.0 ms
+3760: entity 'player1': 3.0 ms
+game 3760: all:20 th:20 ev:0 177 ents 
+3776: entity 'crane_main': 2.0 ms
+3776: entity 'player1': 3.0 ms
+game 3776: all:24 th:24 ev:0 177 ents 
+3792: entity 'crane_main': 2.0 ms
+3792: entity 'player1': 3.0 ms
+game 3792: all:20 th:20 ev:0 177 ents 
+3808: entity 'crane_main': 2.0 ms
+3808: entity 'player1': 3.0 ms
+game 3808: all:20 th:19 ev:1 177 ents 
+3824: entity 'player1': 2.0 ms
+game 3824: all:17 th:17 ev:0 177 ents 
+10 3840: entity 'crane_main': 2.0 ms
+3840: entity 'player1': 3.0 ms
+game 3840: all:20 th:20 ev:0 177 ents 
+3856: entity 'crane_main': 2.0 ms
+3856: entity 'player1': 2.0 ms
+game 3856: all:24 th:23 ev:1 177 ents 
+3872: entity 'player1': 3.0 ms
+game 3872: all:17 th:17 ev:0 177 ents 
+3888: entity 'crane_main': 2.0 ms
+3888: entity 'player1': 2.0 ms
+game 3888: all:20 th:20 ev:0 177 ents 
+3904: entity 'crane_main': 2.0 ms
+3904: entity 'player1': 3.0 ms
+game 3904: all:20 th:20 ev:0 177 ents 
+3920: entity 'crane_main': 2.0 ms
+3920: entity 'player1': 2.0 ms
+game 3920: all:20 th:20 ev:0 177 ents 
+3936: entity 'crane_main': 2.0 ms
+3936: entity 'player1': 3.0 ms
+game 3936: all:20 th:20 ev:0 177 ents 
+3952: entity 'crane_main': 2.0 ms
+3952: entity 'player1': 3.0 ms
+game 3952: all:20 th:20 ev:0 177 ents 
+3968: entity 'crane_main': 2.0 ms
+3968: entity 'player1': 3.0 ms
+game 3968: all:20 th:20 ev:0 177 ents 
+3984: entity 'crane_main': 2.0 ms
+3984: entity 'player1': 3.0 ms
+game 3984: all:20 th:20 ev:0 177 ents 
+10 4000: entity 'crane_main': 2.0 ms
+4000: entity 'player1': 3.0 ms
+game 4000: all:19 th:19 ev:0 177 ents 
+4016: entity 'player1': 2.0 ms
+game 4016: all:18 th:17 ev:1 177 ents 
+4032: entity 'player1': 3.0 ms
+game 4032: all:21 th:21 ev:0 166 ents 
+4048: entity 'crane_main': 2.0 ms
+4048: entity 'player1': 3.0 ms
+game 4048: all:18 th:18 ev:0 165 ents 
+4064: entity 'crane_main': 2.0 ms
+4064: entity 'player1': 4.0 ms
+game 4064: all:20 th:20 ev:0 171 ents 
+4080: entity 'crane_main': 2.0 ms
+4080: entity 'player1': 3.0 ms
+game 4080: all:22 th:19 ev:3 171 ents 
+4096: entity 'swinglight_mover': 2.0 ms
+4096: entity 'player1': 3.0 ms
+game 4096: all:28 th:28 ev:0 226 ents 
+4112: entity 'swinglight_mover': 2.0 ms
+4112: entity 'player1': 3.0 ms
+game 4112: all:31 th:31 ev:0 226 ents 
+4128: entity 'crane_main': 2.0 ms
+4128: entity 'swinglight_mover': 2.0 ms
+4128: entity 'player1': 3.0 ms
+game 4128: all:29 th:29 ev:0 227 ents 
+4144: entity 'crane_main': 2.0 ms
+4144: entity 'swinglight_mover': 2.0 ms
+4144: entity 'player1': 2.0 ms
+game 4144: all:29 th:29 ev:0 227 ents 
+10 4160: entity 'crane_main': 2.0 ms
+4160: entity 'swinglight_mover': 2.0 ms
+4160: entity 'player1': 4.0 ms
+game 4160: all:30 th:30 ev:0 227 ents 
+4176: entity 'swinglight_mover': 2.0 ms
+4176: entity 'player1': 2.0 ms
+game 4176: all:26 th:26 ev:0 227 ents 
+4192: entity 'swinglight_mover': 2.0 ms
+4192: entity 'player1': 2.0 ms
+game 4192: all:27 th:27 ev:0 227 ents 
+4208: entity 'swinglight_mover': 2.0 ms
+4208: entity 'crane_main': 2.0 ms
+4208: entity 'player1': 3.0 ms
+game 4208: all:37 th:37 ev:0 227 ents 
+4224: entity 'crane_main': 2.0 ms
+4224: entity 'swinglight_mover': 2.0 ms
+4224: entity 'player1': 4.0 ms
+game 4224: all:29 th:29 ev:0 227 ents 
+4240: entity 'crane_main': 2.0 ms
+4240: entity 'swinglight_mover': 2.0 ms
+4240: entity 'player1': 3.0 ms
+game 4240: all:29 th:29 ev:0 227 ents 
+4256: entity 'swinglight_mover': 3.0 ms
+4256: entity 'player1': 2.0 ms
+game 4256: all:28 th:28 ev:0 227 ents 
+4272: entity 'swinglight_mover': 2.0 ms
+4272: entity 'player1': 4.0 ms
+game 4272: all:27 th:27 ev:0 227 ents 
+4288: entity 'swinglight_mover': 2.0 ms
+4288: entity 'player1': 3.0 ms
+game 4288: all:36 th:36 ev:0 227 ents 
+4304: entity 'swinglight_mover': 2.0 ms
+4304: entity 'crane_main': 2.0 ms
+4304: entity 'player1': 3.0 ms
+game 4304: all:34 th:34 ev:0 227 ents 
+10 4320: entity 'crane_main': 2.0 ms
+4320: entity 'swinglight_mover': 2.0 ms
+4320: entity 'player1': 4.0 ms
+game 4320: all:30 th:30 ev:0 227 ents 
+4336: entity 'crane_main': 3.0 ms
+4336: entity 'swinglight_mover': 2.0 ms
+4336: entity 'player1': 3.0 ms
+game 4336: all:30 th:30 ev:0 227 ents 
+4352: entity 'swinglight_mover': 2.0 ms
+4352: entity 'crane_main': 2.0 ms
+4352: entity 'player1': 3.0 ms
+game 4352: all:31 th:30 ev:1 227 ents 
+4368: entity 'crane_main': 2.0 ms
+4368: entity 'swinglight_mover': 2.0 ms
+4368: entity 'player1': 3.0 ms
+game 4368: all:30 th:30 ev:0 227 ents 
+4384: entity 'crane_main': 2.0 ms
+4384: entity 'swinglight_mover': 2.0 ms
+4384: entity 'player1': 3.0 ms
+game 4384: all:29 th:29 ev:0 227 ents 
+4400: entity 'crane_main': 2.0 ms
+4400: entity 'swinglight_mover': 2.0 ms
+4400: entity 'player1': 3.0 ms
+game 4400: all:29 th:29 ev:0 227 ents 
+4416: entity 'swinglight_mover': 2.0 ms
+4416: entity 'player1': 3.0 ms
+game 4416: all:32 th:31 ev:1 227 ents 
+4432: entity 'crane_main': 2.0 ms
+4432: entity 'swinglight_mover': 3.0 ms
+4432: entity 'player1': 3.0 ms
+game 4432: all:30 th:30 ev:0 227 ents 
+4448: entity 'crane_main': 3.0 ms
+4448: entity 'swinglight_mover': 2.0 ms
+4448: entity 'player1': 3.0 ms
+game 4448: all:30 th:30 ev:0 227 ents 
+4464: entity 'swinglight_mover': 2.0 ms
+4464: entity 'player1': 3.0 ms
+game 4464: all:28 th:27 ev:1 227 ents 
+10 4480: entity 'swinglight_mover': 2.0 ms
+4480: entity 'player1': 3.0 ms
+game 4480: all:32 th:32 ev:0 227 ents 
+4496: entity 'swinglight_mover': 3.0 ms
+4496: entity 'player1': 3.0 ms
+game 4496: all:28 th:28 ev:0 226 ents 
+4512: entity 'crane_main': 3.0 ms
+4512: entity 'swinglight_mover': 2.0 ms
+4512: entity 'player1': 3.0 ms
+game 4512: all:30 th:30 ev:0 226 ents 
+4528: entity 'swinglight_mover': 2.0 ms
+4528: entity 'crane_main': 2.0 ms
+4528: entity 'player1': 3.0 ms
+game 4528: all:30 th:30 ev:0 218 ents 
+4544: entity 'crane_main': 2.0 ms
+4544: entity 'swinglight_mover': 2.0 ms
+4544: entity 'player1': 3.0 ms
+game 4544: all:36 th:35 ev:1 223 ents 
+4560: entity 'crane_main': 2.0 ms
+4560: entity 'swinglight_mover': 2.0 ms
+4560: entity 'player1': 3.0 ms
+game 4560: all:31 th:31 ev:0 225 ents 
+4576: entity 'crane_main': 2.0 ms
+4576: entity 'swinglight_mover': 2.0 ms
+4576: entity 'player1': 3.0 ms
+game 4576: all:30 th:30 ev:0 225 ents 
+4592: entity 'crane_main': 2.0 ms
+4592: entity 'swinglight_mover': 2.0 ms
+4592: entity 'player1': 3.0 ms
+game 4592: all:31 th:30 ev:1 225 ents 
+4608: entity 'swinglight_mover': 2.0 ms
+4608: entity 'player1': 3.0 ms
+game 4608: all:28 th:28 ev:0 225 ents 
+4624: entity 'swinglight_mover': 2.0 ms
+4624: entity 'crane_main': 3.0 ms
+4624: entity 'player1': 3.0 ms
+game 4624: all:31 th:31 ev:0 225 ents 
+benchmark: 29 frames rendered in 10.6 seconds = 2.7 fps
+10 4640: entity 'crane_main': 2.0 ms
+4640: entity 'swinglight_mover': 2.0 ms
+4640: entity 'player1': 3.0 ms
+game 4640: all:39 th:39 ev:0 225 ents 
+4656: entity 'crane_main': 2.0 ms
+4656: entity 'swinglight_mover': 2.0 ms
+4656: entity 'player1': 4.0 ms
+game 4656: all:39 th:39 ev:0 225 ents 
+4672: entity 'crane_main': 2.0 ms
+4672: entity 'swinglight_mover': 2.0 ms
+4672: entity 'player1': 2.0 ms
+game 4672: all:30 th:30 ev:0 225 ents 
+4688: entity 'crane_main': 2.0 ms
+4688: entity 'swinglight_mover': 2.0 ms
+4688: entity 'player1': 3.0 ms
+game 4688: all:30 th:30 ev:0 225 ents 
+4704: entity 'crane_main': 2.0 ms
+4704: entity 'swinglight_mover': 2.0 ms
+4704: entity 'player1': 3.0 ms
+game 4704: all:30 th:30 ev:0 225 ents 
+4720: entity 'swinglight_mover': 2.0 ms
+4720: entity 'player1': 3.0 ms
+game 4720: all:27 th:27 ev:0 225 ents 
+4736: entity 'swinglight_mover': 2.0 ms
+4736: entity 'crane_main': 2.0 ms
+4736: entity 'player1': 3.0 ms
+game 4736: all:32 th:32 ev:0 225 ents 
+4752: entity 'crane_main': 2.0 ms
+4752: entity 'swinglight_mover': 2.0 ms
+4752: entity 'player1': 2.0 ms
+game 4752: all:30 th:30 ev:0 225 ents 
+4768: entity 'crane_main': 2.0 ms
+4768: entity 'swinglight_mover': 2.0 ms
+4768: entity 'player1': 3.0 ms
+game 4768: all:34 th:34 ev:0 225 ents 
+4784: entity 'crane_main': 2.0 ms
+4784: entity 'swinglight_mover': 2.0 ms
+4784: entity 'player1': 3.0 ms
+game 4784: all:31 th:31 ev:0 225 ents 
+----- Game Map Shutdown -----
+idRenderSystem::Shutdown()
+Shutting down backend threadShutting down OpenGL subsystem
+----- Game Shutdown -----
+----- Game Map Shutdown -----
+Shutdown event system
+exit code 0

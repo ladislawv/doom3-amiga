@@ -18,7 +18,7 @@ mkdir -p "$RUN/save"
 command -v xvfb-run >/dev/null || { echo "no xvfb-run: sudo apt install xvfb"; exit 1; }
 
 # llvmpipe for GL ES 2.0 through SDL2's X11 driver; no audio device in WSL.
-export LIBGL_ALWAYS_SOFTWARE=1 SDL_AUDIODRIVER=dummy
+export LIBGL_ALWAYS_SOFTWARE=1 SDL_AUDIODRIVER=${SDL_AUDIODRIVER:-dummy}
 timeout "${TIMEOUT:-600}" xvfb-run -a -s "-screen 0 ${W}x${H}x24" \
     "$BIN" +set fs_basepath "$DATA" +set fs_savepath "$RUN/save" \
     +set r_fullscreen 0 +set r_mode -1 +set r_customWidth "$W" +set r_customHeight "$H" \

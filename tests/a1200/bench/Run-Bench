@@ -1,0 +1,44 @@
+; Run-Bench - Doom 3 port, phase 5: builds compared on the A1200 (PLAN.md
+; section 10). Each dhewm3-<build> in this directory loads the map, lets it run
+; WARMUP seconds (the ragdolls settle), counts the frames for SECS seconds and
+; quits; the summary (fps; game, front end and back end time per frame; game
+; tics a second) goes to results/<build>.txt. Watch the screen: each build
+; shows the map for WARMUP+SECS seconds after a long black loading screen.
+;   CD to this directory, then:   Execute Run-Bench
+;   Another map:                   Execute Run-Bench MAP=game/demo_mars_city1
+;   Other times:                   Execute Run-Bench WARMUP=20 SECS=60
+;   ogles2's draw timing:          Execute Run-Bench OGLES2PROBE=1 (its probe P,
+;                                  every 256 frames, in results/ogles2.log)
+.key MAP/K,WARMUP/K,SECS/K,DATA/K,OGLES2PROBE/K
+.def MAP "game/demo_mc_underground"
+.def WARMUP 10
+.def SECS 30
+.def DATA "Stuff:doom3"
+.def OGLES2PROBE 0
+.bra {
+.ket }
+
+FailAt 21
+MakeDir results >NIL:
+List LIBS:ogles2#? >results/libs.txt
+List libs >>results/libs.txt
+; the PC sampler's executables by MD5 (tests/a1200/build_pc_sample.sh bench)
+If EXISTS build-ids.txt
+  Copy build-ids.txt results/ QUIET
+EndIf
+Stack 9000000
+If {OGLES2PROBE} EQ 1
+  ; the log is written by the game's process, whose current directory is this one
+  SetEnv OGLES2/Probe P
+  SetEnv OGLES2/LogFile results/ogles2.log
+EndIf
+Echo "Doom 3 builds on {MAP}: {WARMUP} s warm-up, {SECS} s counted"
+; AmigaDOS has no loops: a script with one line per build, then run it
+List PAT="dhewm3-~(#?.(args|dump))" LFORMAT "Execute bench-one %N {MAP} {WARMUP} {SECS} {DATA}" >T:d3bench-run
+Execute T:d3bench-run
+Delete T:d3bench-run QUIET >NIL:
+If {OGLES2PROBE} EQ 1
+  UnSetEnv OGLES2/Probe
+  UnSetEnv OGLES2/LogFile
+EndIf
+Search results/#?.txt "benchmark:" NONUM

@@ -1,0 +1,209 @@
+diff --git a/neo/framework/Common.h b/neo/framework/Common.h
+index 13aec6b2..0ccd2f8d 100644
+--- a/neo/framework/Common.h
++++ b/neo/framework/Common.h
+@@ -296,4 +296,24 @@ public:
+ 
+ extern idCommon *		common;
+ 
++// port (patch 0018): time spent loading, summed by kind from the start of a
++// map change and printed after its "msec to load" (idSessionLocal::ExecuteMapChange);
++// models count their materials' images too; inside the images: their DDS
++// files read and checked, image files read and decoded, uploads (with mipmaps);
++// and every file opened in a pk4 (unzReOpen opens the pk4 again)
++enum { LOAD_IMAGES, LOAD_MODELS, LOAD_SOUNDS, LOAD_IMAGE_DDS, LOAD_IMAGE_FILES, LOAD_IMAGE_UPLOADS,
++	LOAD_ZIP_OPENS, LOAD_NUM_KINDS };
++// the sums so far as one line
++void					Com_PrintLoadTimes( const char *when );
++extern double			com_loadMsec[LOAD_NUM_KINDS];
++extern int				com_loadCount[LOAD_NUM_KINDS];
++class idLoadTimer {		// the time of its scope added to one kind
++public:
++						idLoadTimer( int kind );
++						~idLoadTimer();
++private:
++	int					kind;
++	double				start;
++};
++
+ #endif /* !__COMMON_H__ */
+diff --git a/neo/framework/FileSystem.cpp b/neo/framework/FileSystem.cpp
+index 0dc0d99e..ccbd22bb 100644
+--- a/neo/framework/FileSystem.cpp
++++ b/neo/framework/FileSystem.cpp
+@@ -2929,7 +2929,11 @@ idFile_InZip * idFileSystemLocal::ReadFileFromZip( pack_t *pak, fileInPack_t *pa
+ 	unzSetOffset64( pak->handle, pakFile->pos );
+ 
+ 	// clone handle and assign a new internal filestream to zip file to it
+-	unzFile uf = unzReOpen( pak->pakFilename, pak->handle );
++	unzFile uf;
++	{
++		idLoadTimer	openTimer( LOAD_ZIP_OPENS );	// patch 0018
++		uf = unzReOpen( pak->pakFilename, pak->handle );
++	}
+ 	if ( uf == NULL ) {
+ 		common->FatalError( "Couldn't reopen %s", pak->pakFilename.c_str() );
+ 	}
+diff --git a/neo/framework/Session.cpp b/neo/framework/Session.cpp
+index c4539b6f..8d0a190f 100644
+--- a/neo/framework/Session.cpp
++++ b/neo/framework/Session.cpp
+@@ -1638,6 +1638,8 @@ void idSessionLocal::ExecuteMapChange( bool noFadeWipe ) {
+ 	}
+ 
+ 	int start = Sys_Milliseconds();
++	memset( com_loadMsec, 0, sizeof( com_loadMsec ) );
++	memset( com_loadCount, 0, sizeof( com_loadCount ) );
+ 
+ 	common->Printf( "----- Map Initialization -----\n" );
+ 	common->Printf( "Map: %s\n", mapString.c_str() );
+@@ -1683,24 +1685,35 @@ void idSessionLocal::ExecuteMapChange( bool noFadeWipe ) {
+ 		}
+ 	}
+ 
+-	// actually purge/load the media
++	// actually purge/load the media (port: each step's time printed)
++	int stepStart = Sys_Milliseconds();
++#define LOAD_STEP( name ) { int now = Sys_Milliseconds(); common->Printf( "%6d msec: %s\n", now - stepStart, name ); \
++	Com_PrintLoadTimes( "so far" ); stepStart = now; }
++	Com_PrintLoadTimes( "so far" );	// the entities spawned
+ 	if ( !reloadingSameMap ) {
+ 		renderSystem->EndLevelLoad();
++		LOAD_STEP( "renderSystem->EndLevelLoad" );
+ 		soundSystem->EndLevelLoad( mapString.c_str() );
++		LOAD_STEP( "soundSystem->EndLevelLoad" );
+ 		declManager->EndLevelLoad();
++		LOAD_STEP( "declManager->EndLevelLoad" );
+ 		SetBytesNeededForMapLoad( mapString.c_str(), fileSystem->GetReadCount() );
+ 	}
+ 	uiManager->EndLevelLoad();
++	LOAD_STEP( "uiManager->EndLevelLoad" );
+ 
+ 	if ( !idAsyncNetwork::IsActive() && !loadingSaveGame ) {
+ 		// run a few frames to allow everything to settle
+ 		for ( i = 0; i < 10; i++ ) {
+ 			game->RunFrame( mapSpawnData.mapSpawnUsercmd );
+ 		}
++		LOAD_STEP( "10 game frames to settle" );
+ 	}
++#undef LOAD_STEP
+ 
+ 	int	msec = Sys_Milliseconds() - start;
+ 	common->Printf( "%6d msec to load %s\n", msec, mapString.c_str() );
++	Com_PrintLoadTimes( "in all" );
+ 
+ 	// let the renderSystem generate interactions now that everything is spawned
+ 	rw->GenerateAllInteractions();
+@@ -2754,6 +2767,31 @@ static void BenchmarkFrame( bool mapRunning, int gameTics ) {
+ 	}
+ }
+ 
++/*
++===============
++Load times (Common.h, patch 0018)
++===============
++*/
++double com_loadMsec[LOAD_NUM_KINDS];
++int com_loadCount[LOAD_NUM_KINDS];
++
++idLoadTimer::idLoadTimer( int kind ) : kind( kind ), start( Sys_MillisecondsPrecise() ) {
++}
++
++idLoadTimer::~idLoadTimer() {
++	com_loadMsec[kind] += Sys_MillisecondsPrecise() - start;
++	com_loadCount[kind]++;
++}
++
++void Com_PrintLoadTimes( const char *when ) {
++	common->Printf( "load %s: %d images in %.0f msec (DDS %d in %.0f, files %d in %.0f, uploads %d in %.0f), "
++		"%d models in %.0f msec (with their images), %d sounds in %.0f msec, %d pk4 file opens in %.0f msec\n", when,
++		com_loadCount[LOAD_IMAGES], com_loadMsec[LOAD_IMAGES], com_loadCount[LOAD_IMAGE_DDS], com_loadMsec[LOAD_IMAGE_DDS],
++		com_loadCount[LOAD_IMAGE_FILES], com_loadMsec[LOAD_IMAGE_FILES], com_loadCount[LOAD_IMAGE_UPLOADS],
++		com_loadMsec[LOAD_IMAGE_UPLOADS], com_loadCount[LOAD_MODELS], com_loadMsec[LOAD_MODELS],
++		com_loadCount[LOAD_SOUNDS], com_loadMsec[LOAD_SOUNDS], com_loadCount[LOAD_ZIP_OPENS], com_loadMsec[LOAD_ZIP_OPENS] );
++}
++
+ /*
+ ===============
+ com_presentLastTic (port): when a frame runs several game tics (a 68k runs
+diff --git a/neo/renderer/Image_load.cpp b/neo/renderer/Image_load.cpp
+index 3debb947..b5dcffae 100644
+--- a/neo/renderer/Image_load.cpp
++++ b/neo/renderer/Image_load.cpp
+@@ -948,7 +948,10 @@ bool idImage::CheckPrecompressedImage() {
+ 	}
+ 
+ 	timestamp = precompTimestamp;
+-	UploadPrecompressedImage( data, len );
++	{
++		idLoadTimer	uploadTimer( LOAD_IMAGE_UPLOADS );
++		UploadPrecompressedImage( data, len );
++	}
+ 	R_StaticFree( data );
+ 	return precompressedFile;
+ }
+@@ -1051,6 +1054,7 @@ On exit, the idImage will have a valid OpenGL texture number that can be bound
+ void	idImage::ActuallyLoadImage( bool fromBind ) {
+ 	int		width, height;
+ 	byte	*pic;
++	idLoadTimer	loadTimer( LOAD_IMAGES );	// patch 0018
+ 
+ 	if(fromBind)
+ 	{
+@@ -1109,11 +1113,17 @@ void	idImage::ActuallyLoadImage( bool fromBind ) {
+ 	} else {
+ 		// see if we have a pre-generated image file that is
+ 		// already image processed and compressed
+-		if ( globalImages->image_usePrecompressedTextures.GetBool() && CheckPrecompressedImage() ) {
+-			return;
++		if ( globalImages->image_usePrecompressedTextures.GetBool() ) {
++			idLoadTimer	ddsTimer( LOAD_IMAGE_DDS );
++			if ( CheckPrecompressedImage() ) {
++				return;
++			}
+ 		}
+ 
+-		R_LoadImageProgram( imgName, &pic, &width, &height, &timestamp, &depth );
++		{
++			idLoadTimer	fileTimer( LOAD_IMAGE_FILES );
++			R_LoadImageProgram( imgName, &pic, &width, &height, &timestamp, &depth );
++		}
+ 
+ 		if ( pic == NULL ) {
+ 			common->Warning( "Couldn't load image: %s", imgName.c_str() );
+@@ -1121,7 +1131,10 @@ void	idImage::ActuallyLoadImage( bool fromBind ) {
+ 			return;
+ 		}
+ 
+-		GenerateImage( pic, width, height, filter, allowDownSize, repeat, depth );
++		{
++			idLoadTimer	uploadTimer( LOAD_IMAGE_UPLOADS );
++			GenerateImage( pic, width, height, filter, allowDownSize, repeat, depth );
++		}
+ 		precompressedFile = false;
+ 
+ 		R_StaticFree( pic );
+diff --git a/neo/renderer/ModelManager.cpp b/neo/renderer/ModelManager.cpp
+index 58ab6e40..ef1971bd 100644
+--- a/neo/renderer/ModelManager.cpp
++++ b/neo/renderer/ModelManager.cpp
+@@ -284,6 +284,7 @@ idRenderModel *idRenderModelManagerLocal::GetModel( const char *modelName, bool
+ 	}
+ 
+ 	// see if we can load it
++	idLoadTimer		loadTimer( LOAD_MODELS );	// patch 0018
+ 
+ 	// determine which subclass of idRenderModel to initialize
+ 
+diff --git a/neo/sound/snd_cache.cpp b/neo/sound/snd_cache.cpp
+index 55166822..7ae5943c 100644
+--- a/neo/sound/snd_cache.cpp
++++ b/neo/sound/snd_cache.cpp
+@@ -431,6 +431,7 @@ Loads based on name, possibly doing a MakeDefault if necessary
+ ===================
+ */
+ void idSoundSample::Load( void ) {
++	idLoadTimer	loadTimer( LOAD_SOUNDS );	// patch 0018
+ 	defaultSound = false;
+ 	purged = false;
+ 	hardwareBuffer = false;

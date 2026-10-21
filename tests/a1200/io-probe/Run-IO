@@ -1,0 +1,16 @@
+; Run-IO - what reading the game's pk4 costs (PLAN.md section 14): opening
+; it, random seeks and reads, reads straight on, through stdio and dos.library.
+; Nothing is shown; under a minute.
+;   CD to this directory, then:   Execute Run-IO
+;   Another file:                 Execute Run-IO FILE=Work:big.file
+.key FILE/K,N/K
+.def FILE "Stuff:doom3/demo/demo00.pk4"
+.def N 100
+.bra {
+.ket }
+FailAt 21
+MakeDir results >NIL:
+Info >results/io.txt
+io_probe {FILE} {N} >>results/io.txt
+Echo "exit code $RC" >>results/io.txt
+Type results/io.txt

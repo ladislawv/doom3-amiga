@@ -49,7 +49,7 @@ index 7d2b338a..d949f613 100644
  // a private virtual subclass
  idImageManager	imageManager;
 diff --git a/neo/renderer/Image_load.cpp b/neo/renderer/Image_load.cpp
-index e3a3cfd8..703bc7c3 100644
+index e3a3cfd8..89b279ac 100644
 --- a/neo/renderer/Image_load.cpp
 +++ b/neo/renderer/Image_load.cpp
 @@ -33,6 +33,21 @@ If you have questions concerning this license or the applicable additional terms
@@ -87,7 +87,7 @@ index e3a3cfd8..703bc7c3 100644
  	default:
  		common->Error( "R_BitsForInternalFormat: BAD FORMAT:%i", internalFormat );
  	}
-@@ -835,6 +856,187 @@ int	idImage::NumLevelsForImageSize( int width, int height ) const {
+@@ -835,6 +856,186 @@ int	idImage::NumLevelsForImageSize( int width, int height ) const {
  	return numLevels;
  }
  
@@ -123,22 +123,21 @@ index e3a3cfd8..703bc7c3 100644
 +	char filename[MAX_IMAGE_NAME];
 +	ImageProgramStringToCompressedFileName( imgName, filename );
 +
-+	ID_TIME_T precompTimestamp;
-+	fileSystem->ReadFile( filename, NULL, &precompTimestamp );
-+	if ( precompTimestamp == FILE_NOT_FOUND_TIMESTAMP ) {
++	// opened once: its timestamp from the open file (a file in a pk4 opens
++	// the pk4 again, and reads its header)
++	idFile *f = fileSystem->OpenFileRead( filename );
++	if ( !f ) {
 +		common->DPrintf( "precompressed %s: no %s\n", imgName.c_str(), filename );
 +		return false;
 +	}
++	ID_TIME_T precompTimestamp = f->Timestamp();
 +	if ( !generatorFunction && timestamp != FILE_NOT_FOUND_TIMESTAMP && precompTimestamp < timestamp ) {
 +		common->DPrintf( "precompressed %s: %s is older than the source (%d < %d)\n", imgName.c_str(), filename,
 +			(int)precompTimestamp, (int)timestamp );
++		fileSystem->CloseFile( f );
 +		return false;	// the source changed after it was compressed
 +	}
 +
-+	idFile *f = fileSystem->OpenFileRead( filename );
-+	if ( !f ) {
-+		return false;
-+	}
 +	int len = f->Length();
 +	if ( len < (int)sizeof( ddsFileHeader_t ) + 4 ) {	// +4: the 'DDS ' magic
 +		fileSystem->CloseFile( f );
@@ -275,7 +274,7 @@ index e3a3cfd8..703bc7c3 100644
  /*
  ===============
  ActuallyLoadImage
-@@ -904,6 +1106,9 @@ void	idImage::ActuallyLoadImage( bool fromBind ) {
+@@ -904,6 +1105,9 @@ void	idImage::ActuallyLoadImage( bool fromBind ) {
  	} else {
  		// see if we have a pre-generated image file that is
  		// already image processed and compressed
@@ -285,7 +284,7 @@ index e3a3cfd8..703bc7c3 100644
  
  		R_LoadImageProgram( imgName, &pic, &width, &height, &timestamp, &depth );
  
-@@ -914,6 +1119,7 @@ void	idImage::ActuallyLoadImage( bool fromBind ) {
+@@ -914,6 +1118,7 @@ void	idImage::ActuallyLoadImage( bool fromBind ) {
  		}
  
  		GenerateImage( pic, width, height, filter, allowDownSize, repeat, depth );
@@ -293,7 +292,7 @@ index e3a3cfd8..703bc7c3 100644
  
  		R_StaticFree( pic );
  	}
-@@ -1281,6 +1487,16 @@ void idImage::Print() const {
+@@ -1281,6 +1486,16 @@ void idImage::Print() const {
  	case GL_RGB5_A1:
  		common->Printf( "RGB5_A1  " );
  		break;

@@ -1,0 +1,22 @@
+cxx_probe: GCC 16.2.0, libnix
+-- C++ runtime
+static constructor ran                       ok   
+exception through 3 frames                   ok   
+destructors ran while unwinding              ok   
+dynamic_cast and typeid                      ok   
+std::string and std::vector                  ok   
+-- CPU and FPU
+float to int truncates                       ok   
+sqrtf, sinf, atan2f                          ok   
+big-endian                                   ok   
+sizes (int 4, long 4, pointer 4)             ok   
+-- stack
+stack at least 8 MB (__stack)                ok   9000000 bytes
+alloca of 1 MB                               ok   
+-- memory
+new/delete of small blocks                   ok   new 79 ms, delete 4358 ms (100000 blocks)
+malloc of 256 MB                             ok   
+-- files
+read a large file                            skip (no --file)
+cxx_probe: 0 failure(s)
+exit code 0

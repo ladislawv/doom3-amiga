@@ -1,8 +1,18 @@
 diff --git a/neo/framework/Session.cpp b/neo/framework/Session.cpp
-index 33f88319..d3571331 100644
+index 33f88319..81f4db7d 100644
 --- a/neo/framework/Session.cpp
 +++ b/neo/framework/Session.cpp
-@@ -2649,8 +2649,47 @@ idSessionLocal::Frame
+@@ -2634,7 +2634,8 @@ void idSessionLocal::UpdateScreen( bool outOfSequence ) {
+ 	// draw everything
+ 	Draw();
+ 
+-	if ( com_speeds.GetBool() ) {
++	// the renderer's times also for the benchmark (BenchmarkFrame, below)
++	if ( com_speeds.GetBool() || cvarSystem->GetCVarInteger( "com_benchmarkSeconds" ) > 0 ) {
+ 		renderSystem->EndFrame( &time_frontend, &time_backend );
+ 	} else {
+ 		renderSystem->EndFrame( NULL, NULL );
+@@ -2649,8 +2650,68 @@ idSessionLocal::Frame
  ===============
  */
  extern bool CheckOpenALDeviceAndRecoverIfNeeded();
@@ -11,33 +21,54 @@ index 33f88319..d3571331 100644
 +===============
 +BenchmarkFrame
 +
-+com_benchmarkSeconds N: from the first frame after a map has been loaded,
-+count the frames for N seconds, report them and quit. Needs no demo file:
-+a map's scripted opening (game/demo_mars_city1's, for one) shows the same
-+scene on every machine, at whatever frame rate it reaches.
++com_benchmarkSeconds N: from the first frame after a map has been loaded
++and com_benchmarkWarmup seconds have passed, count the frames for N seconds,
++report them and quit. Needs no demo file: a map's scripted opening
++(game/demo_mars_city1's, for one) shows the same scene on every machine, at
++whatever frame rate it reaches. Also reported, as averages per frame: the
++game frames' time, the renderer front end's and back end's (what com_speeds
++prints each frame, without the printing), and the game tics run per second
++(60 when the game keeps up with real time).
 +===============
 +*/
 +static idCVar com_benchmarkSeconds( "com_benchmarkSeconds", "0", CVAR_SYSTEM | CVAR_INTEGER,
 +	"after a map has loaded, count the frames for this many seconds, print them and quit (0: off)" );
++static idCVar com_benchmarkWarmup( "com_benchmarkWarmup", "0", CVAR_SYSTEM | CVAR_INTEGER,
++	"seconds to let a map run before com_benchmarkSeconds starts counting" );
 +
-+static void BenchmarkFrame( bool mapRunning ) {
-+	static int startMsec = 0, frames = 0;
++static void BenchmarkFrame( bool mapRunning, int gameTics ) {
++	static int mapMsec = 0, startMsec = 0, frames = 0, startTics = 0;
++	static int sumGame = 0, sumFront = 0, sumBack = 0;
 +	static bool done = false;
 +	int seconds = com_benchmarkSeconds.GetInteger();
 +	if ( seconds <= 0 || done || !mapRunning ) {
 +		return;
 +	}
 +	int now = Sys_Milliseconds();
++	if ( !mapMsec ) {
++		mapMsec = now;	// the first frame of the running map
++		common->Printf( "benchmark: %d seconds of warm-up, then counting frames for %d seconds\n",
++			com_benchmarkWarmup.GetInteger(), seconds );
++	}
 +	if ( !startMsec ) {
-+		startMsec = now;	// the first frame of the running map starts the clock
-+		frames = 0;
-+		common->Printf( "benchmark: counting frames for %d seconds\n", seconds );
++		if ( now - mapMsec < com_benchmarkWarmup.GetInteger() * 1000 ) {
++			return;
++		}
++		startMsec = now;
++		startTics = gameTics;
++		time_gameFrame = 0;
 +		return;
 +	}
 +	frames++;
++	sumGame += time_gameFrame;	// the game frames run since the last call
++	time_gameFrame = 0;
++	sumFront += time_frontend;	// the last EndFrame's
++	sumBack += time_backend;
 +	if ( now - startMsec >= seconds * 1000 ) {
 +		float secs = ( now - startMsec ) * 0.001f;
 +		common->Printf( "benchmark: %i frames rendered in %3.1f seconds = %3.1f fps\n", frames, secs, frames / secs );
++		common->Printf( "benchmark: per frame %3.1f ms game, %3.1f ms renderer front end, %3.1f ms back end; %3.1f game tics a second\n",
++			(float)sumGame / frames, (float)sumFront / frames, (float)sumBack / frames, ( gameTics - startTics ) / secs );
 +		done = true;
 +		cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "quit\n" );
 +	}
@@ -45,7 +76,7 @@ index 33f88319..d3571331 100644
 +
  void idSessionLocal::Frame() {
  
-+	BenchmarkFrame( mapSpawned && !insideExecuteMapChange && !readDemo );
++	BenchmarkFrame( mapSpawned && !insideExecuteMapChange && !readDemo, lastGameTic );
 +
  	if ( com_asyncSound.GetInteger() == 0 ) {
  		soundSystem->AsyncUpdateWrite( Sys_Milliseconds() );

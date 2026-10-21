@@ -1,0 +1,16 @@
+Unit         Size    Used    Free Full Errs   State    Type    Name
+CF0:        29.8G   24.2G    5.6G  81%    0 read/write FAT1    AMIGAPC
+DF0:     no disk in drive
+RAM:         1.7G    240K    1.7G   0%    0 read/write OFS     RAM Disk
+SDH0:      742.1M  387.3M  354.8M  52%    0 read/write PDS3    CaffeineOS
+SDH1:       49.0G   45.8G    3.2G  93%    0 read/write PDS3    Stuff
+USERFAT:     1.1G   83.8M    1.0G   7%    0 read/write FAT1    EMU68
+
+Volumes
+AMIGAPC         [Mounted] created Tu, 06-Feb-24  12:54:36
+CaffeineOS      [Mounted] created We, 16-Oct-24  09:27:44
+EMU68           [Mounted] created Mo, 14-Feb-22  17:57:08
+RAM Disk        [Mounted] created Su, 01-Jan-78  00:00:04
+Stuff           [Mounted] created We, 16-Oct-24  09:28:20
+io_probe: cannot open {FILE}
+exit code 10

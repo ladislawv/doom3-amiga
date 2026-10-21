@@ -1,0 +1,215 @@
+diff --git a/neo/CMakeLists.txt b/neo/CMakeLists.txt
+index 6316bd3b..99fc4f40 100644
+--- a/neo/CMakeLists.txt
++++ b/neo/CMakeLists.txt
+@@ -196,8 +196,28 @@ endif()
+ find_package(ZLIB REQUIRED)
+ include_directories(${ZLIB_INCLUDE_DIRS})
+ 
+-find_package(OpenAL REQUIRED)
+-include_directories(${OPENAL_INCLUDE_DIR})
++if(CMAKE_SYSTEM_NAME STREQUAL "AmigaOS")
++	# AmigaOS 3 on 68k (GCC with libnix; see the port's cmake/m68k-amigaos.cmake)
++	set(AMIGAOS3 TRUE)
++endif()
++
++if(AMIGAOS3)
++	# no OpenAL library on AmigaOS 3 yet: its headers (OPENAL_INCLUDE_DIR, given
++	# by the build) and the stub in sys/stub/openal_stub.cpp; play with s_noSound 1
++	set(OPENAL_LIBRARY "")
++	include_directories(${OPENAL_INCLUDE_DIR})
++else()
++	find_package(OpenAL REQUIRED)
++	include_directories(${OPENAL_INCLUDE_DIR})
++endif()
++
++# the GL ES 2.0 library to link; on AmigaOS 3 every GL function comes through
++# SDL_GL_GetProcAddress (ogles2.library), so there is none
++if(AMIGAOS3)
++	set(GLES_LIBRARY "")
++else()
++	set(GLES_LIBRARY "GLESv2")
++endif()
+ 
+ if (SDL2)
+ 	# skip SDL2main
+@@ -324,7 +344,7 @@ if(D3_COMPILER_IS_GCC_OR_CLANG)
+ 		set(sys_libs ${sys_libs} -fsanitize=undefined)
+ 	endif()
+ 
+-	if(NOT AROS)
++	if(NOT AROS AND NOT AMIGAOS3) # the Amiga hunk format has no symbol visibility
+ 		CHECK_CXX_COMPILER_FLAG("-fvisibility=hidden" cxx_has_fvisibility)
+ 		if(NOT cxx_has_fvisibility)
+ 			message(FATAL_ERROR "Compiler does not support -fvisibility")
+@@ -350,6 +370,19 @@ if(D3_COMPILER_IS_GCC_OR_CLANG)
+ 	if(AROS)
+ 		set(CMAKE_SHARED_LIBRARY_SUFFIX ".aros-${cpu}")
+ 		add_definitions(-DIOAPI_NO_64)
++	elseif(AMIGAOS3)
++		# minizip with plain fopen/ftell/fseek (libnix's stdio has no fseeko/ftello
++		# declared for C; pk4 files are far below 2 GB)
++		add_definitions(-DUSE_FILE32API)
++		# the libraries besides SDL2, zlib and libstdc++ (AMIGA_LIBS, given by the
++		# build: the port's support library, ogles2, amiga.lib and friends)
++		set(sys_libs ${sys_libs} ${AMIGA_LIBS})
++		set(ldflags "${ldflags} ${AMIGA_LDFLAGS}")
++		# the optimisation flags of a Release build, from the build (AMIGA_OPT),
++		# to compare them on the A1200; d3es's own when empty
++		if(AMIGA_OPT)
++			set(CMAKE_C_FLAGS_RELEASE "${AMIGA_OPT}")
++		endif()
+ 	elseif(APPLE)
+ 		add_definitions(-DMACOS_X=1)
+ 
+@@ -1051,6 +1084,21 @@ if(AROS)
+ 	set(src_sys_core
+ 		sys/glimp.cpp
+ 	)
++elseif(AMIGAOS3)
++	set(src_sys_base
++		sys/cpu.cpp
++		sys/threads.cpp
++		sys/events.cpp
++		sys/sys_local.cpp
++		sys/amigaos3/amiga_main.cpp
++		sys/amigaos3/amiga_net.cpp
++		sys/amigaos3/amiga_os.c
++	)
++
++	set(src_sys_core
++		sys/glimp.cpp
++		${src_stub_openal}
++	)
+ elseif(APPLE)
+ 	set(OSX_RESOURCE_FILES
+ 		"${CMAKE_SOURCE_DIR}/sys/osx/Doom3.icns"
+@@ -1138,7 +1186,7 @@ if (AROS)
+ 		set(AROS_ARCH ${CMAKE_SYSTEM_PROCESSOR})
+ 	endif()
+ else()
+-	if(D3_COMPILER_IS_GCC_OR_CLANG AND NOT MINGW)
++	if(D3_COMPILER_IS_GCC_OR_CLANG AND NOT MINGW AND NOT AMIGAOS3) # no PIC for the Amiga (and no DLLs)
+ 		set_target_properties(idlib PROPERTIES COMPILE_FLAGS "-fPIC")
+ 	endif()
+ endif()
+@@ -1190,7 +1238,7 @@ endif()
+ 		${ZLIB_LIBRARY}
+ 		${SDLx_LIBRARY}
+ 		${sys_libs}
+-		"GLESv2"
++		${GLES_LIBRARY}
+ 	)
+ 
+ 	if(NOT APPLE AND NOT WIN32)
+diff --git a/neo/framework/FileSystem.cpp b/neo/framework/FileSystem.cpp
+index da0c82ae..0dc0d99e 100644
+--- a/neo/framework/FileSystem.cpp
++++ b/neo/framework/FileSystem.cpp
+@@ -476,7 +476,7 @@ idCVar	idFileSystemLocal::fs_cdpath( "fs_cdpath", "", CVAR_SYSTEM | CVAR_INIT, "
+ idCVar	idFileSystemLocal::fs_devpath( "fs_devpath", "", CVAR_SYSTEM | CVAR_INIT, "" );
+ idCVar	idFileSystemLocal::fs_game( "fs_game", "", CVAR_SYSTEM | CVAR_INIT | CVAR_SERVERINFO, "mod path" );
+ idCVar  idFileSystemLocal::fs_game_base( "fs_game_base", "", CVAR_SYSTEM | CVAR_INIT | CVAR_SERVERINFO, "alternate mod path, searched after the main fs_game path, before the basedir" );
+-#if defined(__AROS__) || defined(WIN32)
++#if defined(__AROS__) || defined(WIN32) || defined(__amigaos3__)
+ idCVar	idFileSystemLocal::fs_caseSensitiveOS( "fs_caseSensitiveOS", "0", CVAR_SYSTEM | CVAR_BOOL, "" );
+ #else
+ idCVar	idFileSystemLocal::fs_caseSensitiveOS( "fs_caseSensitiveOS", "1", CVAR_SYSTEM | CVAR_BOOL, "" );
+@@ -817,7 +817,12 @@ const char *idFileSystemLocal::BuildOSPath( const char *base, const char *game,
+ 	idStr strBase = base;
+ 	strBase.StripTrailing( '/' );
+ 	strBase.StripTrailing( '\\' );
+-	sprintf( newPath, "%s/%s/%s", strBase.c_str(), game, relativePath );
++	if ( strBase.Length() && strBase[ strBase.Length() - 1 ] == ':' ) {
++		// an AmigaDOS volume or assign ("Work:"): "Work:/base" would be its parent
++		sprintf( newPath, "%s%s/%s", strBase.c_str(), game, relativePath );
++	} else {
++		sprintf( newPath, "%s/%s/%s", strBase.c_str(), game, relativePath );
++	}
+ 	ReplaceSeparators( newPath );
+ 	idStr::Copynz( OSPath, newPath, sizeof( OSPath ) );
+ 	return OSPath;
+diff --git a/neo/framework/Session.cpp b/neo/framework/Session.cpp
+index a388d8bb..0036a0e9 100644
+--- a/neo/framework/Session.cpp
++++ b/neo/framework/Session.cpp
+@@ -37,7 +37,7 @@ If you have questions concerning this license or the applicable additional terms
+ 
+ #include "framework/Session_local.h"
+ 
+-#if defined(__AROS__)
++#if defined(__AROS__) || defined(__amigaos3__)
+ #define CDKEY_FILEPATH CDKEY_FILE
+ #define XPKEY_FILEPATH XPKEY_FILE
+ #else
+diff --git a/neo/idlib/Str.cpp b/neo/idlib/Str.cpp
+index e7302333..aa8651eb 100644
+--- a/neo/idlib/Str.cpp
++++ b/neo/idlib/Str.cpp
+@@ -776,7 +776,7 @@ static ID_INLINE bool isDirSeparator( int c )
+ 	if ( c == '\\' ) {
+ 		return true;
+ 	}
+-#elif defined(__AROS__)
++#elif defined(__AROS__) || defined(__amigaos3__)
+ 	if ( c == ':' ) {
+ 		return true;
+ 	}
+diff --git a/neo/renderer/RenderSystem.cpp b/neo/renderer/RenderSystem.cpp
+index e2f879a8..728f22d2 100644
+--- a/neo/renderer/RenderSystem.cpp
++++ b/neo/renderer/RenderSystem.cpp
+@@ -38,6 +38,10 @@ If you have questions concerning this license or the applicable additional terms
+ 
+ #include "renderer/tr_local.h"
+ 
++#ifdef __amigaos3__
++#include <unistd.h>	// usleep (the render thread's spin wait; other platforms get it indirectly)
++#endif
++
+ idRenderSystemLocal	tr;
+ idRenderSystem	*renderSystem = &tr;
+ 
+diff --git a/neo/sys/platform.h b/neo/sys/platform.h
+index d156d2fa..ed0b09b1 100644
+--- a/neo/sys/platform.h
++++ b/neo/sys/platform.h
+@@ -78,6 +78,38 @@ If you have questions concerning this license or the applicable additional terms
+ 
+ #endif
+ 
++// AmigaOS 3 (68k, GCC with libnix)
++#if defined(__amigaos3__)
++
++// the stack comes from the Shell's Stack command or the icon (no stack swap):
++// sys/amigaos3/amiga_main.cpp checks it at start
++#define _alloca( x )				( ({assert((x)<ID_MAX_ALLOCA_SIZE);}), __builtin_alloca( (x) ) )
++#define _alloca16( x )				( ({assert((x)<ID_MAX_ALLOCA_SIZE);}), ((void *)((((uintptr_t)__builtin_alloca( (x)+15 )) + 15) & ~15)) )
++
++#ifdef GAME_DLL
++#define ID_GAME_API					__attribute__((visibility ("default")))
++#else
++#define ID_GAME_API
++#endif
++
++// as on Unix: no alignment request (the Amiga hunk format cannot align a static
++// object beyond 8 bytes, and the generic SIMD code does not need 16)
++#define ALIGN16( x )				x
++#define PACKED						__attribute__((packed))
++
++#define PATHSEPERATOR_STR			"/"
++#define PATHSEPERATOR_CHAR			'/'
++
++#define __cdecl
++#define ASSERT						assert
++
++#define ID_INLINE					inline
++#define ID_STATIC_TEMPLATE
++
++#define assertmem( x, y )
++
++#endif
++
+ // Win32
+ #if defined(WIN32) || defined(_WIN32)
+ 

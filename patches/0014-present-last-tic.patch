@@ -1,0 +1,272 @@
+diff --git a/neo/framework/Game.h b/neo/framework/Game.h
+index 54711c6a..b7a95392 100644
+--- a/neo/framework/Game.h
++++ b/neo/framework/Game.h
+@@ -204,6 +204,11 @@ public:
+ 
+ extern idGame *					game;
+ 
++// true while the session runs a game tic that another tic follows before the
++// next frame is drawn (com_presentLastTic): the entities' render world updates
++// wait for the frame's last tic (idEntity::DeferPresent)
++extern bool							com_moreTicsBeforeDraw;
++
+ 
+ /*
+ ===============================================================================
+diff --git a/neo/framework/Session.cpp b/neo/framework/Session.cpp
+index c6b0923a..60868c94 100644
+--- a/neo/framework/Session.cpp
++++ b/neo/framework/Session.cpp
+@@ -2734,6 +2734,18 @@ static void BenchmarkFrame( bool mapRunning, int gameTics ) {
+ 	}
+ }
+ 
++/*
++===============
++com_presentLastTic (port): when a frame runs several game tics (a 68k runs
++about three at 30 Hz), only the last one updates the render world's entities
++and lights; the others' updates were never drawn. Game.h's
++com_moreTicsBeforeDraw tells the game (idEntity::DeferPresent).
++===============
++*/
++bool com_moreTicsBeforeDraw = false;
++static idCVar com_presentLastTic( "com_presentLastTic", "1", CVAR_SYSTEM | CVAR_BOOL,
++	"update the render world's entities only on the last game tic before a frame is drawn" );
++
+ void idSessionLocal::Frame() {
+ 
+ 	BenchmarkFrame( mapSpawned && !insideExecuteMapChange && !readDemo, lastGameTic );
+@@ -2943,6 +2955,8 @@ void idSessionLocal::Frame() {
+ 	int	gameTicsToRun = latchedTicNumber - lastGameTic;
+ 	int i;
+ 	for ( i = 0 ; i < gameTicsToRun ; i++ ) {
++		// only the last tic before the frame is drawn updates the render world
++		com_moreTicsBeforeDraw = com_presentLastTic.GetBool() && i < gameTicsToRun - 1;
+ 		RunGameTic();
+ 		if ( !mapSpawned ) {
+ 			// exited game play
+@@ -2953,6 +2967,7 @@ void idSessionLocal::Frame() {
+ 			break;
+ 		}
+ 	}
++	com_moreTicsBeforeDraw = false;	// other tics (loading, demos) present at once
+ }
+ 
+ /*
+diff --git a/neo/game/AFEntity.cpp b/neo/game/AFEntity.cpp
+index 686263fc..d30f05cb 100644
+--- a/neo/game/AFEntity.cpp
++++ b/neo/game/AFEntity.cpp
+@@ -96,6 +96,11 @@ void idMultiModelAF::Present( void ) {
+ 	if ( !( thinkFlags & TH_UPDATEVISUALS ) ) {
+ 		return;
+ 	}
++
++	// nor before the frame's last game tic (com_presentLastTic)
++	if ( DeferPresent() ) {
++		return;
++	}
+ 	BecomeInactive( TH_UPDATEVISUALS );
+ 
+ 	for ( i = 0; i < modelHandles.Num(); i++ ) {
+@@ -1067,6 +1072,11 @@ void idAFEntity_Gibbable::Present( void ) {
+ 		return;
+ 	}
+ 
++	// nor before the frame's last game tic (com_presentLastTic)
++	if ( DeferPresent() ) {
++		return;
++	}
++
+ 	// update skeleton model
+ 	if ( gibbed && !IsHidden() && skeletonModel != NULL ) {
+ 		skeleton = renderEntity;
+diff --git a/neo/game/Entity.cpp b/neo/game/Entity.cpp
+index 5dd62776..674e2038 100644
+--- a/neo/game/Entity.cpp
++++ b/neo/game/Entity.cpp
+@@ -1402,6 +1402,10 @@ void idEntity::Present( void ) {
+ 		return;
+ 	}
+ 
++	if ( DeferPresent() ) {
++		return;
++	}
++
+ 	// don't present to the renderer if the entity hasn't changed
+ 	if ( !( thinkFlags & TH_UPDATEVISUALS ) ) {
+ 		return;
+@@ -1426,6 +1430,25 @@ void idEntity::Present( void ) {
+ 	}
+ }
+ 
++/*
++================
++idEntity::DeferPresent
++
++Port (com_presentLastTic): during a game tic that another tic follows before
++the next frame is drawn, an entity with visuals to present keeps
++TH_UPDATEVISUALS (so it stays active and presents on the frame's last tic)
++and is remembered, so that idGameLocal::PresentDeferred presents it on that
++tic should its Think not. Present and its overrides ask this first.
++================
++*/
++bool idEntity::DeferPresent( void ) {
++	if ( !com_moreTicsBeforeDraw || !( thinkFlags & TH_UPDATEVISUALS ) ) {
++		return false;
++	}
++	gameLocal.DeferPresent( this );
++	return true;
++}
++
+ /*
+ ================
+ idEntity::GetRenderEntity
+diff --git a/neo/game/Entity.h b/neo/game/Entity.h
+index 709543b1..c5151db8 100644
+--- a/neo/game/Entity.h
++++ b/neo/game/Entity.h
+@@ -190,6 +190,7 @@ public:
+ 
+ 	// visuals
+ 	virtual void			Present( void );
++	bool					DeferPresent( void );	// true: Present waits for the frame's last tic
+ 	virtual renderEntity_t *GetRenderEntity( void );
+ 	virtual int				GetModelDefHandle( void );
+ 	virtual void			SetModel( const char *modelname );
+diff --git a/neo/game/Game_local.cpp b/neo/game/Game_local.cpp
+index 4065d6dc..e31ce75f 100644
+--- a/neo/game/Game_local.cpp
++++ b/neo/game/Game_local.cpp
+@@ -1501,6 +1501,8 @@ idGameLocal::MapClear
+ void idGameLocal::MapClear( bool clearClients ) {
+ 	int i;
+ 
++	deferredPresents.Clear();	// com_presentLastTic's list
++
+ 	for( i = ( clearClients ? 0 : MAX_CLIENTS ); i < MAX_GENTITIES; i++ ) {
+ 		delete entities[ i ];
+ 		// ~idEntity is in charge of setting the pointer to NULL
+@@ -2236,6 +2238,46 @@ static int CalcMSec( long long framenum ) {
+ 	return int( (framenum * 100000LL) / divisor - ((framenum-1) * 100000LL) / divisor );
+ }
+ 
++/*
++================
++idGameLocal::DeferPresent
++
++An entity's Present waits for the frame's last game tic (idEntity::DeferPresent).
++================
++*/
++void idGameLocal::DeferPresent( idEntity *ent ) {
++	idEntityPtr<idEntity> p;
++	p = ent;
++	deferredPresents.Append( p );
++}
++
++/*
++================
++idGameLocal::PresentDeferred
++
++On a tic after which the frame is drawn, after the entities' think: those whose
++Present waited and that have not presented since (their Think presents them as
++a rule), presented now. A Present done twice does nothing the second time
++(TH_UPDATEVISUALS cleared).
++================
++*/
++void idGameLocal::PresentDeferred( void ) {
++	int i;
++	if ( !deferredPresents.Num() ) {
++		return;
++	}
++	const bool more = com_moreTicsBeforeDraw;
++	com_moreTicsBeforeDraw = false;	// a skipped cinematic's tic: present for real
++	for ( i = 0; i < deferredPresents.Num(); i++ ) {
++		idEntity *ent = deferredPresents[i].GetEntity();
++		if ( ent && ( ent->thinkFlags & TH_UPDATEVISUALS ) ) {
++			ent->Present();
++		}
++	}
++	deferredPresents.SetNum( 0, false );
++	com_moreTicsBeforeDraw = more;
++}
++
+ /*
+ ================
+ Game profile (GameProfile.h)
+@@ -2523,6 +2565,12 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t *clientCmds ) {
+ 			idEvent::ServiceEvents();
+ 		}
+ 
++		// the frame is drawn after this tic: whatever waited for it, presented
++		// (com_presentLastTic; also when a skipped cinematic ends the frame early)
++		if ( !com_moreTicsBeforeDraw || skipCinematic ) {
++			PresentDeferred();
++		}
++
+ 		timer_events.Stop();
+ 
+ 		// free the player pvs
+diff --git a/neo/game/Game_local.h b/neo/game/Game_local.h
+index 848f85e8..6ce17024 100644
+--- a/neo/game/Game_local.h
++++ b/neo/game/Game_local.h
+@@ -238,6 +238,9 @@ public:
+ 	int						numEntitiesToDeactivate;// number of entities that became inactive in current frame
+ 	bool					sortPushers;			// true if active lists needs to be reordered to place pushers at the front
+ 	bool					sortTeamMasters;		// true if active lists needs to be reordered to place physics team masters before their slaves
++	idList< idEntityPtr<idEntity> > deferredPresents;	// entities whose Present waits for the frame's last tic (idEntity::DeferPresent)
++	void					DeferPresent( idEntity *ent );	// ent waits for PresentDeferred
++	void					PresentDeferred( void );	// a tic before a frame is drawn: those that still wait, presented
+ 	idDict					persistentLevelInfo;	// contains args that are kept around between levels
+ 
+ 	// can be used to automatically effect every material in the world that references globalParms
+diff --git a/neo/game/Item.cpp b/neo/game/Item.cpp
+index 97ae9523..d0845844 100644
+--- a/neo/game/Item.cpp
++++ b/neo/game/Item.cpp
+@@ -244,6 +244,11 @@ idItem::Present
+ ================
+ */
+ void idItem::Present( void ) {
++	// not before the frame's last game tic (com_presentLastTic)
++	if ( DeferPresent() ) {
++		return;
++	}
++
+ 	idEntity::Present();
+ 
+ 	if ( !fl.hidden && pulse ) {
+diff --git a/neo/game/Light.cpp b/neo/game/Light.cpp
+index cc24a42d..a5f237b5 100644
+--- a/neo/game/Light.cpp
++++ b/neo/game/Light.cpp
+@@ -746,6 +746,11 @@ void idLight::Present( void ) {
+ 		return;
+ 	}
+ 
++	// nor before the frame's last game tic (com_presentLastTic)
++	if ( DeferPresent() ) {
++		return;
++	}
++
+ 	// add the model
+ 	idEntity::Present();
+ 
+diff --git a/neo/game/SecurityCamera.cpp b/neo/game/SecurityCamera.cpp
+index 36a0cbe0..18de9a26 100644
+--- a/neo/game/SecurityCamera.cpp
++++ b/neo/game/SecurityCamera.cpp
+@@ -565,6 +565,11 @@ void idSecurityCamera::Present( void ) {
+ 	if ( !( thinkFlags & TH_UPDATEVISUALS ) ) {
+ 		return;
+ 	}
++
++	// nor before the frame's last game tic (com_presentLastTic)
++	if ( DeferPresent() ) {
++		return;
++	}
+ 	BecomeInactive( TH_UPDATEVISUALS );
+ 
+ 	// camera target for remote render views

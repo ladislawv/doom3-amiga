@@ -1,0 +1,212 @@
+diff --git a/neo/game/Misc.cpp b/neo/game/Misc.cpp
+index bfde7193..bc5bc81e 100644
+--- a/neo/game/Misc.cpp
++++ b/neo/game/Misc.cpp
+@@ -1453,7 +1453,9 @@ idStaticEntity::Think
+ void idStaticEntity::Think( void ) {
+ 	idEntity::Think();
+ 	if ( thinkFlags & TH_THINK ) {
+-		if ( runGui && renderEntity.gui[0] ) {
++		// port (patch 0020, from ldhewm3-rearmed): the guis' state only while
++		// the player may see them; they catch up when seen again
++		if ( runGui && renderEntity.gui[0] && gameLocal.InPlayerPVS( this ) ) {
+ 			idPlayer *player = gameLocal.GetLocalPlayer();
+ 			if ( player ) {
+ 				if ( !player->objectiveSystemOpen ) {
+diff --git a/neo/renderer/RenderSystem_init.cpp b/neo/renderer/RenderSystem_init.cpp
+index 6cefc9b3..c1296c47 100644
+--- a/neo/renderer/RenderSystem_init.cpp
++++ b/neo/renderer/RenderSystem_init.cpp
+@@ -112,7 +112,8 @@ idCVar r_skipROQ( "r_skipROQ", "0", CVAR_RENDERER | CVAR_BOOL, "skip ROQ decodin
+ idCVar r_ignore( "r_ignore", "0", CVAR_RENDERER, "used for random debugging without defining new vars" );
+ idCVar r_ignore2( "r_ignore2", "0", CVAR_RENDERER, "used for random debugging without defining new vars" );
+ idCVar r_usePreciseTriangleInteractions( "r_usePreciseTriangleInteractions", "0", CVAR_RENDERER | CVAR_BOOL, "1 = do winding clipping to determine if each ambiguous tri should be lit" );
+-idCVar r_useCulling( "r_useCulling", "2", CVAR_RENDERER | CVAR_INTEGER, "0 = none, 1 = sphere, 2 = sphere + box", 0, 2, idCmdSystem::ArgCompletion_Integer<0,2> );
++idCVar r_useEntityBoxRefs( "r_useEntityBoxRefs", "1", CVAR_RENDERER | CVAR_BOOL, "push an entity into the areas as a box, not as its eight corners (port, patch 0020)" );
++idCVar r_useCulling( "r_useCulling", "2", CVAR_RENDERER | CVAR_INTEGER, "0 = none, 1 = sphere, 2 = box, 3 = sphere + box as before (port, patch 0020)", 0, 3, idCmdSystem::ArgCompletion_Integer<0,3> );
+ idCVar r_useLightCulling( "r_useLightCulling", "3", CVAR_RENDERER | CVAR_INTEGER, "0 = none, 1 = box, 2 = exact clip of polyhedron faces, 3 = also areas", 0, 3, idCmdSystem::ArgCompletion_Integer<0,3> );
+ idCVar r_useLightScissors( "r_useLightScissors", "1", CVAR_RENDERER | CVAR_BOOL, "1 = use custom scissor rectangle for each light" );
+ idCVar r_useClippedLightScissors( "r_useClippedLightScissors", "1", CVAR_RENDERER | CVAR_INTEGER, "0 = full screen when near clipped, 1 = exact when near clipped, 2 = exact always", 0, 2, idCmdSystem::ArgCompletion_Integer<0,2> );
+diff --git a/neo/renderer/RenderWorld.cpp b/neo/renderer/RenderWorld.cpp
+index f04e2ed3..715f3c57 100644
+--- a/neo/renderer/RenderWorld.cpp
++++ b/neo/renderer/RenderWorld.cpp
+@@ -1697,6 +1697,78 @@ void idRenderWorldLocal::PushVolumeIntoTree_r( idRenderEntityLocal *def, idRende
+ 	}
+ }
+ 
++/*
++==============
++PushBoxIntoTree
++
++Port (patch 0020, after ldhewm3-rearmed's Vita port): an entity's local
++bounds pushed down the area tree as the box they are in world space, in
++place of its eight corners transformed and each tested against every node's
++plane. At a node, the box is in front when its nearest corner is (distance
++from its center minus its half extent along the plane's normal), as the
++corners' test decides it. The half axes come from the model matrix, so a
++scaled entity's box is exact too.
++==============
++*/
++void idRenderWorldLocal::PushBoxIntoTree_r( idRenderEntityLocal *def, const idVec3 &center, const idVec3 halfAxes[3], float radius, int nodeNum ) {
++	if ( nodeNum < 0 ) {
++		portalArea_t *area = &portalAreas[ -1 - nodeNum ];
++		if ( area->viewCount == tr.viewCount ) {
++			return;	// already added a reference here
++		}
++		area->viewCount = tr.viewCount;
++		AddEntityRefToArea( def, area );
++		return;
++	}
++
++	const areaNode_t *node = areaNodes + nodeNum;
++
++	// as PushVolumeIntoTree_r: all the children's areas already referenced
++	if ( r_useNodeCommonChildren.GetBool() && node->commonChildrenArea != CHILDREN_HAVE_MULTIPLE_AREAS ) {
++		if ( portalAreas[ node->commonChildrenArea ].viewCount == tr.viewCount ) {
++			return;
++		}
++	}
++
++	const float d = node->plane.Distance( center );
++	bool front, back;
++	if ( d >= radius ) {
++		front = true;
++		back = false;
++	} else if ( d <= -radius ) {
++		front = false;
++		back = true;
++	} else {
++		const idVec3 &n = node->plane.Normal();
++		const float extent = idMath::Fabs( n * halfAxes[0] ) + idMath::Fabs( n * halfAxes[1] ) + idMath::Fabs( n * halfAxes[2] );
++		front = d + extent >= 0.0f;	// the farthest corner at or in front of the plane
++		back = d - extent < 0.0f;	// the nearest one behind it
++	}
++	if ( front && node->children[0] ) {	// 0 = solid
++		PushBoxIntoTree_r( def, center, halfAxes, radius, node->children[0] );
++	}
++	if ( back && node->children[1] ) {
++		PushBoxIntoTree_r( def, center, halfAxes, radius, node->children[1] );
++	}
++}
++
++void idRenderWorldLocal::PushBoxIntoTree( idRenderEntityLocal *def, const idBounds &bounds, const float modelMatrix[16] ) {
++	if ( areaNodes == NULL ) {
++		return;
++	}
++	idVec3 center, halfAxes[3];
++	const idVec3 localCenter = ( bounds[0] + bounds[1] ) * 0.5f;
++	const idVec3 extents = bounds[1] - localCenter;
++	R_LocalPointToGlobal( modelMatrix, localCenter, center );
++	for ( int i = 0; i < 3; i++ ) {
++		halfAxes[i].Set( modelMatrix[i * 4 + 0], modelMatrix[i * 4 + 1], modelMatrix[i * 4 + 2] );
++		halfAxes[i] *= extents[i];
++	}
++	// the corners' bounding sphere: half the box's diagonal
++	const float radius = ( halfAxes[0] + halfAxes[1] + halfAxes[2] ).Length();
++	PushBoxIntoTree_r( def, center, halfAxes, radius, 0 );
++}
++
+ /*
+ ==============
+ PushVolumeIntoTree
+diff --git a/neo/renderer/RenderWorld_local.h b/neo/renderer/RenderWorld_local.h
+index 9179c88b..6155e234 100644
+--- a/neo/renderer/RenderWorld_local.h
++++ b/neo/renderer/RenderWorld_local.h
+@@ -259,6 +259,10 @@ public:
+ 
+ 	void					PushVolumeIntoTree( idRenderEntityLocal *def, idRenderLightLocal *light, int numPoints, const idVec3 (*points) );
+ 
++	// an entity's bounds pushed into the areas as a box (port, patch 0020)
++	void					PushBoxIntoTree_r( idRenderEntityLocal *def, const idVec3 &center, const idVec3 halfAxes[3], float radius, int nodeNum );
++	void					PushBoxIntoTree( idRenderEntityLocal *def, const idBounds &bounds, const float modelMatrix[16] );
++
+ 	//-------------------------------
+ 	// tr_light.c
+ 	void					CreateLightDefInteractions( idRenderLightLocal *ldef );
+diff --git a/neo/renderer/tr_lightrun.cpp b/neo/renderer/tr_lightrun.cpp
+index 10bb371d..9d56124a 100644
+--- a/neo/renderer/tr_lightrun.cpp
++++ b/neo/renderer/tr_lightrun.cpp
+@@ -197,6 +197,13 @@ void R_CreateEntityRefs( idRenderEntityLocal *def ) {
+ 						def->referenceBounds[1][1] - def->referenceBounds[0][1] );
+ 	}
+ 
++	if ( r_useEntityBoxRefs.GetBool() ) {
++		// the bounds down the BSP tree into areas as a box (patch 0020)
++		tr.viewCount++;
++		def->world->PushBoxIntoTree( def, def->referenceBounds, def->modelMatrix );
++		return;
++	}
++
+ 	for (i = 0 ; i < 8 ; i++) {
+ 		v[0] = def->referenceBounds[i&1][0];
+ 		v[1] = def->referenceBounds[(i>>1)&1][1];
+diff --git a/neo/renderer/tr_local.h b/neo/renderer/tr_local.h
+index 9a745d16..b683e7ca 100644
+--- a/neo/renderer/tr_local.h
++++ b/neo/renderer/tr_local.h
+@@ -872,7 +872,8 @@ extern idCVar r_useConstantMaterials;	// 1 = use pre-calculated material registe
+ extern idCVar r_useInteractionTable;	// create a full entityDefs * lightDefs table to make finding interactions faster
+ extern idCVar r_useNodeCommonChildren;	// stop pushing reference bounds early when possible
+ extern idCVar r_useSilRemap;			// 1 = consider verts with the same XYZ, but different ST the same for shadows
+-extern idCVar r_useCulling;				// 0 = none, 1 = sphere, 2 = sphere + box
++extern idCVar r_useEntityBoxRefs;		// 1 = an entity into the areas as a box (patch 0020)
++extern idCVar r_useCulling;				// 0 = none, 1 = sphere, 2 = box (patch 0020), 3 = sphere + box as before
+ extern idCVar r_useLightCulling;		// 0 = none, 1 = box, 2 = exact clip of polyhedron faces
+ extern idCVar r_useLightScissors;		// 1 = use custom scissor rectangle for each light
+ extern idCVar r_useClippedLightScissors;// 0 = full screen when near clipped, 1 = exact when near clipped, 2 = exact always
+diff --git a/neo/renderer/tr_main.cpp b/neo/renderer/tr_main.cpp
+index 93228b06..22cd76e0 100644
+--- a/neo/renderer/tr_main.cpp
++++ b/neo/renderer/tr_main.cpp
+@@ -688,15 +688,44 @@ bool R_CornerCullLocalBox( const idBounds &bounds, const float modelMatrix[16],
+ =================
+ R_CullLocalBox
+ 
+-Performs quick test before expensive test
+ Returns true if the box is outside the given global frustum, (positive sides are out)
++
++Port (patch 0020, from ldhewm3-rearmed's Vita port): each plane is taken
++into the model's space and only the box corner nearest to it is tested: the
++box is out when that corner is. The same answer as testing all eight corners
++in world space (R_CornerCullLocalBox), without transforming them; the plane
++transform is exact for any linear model matrix, so scaled models are culled
++correctly too (the radius test before it assumed no scale).
+ =================
+ */
+ bool R_CullLocalBox( const idBounds &bounds, const float modelMatrix[16], int numPlanes, const idPlane *planes ) {
+-	if ( R_RadiusCullLocalBox( bounds, modelMatrix, numPlanes, planes ) ) {
+-		return true;
++	if ( r_useCulling.GetInteger() == 0 ) {
++		return false;
++	}
++	if ( r_useCulling.GetInteger() == 1 ) {
++		return R_RadiusCullLocalBox( bounds, modelMatrix, numPlanes, planes );
++	}
++	if ( r_useCulling.GetInteger() == 3 ) {
++		// the original tests, for comparison
++		if ( R_RadiusCullLocalBox( bounds, modelMatrix, numPlanes, planes ) ) {
++			return true;
++		}
++		return R_CornerCullLocalBox( bounds, modelMatrix, numPlanes, planes );
++	}
++	for ( int i = 0; i < numPlanes; i++ ) {
++		idPlane localPlane;
++		R_GlobalPlaneToLocal( modelMatrix, planes[i], localPlane );
++		const float d = localPlane[3] +
++			localPlane[0] * bounds[ localPlane[0] >= 0.0f ? 0 : 1 ][0] +
++			localPlane[1] * bounds[ localPlane[1] >= 0.0f ? 0 : 1 ][1] +
++			localPlane[2] * bounds[ localPlane[2] >= 0.0f ? 0 : 1 ][2];
++		if ( d >= 0.0f ) {
++			tr.pc.c_box_cull_out++;
++			return true;
++		}
+ 	}
+-	return R_CornerCullLocalBox( bounds, modelMatrix, numPlanes, planes );
++	tr.pc.c_box_cull_in++;
++	return false;
+ }
+ 
+ /*

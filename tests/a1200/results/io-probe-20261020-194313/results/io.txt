@@ -1,0 +1,26 @@
+Unit         Size    Used    Free Full Errs   State    Type    Name
+CF0:        29.8G   24.2G    5.6G  81%    0 read/write FAT1    AMIGAPC
+DF0:     no disk in drive
+RAM:         1.7G    240K    1.7G   0%    0 read/write OFS     RAM Disk
+SDH0:      742.1M  387.3M  354.8M  52%    0 read/write PDS3    CaffeineOS
+SDH1:       49.0G   45.8G    3.2G  93%    0 read/write PDS3    Stuff
+USERFAT:     1.1G   83.8M    1.0G   7%    0 read/write FAT1    EMU68
+
+Volumes
+AMIGAPC         [Mounted] created Tu, 06-Feb-24  12:54:36
+CaffeineOS      [Mounted] created We, 16-Oct-24  09:27:44
+EMU68           [Mounted] created Mo, 14-Feb-22  17:57:08
+RAM Disk        [Mounted] created Su, 01-Jan-78  00:00:04
+Stuff           [Mounted] created We, 16-Oct-24  09:28:20
+io_probe: Stuff:doom3/demo/demo00.pk4, 483535485 bytes, 100 tries each
+io_probe: fopen + fclose                                  361 us each
+io_probe: dos Open + Close                                302 us each
+io_probe: stdio: random seek + 64-byte read              3237 us each
+io_probe: stdio: random seek + 64 KB read                3210 us each, 19936 KB/s
+io_probe: stdio: 64 KB read straight on                  2777 us each, 23046 KB/s
+io_probe: dos: random Seek + 64-byte Read                 472 us each
+io_probe: dos: random Seek + 64 KB Read                  3060 us each, 20910 KB/s
+io_probe: dos: 64 KB Read straight on                    3014 us each, 21229 KB/s
+io_probe: dos: 1 MB Read straight on                    39658 us each, 25820 KB/s
+io_probe: dos: random Seek alone                          175 us each
+exit code 0

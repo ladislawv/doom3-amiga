@@ -1,0 +1,1400 @@
+diff --git a/neo/framework/Common.cpp b/neo/framework/Common.cpp
+index b1ddb6f1..1569ea7f 100644
+--- a/neo/framework/Common.cpp
++++ b/neo/framework/Common.cpp
+@@ -89,7 +89,7 @@ idCVar com_forceGenericSIMD( "com_forceGenericSIMD", "0", CVAR_BOOL | CVAR_SYSTE
+ idCVar com_developer( "developer", "0", CVAR_BOOL|CVAR_SYSTEM|CVAR_NOCHEAT, "developer mode" );
+ idCVar com_allowConsole( "com_allowConsole", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "allow toggling console with the tilde key" );
+ idCVar com_speeds( "com_speeds", "0", CVAR_BOOL|CVAR_SYSTEM|CVAR_NOCHEAT, "show engine timings" );
+-idCVar com_showFPS( "com_showFPS", "0", CVAR_BOOL|CVAR_SYSTEM|CVAR_ARCHIVE|CVAR_NOCHEAT, "show frames rendered per second" );
++idCVar com_showFPS( "com_showFPS", "0", CVAR_INTEGER|CVAR_SYSTEM|CVAR_ARCHIVE|CVAR_NOCHEAT, "show frames rendered per second" );
+ idCVar com_showMemoryUsage( "com_showMemoryUsage", "0", CVAR_BOOL|CVAR_SYSTEM|CVAR_NOCHEAT, "show total and per frame memory usage" );
+ idCVar com_showAsyncStats( "com_showAsyncStats", "0", CVAR_BOOL|CVAR_SYSTEM|CVAR_NOCHEAT, "show async network stats" );
+ idCVar com_showSoundDecoders( "com_showSoundDecoders", "0", CVAR_BOOL|CVAR_SYSTEM|CVAR_NOCHEAT, "show sound decoders" );
+@@ -104,13 +104,24 @@ idCVar com_dbgServerAdr( "com_dbgServerAdr", "localhost", CVAR_SYSTEM | CVAR_ARC
+ 
+ idCVar com_product_lang_ext( "com_product_lang_ext", "1", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ARCHIVE, "Extension to use when creating language files." );
+ 
++// DG: the next block is for configurable framerate
++#define COM_GAMEHZ_DESCR "Frames per second the game should run at. You really shouldn't set a higher value than 250! Also keep in mind that Vertical Sync (or a too slow computer) may slow it down, and that running below this configured framerate can cause problems!"
++idCVar com_gameHz( "com_gameHz", "60", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_SYSTEM, COM_GAMEHZ_DESCR, 10, 480 ); // TODO: make it float? make it default to 62.5?
++// the next three values will be set based on com_gameHz
++int    com_gameHzVal = 60;
++int    com_gameFrameLengthMS = 16; // length of one frame in msec, 1000 / com_gameHz
++float  com_preciseFrameLengthMS = 16.6667f;    // 1000.0f / gameHzVal
++float  com_gameTicScale = 1.0f; // com_gameHzVal/60.0f, multiply stuff assuming one tic is 16ms with this
++
++double com_preciseFrameTimeMS = 0; // like com_frameTime but as double: time (since start) for the current frame in milliseconds
++
+ // com_speeds times
+ int				time_gameFrame;
+ int				time_gameDraw;
+ int				time_frontend;			// renderSystem frontend time
+ int				time_backend;			// renderSystem backend time
+ 
+-int				com_frameTime;			// time for the current frame in milliseconds
++int				com_frameTime;			// time (since start) for the current frame in milliseconds
+ int				com_frameNumber;		// variable frame number
+ volatile int	com_ticNumber;			// 60 hz tics
+ int				com_editors;			// currently opened editor(s)
+@@ -214,6 +225,8 @@ private:
+ 	void						PrintLoadingMessage( const char *msg );
+ 	void						FilterLangList( idStrList* list, idStr lang );
+ 
++	void						UpdateGameHz(); // DG: for configurable framerate
++
+ 	bool						com_fullyInitialized;
+ 	bool						com_refreshOnPrint;		// update the screen every print for dmap
+ 	int							com_errorEntered;		// 0, ERP_DROP, etc
+@@ -236,12 +249,30 @@ private:
+ 	idCompressor *				config_compressor;
+ #endif
+ 
+-	SDL_TimerID					async_timer;
++	static int					AsyncThread(void* arg);
++	xthreadInfo					asyncThread;
++	volatile bool				runAsyncThread;
+ };
+ 
+ idCommonLocal	commonLocal;
+ idCommon *		common = &commonLocal;
+ 
++// DG: updates com_frameTime based on the current tic number and USERCMD_MSEC (com_gameFrameTime == 1000/com_gameHz)
++void Com_UpdateFrameTime() {
++	// It used to be just com_frameTime = com_ticNumber * USERCMD_MSEC;
++	// But now that USERCMD_MSEC isn't fixed to 16 for fixed 60fps anymore (thanks to com_gameHz),
++	// that doesn't work anymore (com_frameTime would decrease when setting com_gameHz to a lower value!)
++	// So I moved updating it into a function (it's done in 3 places) that has just slightly more logic
++	// to ensure com_frameTime never decreases (well, until it overflows :-p)
++	static int lastTicNum = 0;
++	int ticNum = com_ticNumber;
++	int ticDiff = ticNum - lastTicNum;
++	assert(ticDiff >= 0);
++	com_preciseFrameTimeMS += ticDiff * com_preciseFrameLengthMS;
++	com_frameTime = idMath::Rint( com_preciseFrameTimeMS );
++	lastTicNum = ticNum;
++}
++
+ /*
+ ==================
+ idCommonLocal::idCommonLocal
+@@ -265,7 +296,8 @@ idCommonLocal::idCommonLocal( void ) {
+ 	config_compressor = NULL;
+ #endif
+ 
+-	async_timer = 0;
++	memset( &asyncThread, 0, sizeof(asyncThread) );
++	runAsyncThread = false;
+ }
+ 
+ /*
+@@ -2424,14 +2456,19 @@ void idCommonLocal::Frame( void ) {
+ 			}
+ 		}
+ 
++		// DG: for configurable framerate
++		if ( com_gameHz.IsModified() ) {
++			UpdateGameHz();
++		}
++
+ 		eventLoop->RunEventLoop();
+ 
+ #ifdef D3_SINGLE_TASK
+-		// no async timer task: run the 60 Hz tics that are due from the main loop
++		// no async thread: run the game tics that are due from the main loop
+ 		Async();
+ #endif
+ 
+-		com_frameTime = com_ticNumber * USERCMD_MSEC;
++		Com_UpdateFrameTime(); // DG: put updating com_frameTime into a function
+ 
+ 		idAsyncNetwork::RunFrame();
+ 
+@@ -2480,7 +2517,7 @@ void idCommonLocal::GUIFrame( bool execCmd, bool network ) {
+ #ifdef D3_SINGLE_TASK
+ 	Async();
+ #endif
+-	com_frameTime = com_ticNumber * USERCMD_MSEC;
++	Com_UpdateFrameTime(); // DG: put updating com_frameTime into a function
+ 	if ( network ) {
+ 		idAsyncNetwork::RunFrame();
+ 	}
+@@ -2517,8 +2554,8 @@ typedef struct {
+ 
+ static const int MAX_ASYNC_STATS = 1024;
+ asyncStats_t	com_asyncStats[MAX_ASYNC_STATS];		// indexed by com_ticNumber
+-int prevAsyncMsec;
+-int	lastTicMsec;
++static double lastTicMsec = 0.0;
++static double nextTicTargetMsec = 0.0; // when (according to Sys_MillisecondsPrecise()) the next async tic should start
+ 
+ void idCommonLocal::SingleAsyncTic( void ) {
+ 	// main thread code can prevent this from happening while modifying
+@@ -2561,18 +2598,19 @@ idCommonLocal::Async
+ =================
+ */
+ void idCommonLocal::Async( void ) {
+-	int	msec = Sys_Milliseconds();
++	double msec = Sys_MillisecondsPrecise();
+ 	if ( !lastTicMsec ) {
+-		lastTicMsec = msec - USERCMD_MSEC;
++		lastTicMsec = msec - com_preciseFrameLengthMS;
+ 	}
+ 
+ 	if ( !com_preciseTic.GetBool() ) {
+ 		// just run a single tic, even if the exact msec isn't precise
+ 		SingleAsyncTic();
++		nextTicTargetMsec = msec + com_preciseFrameLengthMS;
+ 		return;
+ 	}
+ 
+-	int ticMsec = USERCMD_MSEC;
++	float ticMsec = com_preciseFrameLengthMS;
+ 
+ 	// the number of msec per tic can be varies with the timescale cvar
+ 	float timescale = com_timescale.GetFloat();
+@@ -2585,8 +2623,8 @@ void idCommonLocal::Async( void ) {
+ 
+ 	// don't skip too many
+ 	if ( timescale == 1.0f ) {
+-		if ( lastTicMsec + 10 * USERCMD_MSEC < msec ) {
+-			lastTicMsec = msec - 10*USERCMD_MSEC;
++		if ( lastTicMsec + 10 * com_preciseFrameLengthMS < msec ) {
++			lastTicMsec = msec - 10.0*com_preciseFrameLengthMS;
+ 		}
+ 	}
+ 
+@@ -2594,6 +2632,7 @@ void idCommonLocal::Async( void ) {
+ 		SingleAsyncTic();
+ 		lastTicMsec += ticMsec;
+ 	}
++	nextTicTargetMsec = lastTicMsec + ticMsec;
+ }
+ 
+ /*
+@@ -2717,6 +2756,7 @@ void idCommonLocal::LoadGameDLL( void ) {
+ 
+ 	// initialize the game object
+ 	if ( game != NULL ) {
++		game->SetGameHz( com_gameHzVal, com_gameFrameLengthMS, com_gameTicScale ); // DG: make sure it knows the ticrate
+ 		game->Init();
+ 	}
+ }
+@@ -2783,21 +2823,21 @@ void idCommonLocal::SetMachineSpec( void ) {
+ }
+ 
+ #ifndef D3_SINGLE_TASK
+-static unsigned int AsyncTimer(unsigned int interval, void *) {
+-	common->Async();
+-	Sys_TriggerEvent(TRIGGER_EVENT_ONE);
++// dhewm3's kickstart-my-hertz branch: a thread that runs the tics, in place of the SDL timer
++int idCommonLocal::AsyncThread(void* arg)
++{
++	idCommonLocal* self = (idCommonLocal*)arg;
+ 
+-	// calculate the next interval to get as close to 60fps as possible
+-	unsigned int now = SDL_GetTicks();
+-	unsigned int tick = com_ticNumber * USERCMD_MSEC;
+-	// FIXME: this is pretty broken and basically always returns 1 because now now is much bigger than tic
+-	//        (probably com_tickNumber only starts incrementing a second after engine starts?)
+-	//        only reason this works is common->Async() checking again before calling SingleAsyncTic()
++	while ( self->runAsyncThread ) {
++		self->Async();
+ 
+-	if (now >= tick)
+-		return 1;
++		// idSessionLocal::Frame() waits for TRIGGER_EVENT_ONE
++		// => this syncs the main thread with the async thread
++		Sys_TriggerEvent(TRIGGER_EVENT_ONE);
+ 
+-	return tick - now;
++		Sys_SleepUntilPrecise( nextTicTargetMsec );
++	}
++	return 0;
+ }
+ #endif
+ 
+@@ -3052,10 +3092,8 @@ void idCommonLocal::Init( int argc, char **argv ) {
+ 	}
+ 
+ #ifndef D3_SINGLE_TASK
+-	async_timer = SDL_AddTimer(USERCMD_MSEC, AsyncTimer, NULL);
+-
+-	if (!async_timer)
+-		Sys_Error("Error while starting the async timer: %s", SDL_GetError());
++	runAsyncThread = true;
++	Sys_CreateThread( AsyncThread, this, asyncThread, "AsyncThread" );
+ #endif
+ }
+ 
+@@ -3066,9 +3104,10 @@ idCommonLocal::Shutdown
+ =================
+ */
+ void idCommonLocal::Shutdown( void ) {
+-	if (async_timer) {
+-		SDL_RemoveTimer(async_timer);
+-		async_timer = 0;
++	if ( asyncThread.threadHandle != NULL ) {
++		runAsyncThread = false;
++		Sys_DestroyThread( asyncThread );
++		memset( &asyncThread, 0, sizeof(asyncThread) );
+ 	}
+ 
+ 	idAsyncNetwork::server.Kill();
+@@ -3187,6 +3226,8 @@ void idCommonLocal::InitGame( void ) {
+ 	// if any archived cvars are modified after this, we will trigger a writing of the config file
+ 	cvarSystem->ClearModifiedFlags( CVAR_ARCHIVE );
+ 
++	UpdateGameHz(); // DG: for configurable framerate
++
+ 	// init the user command input code
+ 	usercmdGen->Init();
+ 
+@@ -3300,6 +3341,32 @@ void idCommonLocal::ShutdownGame( bool reloading ) {
+ 	fileSystem->Shutdown( reloading );
+ }
+ 
++// DG: for configurable framerate
++void idCommonLocal::UpdateGameHz()
++{
++	com_gameHz.ClearModified();
++	com_gameHzVal = com_gameHz.GetInteger();
++
++	if ( com_gameHzVal > 250 ) {
++		Warning( "Setting com_gameHz to values above 250 is known to cause bugs! You generally shouldn't do this, it's only for testing/debugging purposes!" );
++	}
++
++	com_preciseFrameLengthMS = 1000.0f / com_gameHzVal;
++	// only rounding up the frame time a little bit, so for 144hz (6.94ms) it becomes 7ms,
++	// but for 60Hz (16.6667ms) it remains 16ms, like before
++	// FIXME: still do this, now that the game code increases the frametime by 1ms for some frames
++	//        so com_gameHz frames add up to 1000ms?
++	com_gameFrameLengthMS = com_preciseFrameLengthMS + 0.1f; // TODO: idMath::Rint ? or always round down?
++
++	com_gameTicScale = com_gameHzVal / 60.0f; // TODO: or / 62.5?
++
++	Printf( "Running the game at com_gameHz = %dHz, frametime %dms\n", com_gameHzVal, com_gameFrameLengthMS );
++
++	if ( game != NULL ) {
++		game->SetGameHz( com_gameHzVal, com_gameFrameLengthMS, com_gameTicScale );
++	}
++}
++
+ // DG: below here are hacks to allow adding callbacks and exporting additional functions to the
+ //     Game DLL without breaking the ABI. See Common.h for longer explanation...
+ 
+diff --git a/neo/framework/Common.h b/neo/framework/Common.h
+index 3262e6cc..13aec6b2 100644
+--- a/neo/framework/Common.h
++++ b/neo/framework/Common.h
+@@ -77,6 +77,14 @@ extern idCVar		com_enableDebuggerServer;
+ extern idCVar		com_dbgClientAdr;
+ extern idCVar		com_dbgServerAdr;
+ 
++// DG: the next block is for configurable framerate
++extern idCVar		com_gameHz;
++extern int			com_gameHzVal;
++extern int			com_gameFrameLengthMS;    // 1000.0f / gameHzVal, I guess
++extern float		com_preciseFrameLengthMS; // 1000.0f / gameHzVal
++extern float		com_gameTicScale;         // com_gameHzVal/60.0f, multiply stuff assuming one tic is 16ms with this
++extern double		com_preciseFrameTimeMS;   // like com_frameTime but as double: time (since start) for the current frame in milliseconds
++
+ extern int			time_gameFrame;			// game logic time
+ extern int			time_gameDraw;			// game present time
+ extern int			time_frontend;			// renderer frontend time
+diff --git a/neo/framework/Console.cpp b/neo/framework/Console.cpp
+index 96357022..d2f62531 100644
+--- a/neo/framework/Console.cpp
++++ b/neo/framework/Console.cpp
+@@ -193,41 +193,53 @@ void SCR_DrawTextRightAlign( float &y, const char *text, ... ) {
+ SCR_DrawFPS
+ ==================
+ */
+-#define	FPS_FRAMES	4
++#define	FPS_FRAMES	256
+ float SCR_DrawFPS( float y ) {
+-	char		*s;
+-	int			w;
+-	static int	previousTimes[FPS_FRAMES];
+-	static int	index;
+-	int		i, total;
+-	int		fps;
+-	static	int	previous;
+-	int		t, frameTime;
++	static float previousTimes[FPS_FRAMES];
++	static unsigned	index;
++	static double previous;
++
++	// DG: take all frames from last half second into account
++	const int maxFrames = Min(FPS_FRAMES, com_gameHzVal/2);
+ 
+ 	// don't use serverTime, because that will be drifting to
+ 	// correct for internet lag changes, timescales, timedemos, etc
+-	t = Sys_Milliseconds();
+-	frameTime = t - previous;
++	double t = Sys_MillisecondsPrecise(); // DG: more precision
++	float frameTime = t - previous;
+ 	previous = t;
+ 
+-	previousTimes[index % FPS_FRAMES] = frameTime;
++	previousTimes[index % maxFrames] = frameTime;
+ 	index++;
+-	if ( index > FPS_FRAMES ) {
++	if ( index > maxFrames ) {
+ 		// average multiple frames together to smooth changes out a bit
+-		total = 0;
+-		for ( i = 0 ; i < FPS_FRAMES ; i++ ) {
+-			total += previousTimes[i];
++		float total = 0.0;
++		float minTime = 10000;
++		float maxTime = 0;
++		for ( int i = 0 ; i < maxFrames ; i++ ) {
++			float pt = previousTimes[i];
++			total += pt;
++			minTime = Min( minTime, pt );
++			maxTime = Max( maxTime, pt );
+ 		}
+ 		if ( !total ) {
+ 			total = 1;
+ 		}
+-		fps = 10000 * FPS_FRAMES / total;
+-		fps = (fps + 5)/10;
++		float fps = (1000.0f * maxFrames) / total;
++		int ifps = idMath::Rint( fps );
+ 
+-		s = va( "%ifps", fps );
+-		w = strlen( s ) * BIGCHAR_WIDTH;
++		char* s = va( "%dfps", ifps );
++		int w = strlen( s ) * BIGCHAR_WIDTH;
+ 
+ 		renderSystem->DrawBigStringExt( 635 - w, idMath::FtoiFast( y ) + 2, s, colorWhite, true, localConsole.charSetShader);
++
++		if ( com_showFPS.GetInteger() > 1 ) {
++			y +=  BIGCHAR_HEIGHT + 4;
++
++			s = va( "avg %5.2fms min %5.2f max %5.2f", total * (1.0f / maxFrames), minTime, maxTime );
++			w = strlen ( s ) * SMALLCHAR_WIDTH;
++			renderSystem->DrawSmallStringExt( 635 - w, idMath::FtoiFast( y ) + 2, s, colorWhite, true, localConsole.charSetShader );
++		}
++
+ 	}
+ 
+ 	return y + BIGCHAR_HEIGHT + 4;
+diff --git a/neo/framework/EditField.cpp b/neo/framework/EditField.cpp
+index 41ef17ba..c75d6635 100644
+--- a/neo/framework/EditField.cpp
++++ b/neo/framework/EditField.cpp
+@@ -587,7 +587,9 @@ void idEditField::Draw( int x, int y, int width, bool showCursor, const idMateri
+ 		return;
+ 	}
+ 
+-	if ( (int)( com_ticNumber >> 4 ) & 1 ) {
++	// DG: fix cursor blinking speed for >60fps
++	unsigned scaledTicNumber = com_ticNumber / com_gameTicScale;
++	if ( ( scaledTicNumber >> 4 ) & 1 ) {
+ 		return;		// off blink
+ 	}
+ 
+diff --git a/neo/framework/Game.h b/neo/framework/Game.h
+index af64d2c8..54711c6a 100644
+--- a/neo/framework/Game.h
++++ b/neo/framework/Game.h
+@@ -197,6 +197,9 @@ public:
+ 	virtual bool				DownloadRequest( const char *IP, const char *guid, const char *paks, char urls[ MAX_STRING_CHARS ] ) = 0;
+ 
+ 	virtual void				GetMapLoadingGUI( char gui[ MAX_STRING_CHARS ] ) = 0;
++
++	// DG: Added for configurable framerate
++	virtual void				SetGameHz( float hz, float frametime, float ticScaleFactor ) = 0;
+ };
+ 
+ extern idGame *					game;
+diff --git a/neo/framework/Session.cpp b/neo/framework/Session.cpp
+index 0036a0e9..a01f34a8 100644
+--- a/neo/framework/Session.cpp
++++ b/neo/framework/Session.cpp
+@@ -524,6 +524,8 @@ void idSessionLocal::CompleteWipe() {
+ 	}
+ }
+ 
++extern void Com_UpdateFrameTime();
++
+ /*
+ ================
+ idSessionLocal::ShowLoadingGui
+@@ -541,7 +543,7 @@ void idSessionLocal::ShowLoadingGui() {
+ 	int stop = Sys_Milliseconds() + 1000;
+ 	int force = 10;
+ 	while ( Sys_Milliseconds() < stop || force-- > 0 ) {
+-		com_frameTime = com_ticNumber * USERCMD_MSEC;
++		Com_UpdateFrameTime(); // DG: put updating com_frameTime into a function
+ 		session->Frame();
+ 		session->UpdateScreen( false );
+ 	}
+diff --git a/neo/framework/UsercmdGen.h b/neo/framework/UsercmdGen.h
+index 17e88fe8..fc92a746 100644
+--- a/neo/framework/UsercmdGen.h
++++ b/neo/framework/UsercmdGen.h
+@@ -37,8 +37,16 @@ If you have questions concerning this license or the applicable additional terms
+ ===============================================================================
+ */
+ 
+-const int USERCMD_HZ			= 60;			// 60 frames per second
+-const int USERCMD_MSEC			= 1000 / USERCMD_HZ;
++// DG: The framerate/ticrate is now configurable. This hacks lets us continue using USERCMD_HZ/MSEC
++//const int USERCMD_HZ			= 60;			// 60 frames per second
++//const int USERCMD_MSEC			= 1000 / USERCMD_HZ;
++#ifdef GAME_DLL // in the game DLLs we can't access com_gameHzVal, so it's mirrored in idGameLocal
++  #define USERCMD_HZ   gameLocal.gameHz
++  #define USERCMD_MSEC gameLocal.gameMsec
++#else
++  #define USERCMD_HZ   com_gameHzVal
++  #define USERCMD_MSEC com_gameFrameLengthMS
++#endif
+ 
+ // usercmd_t->button bits
+ const int BUTTON_ATTACK			= BIT(0);
+diff --git a/neo/game/Actor.cpp b/neo/game/Actor.cpp
+index 15061a29..4651c91d 100644
+--- a/neo/game/Actor.cpp
++++ b/neo/game/Actor.cpp
+@@ -1620,6 +1620,9 @@ bool idActor::StartRagdoll( void ) {
+ 		return true;
+ 	}
+ 
++	// dezo2, modified entity mass (must be here, mass is zeroed in StartFromCurrentPose)
++	float mass_mod = GetPhysics()->GetMass() * idMath::Pow( gameLocal.gameTicScale, 2.0f );
++
+ 	// disable the monster bounding box
+ 	GetPhysics()->DisableClip();
+ 
+@@ -1654,6 +1657,9 @@ bool idActor::StartRagdoll( void ) {
+ 
+ 	RemoveAttachments();
+ 
++	// dezo2, use modified entity mass to reduce ragdoll movement at high FPS
++	GetPhysics()->SetMass( mass_mod );
++
+ 	return true;
+ }
+ 
+diff --git a/neo/game/Game_local.cpp b/neo/game/Game_local.cpp
+index 4ca98d6f..36e5a25e 100644
+--- a/neo/game/Game_local.cpp
++++ b/neo/game/Game_local.cpp
+@@ -172,6 +172,10 @@ idGameLocal::idGameLocal
+ */
+ idGameLocal::idGameLocal() {
+ 	Clear();
++	// DG: some sane default values until the proper values are set by SetGameHz()
++	msec = gameMsec = 16;
++	gameHz = 60;
++	gameTicScale = 1.0f;
+ }
+ 
+ /*
+@@ -2224,6 +2228,13 @@ void idGameLocal::SortActiveEntityList( void ) {
+ 	sortPushers = false;
+ }
+ 
++// DG: returns number of milliseconds for this frame, based on gameLocal.gameHz, for high-fps support
++//     either 1000/gameHz or 1000/gameHz + 1, so the frametimes of gameHz frames add up to 1000ms
++static int CalcMSec( long long framenum ) {
++	long long divisor = 100LL * gameLocal.gameHz;
++	return int( (framenum * 100000LL) / divisor - ((framenum-1) * 100000LL) / divisor );
++}
++
+ /*
+ ================
+ idGameLocal::RunFrame
+@@ -2260,6 +2271,10 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t *clientCmds ) {
+ 		// update the game time
+ 		framenum++;
+ 		previousTime = time;
++		// dezo2/DG: for high-fps support, calculate the frametime msec every frame
++		//           the length actually varies between 1000/gameHz and (1000/gameHz) + 1
++		//           so the sum of gameHz frames is 1000 (while still keeping integer frametimes)
++		msec = CalcMSec( framenum );
+ 		time += msec;
+ 		realClientTime = time;
+ 
+@@ -4443,3 +4458,11 @@ idGameLocal::GetMapLoadingGUI
+ ===============
+ */
+ void idGameLocal::GetMapLoadingGUI( char gui[ MAX_STRING_CHARS ] ) { }
++
++// DG: Added for configurable framerate
++void idGameLocal::SetGameHz( float hz, float frametime, float ticScaleFactor )
++{
++	gameHz = hz;
++	gameMsec = msec = frametime;
++	gameTicScale = ticScaleFactor;
++}
+diff --git a/neo/game/Game_local.h b/neo/game/Game_local.h
+index df7456d1..848f85e8 100644
+--- a/neo/game/Game_local.h
++++ b/neo/game/Game_local.h
+@@ -272,7 +272,13 @@ public:
+ 	int						framenum;
+ 	int						previousTime;			// time in msec of last frame
+ 	int						time;					// in msec
+-	static const int		msec = USERCMD_MSEC;	// time since last update in milliseconds
++	//static const int		msec = USERCMD_MSEC;	// time since last update in milliseconds
++
++	int						msec;					// time since last update in milliseconds - DG: just mirrors gameMsec (in d3xp it's modified for slowmo)
++	// DG: added for configurable framerate
++	int						gameMsec;				// length of one frame/tic in milliseconds - TODO: make float?
++	int						gameHz;					// current gameHz value (tic-rate, FPS)
++	float					gameTicScale;			// gameHz/60 factor to multiply delays in tics (that assume 60fps) with
+ 
+ 	int						vacuumAreaNum;			// -1 if level doesn't have any outside areas
+ 
+@@ -338,6 +344,9 @@ public:
+ 
+ 	virtual bool			DownloadRequest( const char *IP, const char *guid, const char *paks, char urls[ MAX_STRING_CHARS ] );
+ 
++	// DG: Added for configurable framerate
++	virtual void			SetGameHz( float hz, float frametime, float ticScaleFactor );
++
+ 	// ---------------------- Public idGameLocal Interface -------------------
+ 
+ 	void					Printf( const char *fmt, ... ) const id_attribute((format(printf,2,3)));
+diff --git a/neo/game/Player.cpp b/neo/game/Player.cpp
+index 3565d5f2..acdf8364 100644
+--- a/neo/game/Player.cpp
++++ b/neo/game/Player.cpp
+@@ -1747,7 +1747,7 @@ void idPlayer::Save( idSaveGame *savefile ) const {
+ 	savefile->WriteInt( numProjectileHits );
+ 
+ 	savefile->WriteBool( airless );
+-	savefile->WriteInt( airTics );
++	savefile->WriteInt( (int)airTics );
+ 	savefile->WriteInt( lastAirDamage );
+ 
+ 	savefile->WriteBool( gibDeath );
+@@ -1979,7 +1979,11 @@ void idPlayer::Restore( idRestoreGame *savefile ) {
+ 	savefile->ReadInt( numProjectileHits );
+ 
+ 	savefile->ReadBool( airless );
+-	savefile->ReadInt( airTics );
++	// DG: I made made airTics float for high-fps (where we have fractions of 60Hz tics),
++	//     but for saving ints should still suffice (and this preserves savegame compat)
++	int iairTics;
++	savefile->ReadInt( iairTics );
++	airTics = iairTics;
+ 	savefile->ReadInt( lastAirDamage );
+ 
+ 	savefile->ReadBool( gibDeath );
+@@ -2903,12 +2907,12 @@ bool idPlayer::Give( const char *statname, const char *value ) {
+ 		}
+ 
+ 	} else if ( !idStr::Icmp( statname, "air" ) ) {
+-		if ( airTics >= pm_airTics.GetInteger() ) {
++		if ( airTics >= pm_airTics.GetFloat() ) { // DG: airTics are floats now for high-fps support
+ 			return false;
+ 		}
+-		airTics += atoi( value ) / 100.0 * pm_airTics.GetInteger();
+-		if ( airTics > pm_airTics.GetInteger() ) {
+-			airTics = pm_airTics.GetInteger();
++		airTics += atoi( value ) / 100.0 * pm_airTics.GetFloat();
++		if ( airTics > pm_airTics.GetFloat() ) {
++			airTics = pm_airTics.GetFloat();
+ 		}
+ 	} else {
+ 		return inventory.Give( this, spawnArgs, statname, value, &idealWeapon, true );
+@@ -5090,7 +5094,8 @@ void idPlayer::UpdateAir( void ) {
+ 				hud->HandleNamedEvent( "noAir" );
+ 			}
+ 		}
+-		airTics--;
++		// DG: was airTics--, but airTics assume 60Hz tics and we support other ticrates now (com_gameHz)
++		airTics -= 1.0f / gameLocal.gameTicScale;
+ 		if ( airTics < 0 ) {
+ 			airTics = 0;
+ 			// check for damage
+@@ -5110,16 +5115,16 @@ void idPlayer::UpdateAir( void ) {
+ 				hud->HandleNamedEvent( "Air" );
+ 			}
+ 		}
+-		airTics+=2;	// regain twice as fast as lose
+-		if ( airTics > pm_airTics.GetInteger() ) {
+-			airTics = pm_airTics.GetInteger();
++		airTics += 2.0f / gameLocal.gameTicScale; // regain twice as fast as lose - DG: scale for com_gameHz
++		if ( airTics > pm_airTics.GetFloat() ) {
++			airTics = pm_airTics.GetFloat();
+ 		}
+ 	}
+ 
+ 	airless = newAirless;
+ 
+ 	if ( hud ) {
+-		hud->SetStateInt( "player_air", 100 * airTics / pm_airTics.GetInteger() );
++		hud->SetStateInt( "player_air", 100 * (airTics / pm_airTics.GetFloat()) );
+ 	}
+ }
+ 
+@@ -6005,8 +6010,12 @@ void idPlayer::Move( void ) {
+ 		if ( spectating ) {
+ 			SetEyeHeight( newEyeOffset );
+ 		} else {
++			// DG: make this framerate-independent, code suggested by tyuah8 on Github
++			// https://en.wikipedia.org/wiki/Exponential_smoothing#Time_constant
++			const float tau = -16.0f / idMath::Log( pm_crouchrate.GetFloat() );
++			const float a = 1.0f - idMath::Exp( -gameLocal.gameMsec / tau );
+ 			// smooth out duck height changes
+-			SetEyeHeight( EyeHeight() * pm_crouchrate.GetFloat() + newEyeOffset * ( 1.0f - pm_crouchrate.GetFloat() ) );
++			SetEyeHeight( EyeHeight() * (1.0f - a) + newEyeOffset * a );
+ 		}
+ 	}
+ 
+diff --git a/neo/game/Player.h b/neo/game/Player.h
+index b411a0c0..46b8ef33 100644
+--- a/neo/game/Player.h
++++ b/neo/game/Player.h
+@@ -564,7 +564,8 @@ private:
+ 	int						numProjectileHits;		// number of hits on mobs
+ 
+ 	bool					airless;
+-	int						airTics;				// set to pm_airTics at start, drops in vacuum
++	// DG: Note: airTics are tics at 60Hz, so no real tics (unless com_gameHz happens to be 60)
++	float					airTics;				// set to pm_airTics at start, drops in vacuum
+ 	int						lastAirDamage;
+ 
+ 	bool					gibDeath;
+diff --git a/neo/game/ai/AI.cpp b/neo/game/ai/AI.cpp
+index 2ac99486..b025bd9c 100644
+--- a/neo/game/ai/AI.cpp
++++ b/neo/game/ai/AI.cpp
+@@ -2896,8 +2896,12 @@ void idAI::AdjustFlyingAngles( void ) {
+ 		}
+ 	}
+ 
+-	fly_roll = fly_roll * 0.95f + roll * 0.05f;
+-	fly_pitch = fly_pitch * 0.95f + pitch * 0.05f;
++	// DG: make this framerate-independent, code suggested by tyuah8 on Github
++	// https://en.wikipedia.org/wiki/Exponential_smoothing#Time_constant
++	static const float tau = -16.0f / idMath::Log( 0.95f );
++	const float a = 1.0f - idMath::Exp( -gameLocal.msec / tau );
++	fly_roll  = fly_roll  * (1.0f - a) + roll  * a;
++	fly_pitch = fly_pitch * (1.0f - a) + pitch * a;
+ 
+ 	if ( flyTiltJoint != INVALID_JOINT ) {
+ 		animator.SetJointAxis( flyTiltJoint, JOINTMOD_WORLD, idAngles( fly_pitch, 0.0f, fly_roll ).ToMat3() );
+diff --git a/neo/game/physics/Force_Drag.cpp b/neo/game/physics/Force_Drag.cpp
+index f8682a11..581a039a 100644
+--- a/neo/game/physics/Force_Drag.cpp
++++ b/neo/game/physics/Force_Drag.cpp
+@@ -33,6 +33,8 @@ If you have questions concerning this license or the applicable additional terms
+ 
+ #include "physics/Force_Drag.h"
+ 
++#include "Game_local.h"
++
+ CLASS_DECLARATION( idForce, idForce_Drag )
+ END_CLASS
+ 
+diff --git a/neo/game/physics/Physics_AF.cpp b/neo/game/physics/Physics_AF.cpp
+index 37304807..b05d2f80 100644
+--- a/neo/game/physics/Physics_AF.cpp
++++ b/neo/game/physics/Physics_AF.cpp
+@@ -2233,6 +2233,8 @@ bool idAFConstraint_HingeSteering::Add( idPhysics_AF *phys, float invTimeStep )
+ 	}
+ 
+ 	speed = steerAngle - angle;
++	// DG: steerSpeed is applied per frame, so it must be adjusted for the actual frametime
++	float steerSpeed = this->steerSpeed / gameLocal.gameTicScale;
+ 	if ( steerSpeed != 0.0f ) {
+ 		if ( speed > steerSpeed ) {
+ 			speed = steerSpeed;
+@@ -5374,6 +5376,9 @@ void idPhysics_AF::Evolve( float timeStep ) {
+ 	// make absolutely sure all contact constraints are satisfied
+ 	VerifyContactConstraints();
+ 
++	// DG: from TDM: make friction independent of the frametime (i.e. the time between two calls of this function)
++	float frictionTickMul = timeStep / MS2SEC( 16 ); // USERCMD_MSEC was 16 before introducing com_gameHz
++
+ 	// calculate the position of the bodies for the next physics state
+ 	for ( i = 0; i < bodies.Num(); i++ ) {
+ 		body = bodies[i];
+@@ -5392,8 +5397,9 @@ void idPhysics_AF::Evolve( float timeStep ) {
+ 		body->next->worldAxis.OrthoNormalizeSelf();
+ 
+ 		// linear and angular friction
+-		body->next->spatialVelocity.SubVec3(0) -= body->linearFriction * body->next->spatialVelocity.SubVec3(0);
+-		body->next->spatialVelocity.SubVec3(1) -= body->angularFriction * body->next->spatialVelocity.SubVec3(1);
++		// DG: from TDM: use frictionTicMul from above
++		body->next->spatialVelocity.SubVec3(0) -= frictionTickMul * body->linearFriction * body->next->spatialVelocity.SubVec3(0);
++		body->next->spatialVelocity.SubVec3(1) -= frictionTickMul * body->angularFriction * body->next->spatialVelocity.SubVec3(1);
+ 	}
+ }
+ 
+diff --git a/neo/game/physics/Physics_Monster.cpp b/neo/game/physics/Physics_Monster.cpp
+index 8b74d3a7..2cb93e2b 100644
+--- a/neo/game/physics/Physics_Monster.cpp
++++ b/neo/game/physics/Physics_Monster.cpp
+@@ -186,7 +186,11 @@ monsterMoveResult_t idPhysics_Monster::StepMove( idVec3 &start, idVec3 &velocity
+ 	// try to move at the stepped up position
+ 	stepPos = tr.endpos;
+ 	stepVel = velocity;
+-	result2 = SlideMove( stepPos, stepVel, delta );
++	// DG: this hack allows monsters to climb stairs at high framerates
++	//     the tr.fraction < 1.0 check should prevent monsters from sliding faster when not
++	//     actually on stairs (when climbing stairs it's apparently 1.0)
++	idVec3 fixedDelta = delta * ( tr.fraction < 1.0f ? 1.0f : gameLocal.gameTicScale );
++	result2 = SlideMove( stepPos, stepVel, fixedDelta );
+ 	if ( result2 == MM_BLOCKED ) {
+ 		start = noStepPos;
+ 		velocity = noStepVel;
+diff --git a/neo/game/physics/Physics_Player.cpp b/neo/game/physics/Physics_Player.cpp
+index 82ac8121..4aaa866a 100644
+--- a/neo/game/physics/Physics_Player.cpp
++++ b/neo/game/physics/Physics_Player.cpp
+@@ -779,7 +779,8 @@ void idPhysics_Player::NoclipMove( void ) {
+ 
+ 	// friction
+ 	speed = current.velocity.Length();
+-	if ( speed < 20.0f ) {
++	// DG: adjust this for framerate
++	if ( speed < 20.0f / gameLocal.gameTicScale ) {
+ 		current.velocity = vec3_origin;
+ 	}
+ 	else {
+diff --git a/neo/game/physics/Physics_RigidBody.cpp b/neo/game/physics/Physics_RigidBody.cpp
+index 83806569..332c54b4 100644
+--- a/neo/game/physics/Physics_RigidBody.cpp
++++ b/neo/game/physics/Physics_RigidBody.cpp
+@@ -38,7 +38,9 @@ If you have questions concerning this license or the applicable additional terms
+ CLASS_DECLARATION( idPhysics_Base, idPhysics_RigidBody )
+ END_CLASS
+ 
+-const float STOP_SPEED		= 10.0f;
++// DG: physics fixes from TDM
++const float STOP_SPEED = 50.0f; // grayman #3452 (was 10) - allow less movement at end to prevent excessive jiggling
++const float OLD_STOP_SPEED = 10.0f; // grayman #3452 - still needed at this value for some of the math
+ 
+ 
+ #undef RB_TIMINGS
+@@ -139,10 +141,10 @@ bool idPhysics_RigidBody::CollisionImpulse( const trace_t &collision, idVec3 &im
+ 	// velocity in normal direction
+ 	vel = velocity * collision.c.normal;
+ 
+-	if ( vel > -STOP_SPEED ) {
+-		impulseNumerator = STOP_SPEED;
+-	}
+-	else {
++	// DG: physics fixes from TDM (use OLD_STOP_SPEED here)
++	if ( vel > -OLD_STOP_SPEED ) { // grayman #3452 - was STOP_SPEED
++		impulseNumerator = OLD_STOP_SPEED;
++	} else {
+ 		impulseNumerator = -( 1.0f + bouncyness ) * vel;
+ 	}
+ 	impulseDenominator = inverseMass + ( ( inverseWorldInertiaTensor * r.Cross( collision.c.normal ) ).Cross( r ) * collision.c.normal );
+@@ -844,6 +846,10 @@ bool idPhysics_RigidBody::Evaluate( int timeStepMSec, int endTimeMSec ) {
+ 	float timeStep;
+ 	bool collided, cameToRest = false;
+ 
++	// DG: from TDM: stgatilov: avoid doing zero steps (useless and causes division by zero)
++	if (timeStepMSec <= 0)
++		return false;
++
+ 	timeStep = MS2SEC( timeStepMSec );
+ 	current.lastTimeStep = timeStep;
+ 
+diff --git a/neo/game/script/Script_Compiler.cpp b/neo/game/script/Script_Compiler.cpp
+index 5ee0c77a..48ee811e 100644
+--- a/neo/game/script/Script_Compiler.cpp
++++ b/neo/game/script/Script_Compiler.cpp
+@@ -2516,6 +2516,37 @@ void idCompiler::ParseEventDef( idTypeDef *returnType, const char *name ) {
+ 
+ 		// mark the parms as local
+ 		func.locals	= func.parmTotal;
++
++		// DG: Hack: when "scriptEvent float getFrameTime()" is parsed,
++		//     inject "scriptEvent float getRawFrameTime()"
++		if ( idStr::Cmp( name, "getFrameTime" ) == 0
++		     && gameLocal.program.FindType( "getRawFrameTime" ) == NULL )
++		{
++			// NOTE: getRawFrameTime() has the same signature as getFrameTime()
++			//       so its type settings can be copied, only the name must be changed
++			newtype.SetName( "getRawFrameTime" );
++
++			ev = idEventDef::FindEvent( "getRawFrameTime" );
++			if ( ev == NULL ) {
++				Error( "Couldn't find Event getRawFrameTime!" );
++			}
++
++			type = gameLocal.program.AllocType( newtype );
++			type->def = gameLocal.program.AllocDef( type, "getRawFrameTime", &def_namespace, true );
++
++			function_t &func2	= gameLocal.program.AllocFunction( type->def );
++			func2.eventdef		= ev;
++			func2.parmSize.SetNum( num );
++			for( i = 0; i < num; i++ ) {
++				argType = newtype.GetParmType( i );
++				func2.parmTotal		+= argType->Size();
++				func2.parmSize[ i ]	= argType->Size();
++			}
++
++			// mark the parms as local
++			func2.locals = func2.parmTotal;
++		}
++		// DG end
+ 	}
+ }
+ 
+diff --git a/neo/game/script/Script_Thread.cpp b/neo/game/script/Script_Thread.cpp
+index 32064522..6fa6c317 100644
+--- a/neo/game/script/Script_Thread.cpp
++++ b/neo/game/script/Script_Thread.cpp
+@@ -106,6 +106,7 @@ const idEventDef EV_Thread_RadiusDamage( "radiusDamage", "vEEEsf" );
+ const idEventDef EV_Thread_IsClient( "isClient", NULL, 'f' );
+ const idEventDef EV_Thread_IsMultiplayer( "isMultiplayer", NULL, 'f' );
+ const idEventDef EV_Thread_GetFrameTime( "getFrameTime", NULL, 'f' );
++const idEventDef EV_Thread_GetRawFrameTime( "getRawFrameTime", NULL, 'f' ); // DG: for com_gameHz (returns frametime, unlike getFrameTime() *not* scaled for slowmo)
+ const idEventDef EV_Thread_GetTicsPerSecond( "getTicsPerSecond", NULL, 'f' );
+ const idEventDef EV_Thread_DebugLine( "debugLine", "vvvf" );
+ const idEventDef EV_Thread_DebugArrow( "debugArrow", "vvvdf" );
+@@ -185,6 +186,7 @@ CLASS_DECLARATION( idClass, idThread )
+ 	EVENT( EV_Thread_IsClient,				idThread::Event_IsClient )
+ 	EVENT( EV_Thread_IsMultiplayer,			idThread::Event_IsMultiplayer )
+ 	EVENT( EV_Thread_GetFrameTime,			idThread::Event_GetFrameTime )
++	EVENT( EV_Thread_GetRawFrameTime,		idThread::Event_GetRawFrameTime ) // DG: for com_gameHz (returns frametime, unlike getFrameTime() *not* scaled for slowmo)
+ 	EVENT( EV_Thread_GetTicsPerSecond,		idThread::Event_GetTicsPerSecond )
+ 	EVENT( EV_CacheSoundShader,				idThread::Event_CacheSoundShader )
+ 	EVENT( EV_Thread_DebugLine,				idThread::Event_DebugLine )
+@@ -1763,6 +1765,16 @@ void idThread::Event_GetFrameTime( void ) {
+ 	idThread::ReturnFloat( MS2SEC( gameLocal.msec ) );
+ }
+ 
++/*
++================
++idThread::Event_GetRawFrameTime
++================
++*/
++void idThread::Event_GetRawFrameTime( void ) {
++	// DG: for com_gameHz, to replace GAME_FRAMETIME (raw frametime, unlike getFrameTime() *not* scaled for slowmo)
++	idThread::ReturnFloat( MS2SEC( gameLocal.gameMsec ) );
++}
++
+ /*
+ ================
+ idThread::Event_GetTicsPerSecond
+diff --git a/neo/game/script/Script_Thread.h b/neo/game/script/Script_Thread.h
+index fe24943f..afa3ac09 100644
+--- a/neo/game/script/Script_Thread.h
++++ b/neo/game/script/Script_Thread.h
+@@ -179,6 +179,7 @@ private:
+ 	void						Event_IsClient( void );
+ 	void						Event_IsMultiplayer( void );
+ 	void						Event_GetFrameTime( void );
++	void						Event_GetRawFrameTime( void ); // DG: for com_gameHz (returns frametime, unlike getFrameTime() *not* scaled for slowmo)
+ 	void						Event_GetTicsPerSecond( void );
+ 	void						Event_CacheSoundShader( const char *soundName );
+ 	void						Event_DebugLine( const idVec3 &color, const idVec3 &start, const idVec3 &end, const float lifetime );
+diff --git a/neo/idlib/Parser.cpp b/neo/idlib/Parser.cpp
+index dedf5cc0..a8455eb4 100644
+--- a/neo/idlib/Parser.cpp
++++ b/neo/idlib/Parser.cpp
+@@ -1083,6 +1083,19 @@ int idParser::Directive_undef( void ) {
+ 	return true;
+ }
+ 
++
++// DG: helperfunction for my hack in Directive_define()
++static idToken* createToken(const char* str, int type, int subtype, int line) {
++	idToken* ret = new idToken();
++	*ret = str;
++	ret->type = type;
++	ret->subtype = subtype;
++	ret->line = line;
++	ret->flags = 0;
++	ret->ClearTokenWhiteSpace();
++	return ret;
++}
++
+ /*
+ ================
+ idParser::Directive_define
+@@ -1126,6 +1139,89 @@ int idParser::Directive_define( void ) {
+ 	if ( !idParser::ReadLine( &token ) ) {
+ 		return true;
+ 	}
++
++	// Stradex/DG: Hack to support com_gameHZ (configurable framerate instead of fixed 60fps):
++	//    we replace GAME_FPS, GAME_FRAMETIME and CHAINGUN_FIRE_SKIPFRAMES #defines with script code
++	// NOTE: it's theoretically possible to just replace them with the current value instead
++	//   of function calls ("#define GAME_FPS 144"), but that changes the script's checksum
++	//   which makes loading savegames fail after changing com_gameHz
++	const char* defName = define->name;
++	int numHackTokens = 0;
++	idToken* hackTokens[12] = {};
++	if ( idStr::Icmp(defName, "GAME_FPS") == 0 || idStr::Icmp(defName, "GAME_FRAMETIME") == 0 ) {
++		const char* funName = (idStr::Icmp(defName, "GAME_FPS") == 0) ? "getTicsPerSecond" : "getRawFrameTime";
++		int line = token.line;
++
++		// change "#define GAME_FPS 60" to "#define GAME_FPS sys.getTicsPerSecond()"
++		// (or equivalent for GAME_FRAMETIME and sys.getRawFrameTime())
++		hackTokens[0] = createToken( "sys", TT_NAME, 3, line );
++		hackTokens[1] = createToken( ".", TT_PUNCTUATION, P_REF, line );
++		hackTokens[2] = createToken( funName, TT_NAME, strlen(funName), line ); // getTicsPerSecond or getFrameTime
++		hackTokens[3] = createToken( "(", TT_PUNCTUATION, P_PARENTHESESOPEN, line );
++		hackTokens[4] = createToken( ")", TT_PUNCTUATION, P_PARENTHESESCLOSE, line );
++		numHackTokens = 5;
++	}
++	else if ( idStr::Icmp(defName, "CHAINGUN_FIRE_SKIPFRAMES" ) == 0) {
++		int line = token.line;
++
++		// change "#define CHAINGUN_FIRE_SKIPFRAMES 7" (or similar) to
++		// "#define CHAINGUN_FIRE_SKIPFRAMES int( ( 0.118644 * sys.getTicsPerSecond() ) )
++		//   where 0.118644 is the value of "factor" below (sth like 7/59)
++		// Note: Yes, it looks like there's a superfluous set of parenthesis, but without them
++		//       it doesn't work. I guess that's a bug in the script compiler, but I have no
++		//       motivation to debug that further..
++
++		float origVal = ( token.type == TT_NUMBER ) ? token.GetFloatValue() : 7.0f;
++		// should divide by 60, but with 59 it rounds up a bit, esp. for 144 fps the resulting
++		// value is better (in the script we clamp to int and don't round): 7/60 * 144 = 16.8
++		// => converted to int that's 16, while 7/59 * 144 = 17.084 => 17 => closer to 16.8
++		// (and for other common values like 60 or 120 or 200 or 240 it doesn't make a difference)
++		// Note that clamping to int is important, so the following script code works as before:
++		//   "for( skip = 0; skip < CHAINGUN_FIRE_SKIPFRAMES; skip++ )"
++		// (if CHAINGUN_FIRE_SKIPFRAMES isn't 7 but 7.01, this runs 8 times instead of 7)
++		float factor = origVal / 59.0f;
++		char facStr[10];
++		idStr::snPrintf( facStr, sizeof(facStr), "%f", factor );
++
++		// int( ( 0.118644 * sys.getTicsPerSecond() ) )
++		hackTokens[0]  = createToken( "int", TT_NAME, 3, line );
++		hackTokens[1]  = createToken( "(", TT_PUNCTUATION, P_PARENTHESESOPEN, line );
++
++		hackTokens[2]  = createToken( "(", TT_PUNCTUATION, P_PARENTHESESOPEN, line );
++
++		hackTokens[3]  = createToken( facStr, TT_NUMBER, TT_DECIMAL | TT_FLOAT | TT_DOUBLE_PRECISION, line );
++		hackTokens[4]  = createToken( "*", TT_PUNCTUATION, P_MUL, line );
++		hackTokens[5]  = createToken( "sys", TT_NAME, 3, line );
++		hackTokens[6]  = createToken( ".", TT_PUNCTUATION, P_REF, line );
++		hackTokens[7]  = createToken( "getTicsPerSecond", TT_NAME, strlen("getTicsPerSecond"), line );
++		hackTokens[8]  = createToken( "(", TT_PUNCTUATION, P_PARENTHESESOPEN, line );
++		hackTokens[9]  = createToken( ")", TT_PUNCTUATION, P_PARENTHESESCLOSE, line );
++
++		hackTokens[10] = createToken( ")", TT_PUNCTUATION, P_PARENTHESESCLOSE, line );
++
++		hackTokens[11] = createToken( ")", TT_PUNCTUATION, P_PARENTHESESCLOSE, line );
++		numHackTokens = 12;
++	}
++
++	if ( numHackTokens != 0 ) {
++		// skip rest of the line, inject our hackTokens instead and return
++		while ( idParser::ReadLine( &token ) )
++		{}
++
++		define->tokens = hackTokens[0];
++		last = hackTokens[0];
++
++		for( int i=1; i < numHackTokens; ++i ) {
++			t = hackTokens[i];
++			last->next = t;
++			last = t;
++		}
++		last->next = NULL;
++
++		return true;
++	}
++	// DG: END of Hack.
++
+ 	// if it is a define with parameters
+ 	if ( token.WhiteSpaceBeforeToken() == 0 && token == "(" ) {
+ 		// read the define parameters
+diff --git a/neo/renderer/RenderSystem_init.cpp b/neo/renderer/RenderSystem_init.cpp
+index 87e5bdc1..432f9545 100644
+--- a/neo/renderer/RenderSystem_init.cpp
++++ b/neo/renderer/RenderSystem_init.cpp
+@@ -50,7 +50,7 @@ glconfig_t	glConfig;
+ idCVar r_useLightPortalFlow( "r_useLightPortalFlow", "1", CVAR_RENDERER | CVAR_BOOL, "use a more precise area reference determination" );
+ idCVar r_multiSamples( "r_multiSamples", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "number of antialiasing samples" );
+ idCVar r_mode( "r_mode", "5", CVAR_ARCHIVE | CVAR_RENDERER | CVAR_INTEGER, "video mode number" );
+-idCVar r_displayRefresh( "r_displayRefresh", "0", CVAR_RENDERER | CVAR_INTEGER | CVAR_NOCHEAT, "optional display refresh rate option for vid mode", 0.0f, 200.0f );
++idCVar r_displayRefresh( "r_displayRefresh", "0", CVAR_RENDERER | CVAR_INTEGER | CVAR_NOCHEAT | CVAR_ARCHIVE, "optional display refresh rate option for vid mode", 0.0f, 500.0f );
+ idCVar r_fullscreen( "r_fullscreen", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "0 = windowed, 1 = full screen" );
+ idCVar r_fullscreenDesktop( "r_fullscreenDesktop", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "0: 'real' fullscreen mode 1: keep resolution 'desktop' fullscreen mode" );
+ idCVar r_customWidth( "r_customWidth", "720", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "custom screen width. set r_mode to -1 to activate" );
+diff --git a/neo/renderer/tr_local.h b/neo/renderer/tr_local.h
+index 632efe17..02c33db3 100644
+--- a/neo/renderer/tr_local.h
++++ b/neo/renderer/tr_local.h
+@@ -1074,8 +1074,9 @@ bool		GLimp_Init( glimpParms_t parms );
+ // The renderer will then reset the glimpParms to "safe mode" of 640x480
+ // fullscreen and try again.  If that also fails, the error will be fatal.
+ 
+-bool		GLimp_SetScreenParms( glimpParms_t parms );
+-// will set up gl up with the new parms
++bool		GLimp_SetScreenParms( glimpParms_t parms, bool fromInit = false );
++// will set up gl up with the new parms (set multisamples to -1 if you don't care about them)
++// fromInit should only be set when called from GLimp_Init()
+ 
+ void		GLimp_Shutdown( void );
+ // Destroys the rendering context, closes the window, resets the resolution,
+diff --git a/neo/sound/snd_local.h b/neo/sound/snd_local.h
+index 6c5790eb..fc30befc 100644
+--- a/neo/sound/snd_local.h
++++ b/neo/sound/snd_local.h
+@@ -59,7 +59,9 @@ typedef enum {
+ } soundDemoCommand_t;
+ 
+ const int SOUND_MAX_CHANNELS		= 8;
+-const int SOUND_DECODER_FREE_DELAY	= 1000 * MIXBUFFER_SAMPLES / USERCMD_MSEC;		// four seconds
++// DG: TODO: keep the next at the same value for ~4 seconds, no matter how many frames that is?
++//     (we don't play sound faster just because we're running at higher FPS, I hope..)
++const int SOUND_DECODER_FREE_DELAY	= 1000 * MIXBUFFER_SAMPLES / 16; //USERCMD_MSEC;		// four seconds
+ 
+ const int PRIMARYFREQ				= 44100;			// samples per second
+ const float SND_EPSILON				= 1.0f / 32768.0f;	// if volume is below this, it will always multiply to zero
+diff --git a/neo/sys/aros/aros_main.cpp b/neo/sys/aros/aros_main.cpp
+index afad94f7..d3ca294f 100644
+--- a/neo/sys/aros/aros_main.cpp
++++ b/neo/sys/aros/aros_main.cpp
+@@ -923,6 +923,60 @@ void idSysLocal::OpenURL( const char *url, bool quit ) {
+     AROS_OpenURL( url );
+ }
+ 
++
++
++// DG: apparently AROS supports clock_gettime(), so use that for Sys_MillisecondsPrecise()
++static struct timespec first;
++static void AROS_initTime() {
++	struct timespec now;
++	clock_gettime(CLOCK_MONOTONIC, &now);
++
++	long nsec = now.tv_nsec;
++	long long sec = now.tv_sec;
++	// set back first by 1.5ms so neither Sys_MillisecondsPrecise() nor Sys_Milliseconds()
++	// (which calls Sys_MillisecondsPrecise()) will ever return 0 or even a negative value
++	nsec -= 1500000;
++	if(nsec < 0)
++	{
++		nsec += 1000000000ll; // 1s in ns => definitely positive now
++		--sec;
++	}
++
++	first.tv_sec = sec;
++	first.tv_nsec = nsec;
++}
++
++/*
++=======================
++Sys_MillisecondsPrecise
++=======================
++*/
++double Sys_MillisecondsPrecise() {
++	struct timespec now;
++	clock_gettime(CLOCK_MONOTONIC, &now);
++
++	long long sec = now.tv_sec - first.tv_sec;
++	long nsec = now.tv_nsec - first.tv_nsec;
++
++	double ret = sec * 1000.0;
++	ret += double(nsec) * 0.000001;
++	return ret;
++}
++
++void Sys_SleepUntilPrecise( double targetTimeMS ) {
++	// TODO: I know nothing about how precise AROS' sleep implementation is,
++	//       and apparently even their clock_gettime() implementation only has milliseconds resolution
++	//       (https://aros.sourceforge.io/documentation/developers/autodocs/posixc.php#clock-gettime)
++	//       So I'm keeping this extremely simple.
++	//       See POSIX implementation for an actually precise implementation (that requires precise clock_gettime())
++	double now = Sys_MillisecondsPrecise();
++	double msToWait = targetTimeMS - now;
++	if ( msToWait > 0.1 ) {
++		unsigned long usec = msToWait * 1000;
++		usleep( usec - 100 ); // sleep 100usec less so we don't oversleep that much
++	}
++}
++
+ /*
+ ===============
+ main
+@@ -931,6 +985,8 @@ main
+ int main(int argc, char **argv) {
+     bug("[ADoom3] %s()\n", __PRETTY_FUNCTION__);
+ 
++    AROS_initTime();
++
+     AROS_EarlyInit( );
+ 
+     if ( argc > 1 ) {
+diff --git a/neo/sys/glimp.cpp b/neo/sys/glimp.cpp
+index 4a030043..9b65970d 100644
+--- a/neo/sys/glimp.cpp
++++ b/neo/sys/glimp.cpp
+@@ -600,7 +600,7 @@ try_again:
+ GLimp_SetScreenParms
+ ===================
+ */
+-bool GLimp_SetScreenParms(glimpParms_t parms) {
++bool GLimp_SetScreenParms(glimpParms_t parms, bool fromInit) {
+ 	common->DPrintf("TODO: GLimp_ActivateContext\n");
+ 	return true;
+ }
+diff --git a/neo/sys/posix/posix_main.cpp b/neo/sys/posix/posix_main.cpp
+index ee975d32..da7aa7b8 100644
+--- a/neo/sys/posix/posix_main.cpp
++++ b/neo/sys/posix/posix_main.cpp
+@@ -413,6 +413,177 @@ int Sys_GetDriveFreeSpace( const char *path ) {
+ 	return 1000 * 1024;
+ }
+ 
++// ---------- Time Stuff -------------
++
++// D3_CpuPause() abstracts a CPU pause instruction, to make busy waits a bit less power-hungry
++// (code taken from Yamagi Quake II)
++#ifdef SDL_CPUPauseInstruction
++  #define D3_CpuPause() SDL_CPUPauseInstruction()
++#elif defined(__GNUC__)
++  #if (__i386 || __x86_64__)
++    #define D3_CpuPause() asm volatile("pause")
++  #elif defined(__aarch64__) || (defined(__ARM_ARCH) && __ARM_ARCH >= 7) || defined(__ARM_ARCH_6K__)
++    #define D3_CpuPause() asm volatile("yield")
++  #elif defined(__powerpc__) || defined(__powerpc64__)
++    #define D3_CpuPause() asm volatile("or 27,27,27")
++  #elif defined(__riscv) && __riscv_xlen == 64
++    #define D3_CpuPause() asm volatile(".insn i 0x0F, 0, x0, x0, 0x010");
++  #endif
++#endif
++
++#ifndef D3_CpuPause
++  #warning "No D3_CpuPause implementation for this platform/architecture! Will busy-wait sometimes!"
++  // TODO: something that prevents the loop from being optimized away?
++  //#define D3_CpuPause()
++#endif
++
++
++#ifdef __APPLE__
++  static mach_timespec_t first;
++#else
++  static struct timespec first;
++
++  #ifdef _POSIX_MONOTONIC_CLOCK
++    #define D3_GETTIME_CLOCK CLOCK_MONOTONIC
++  #else
++    #define D3_GETTIME_CLOCK CLOCK_REALTIME
++  #endif
++#endif
++
++static size_t pauseLoopsPer5usec = 100; // set in initTime()
++
++static void Posix_InitTime() {
++#ifdef __APPLE__
++	// OSX didn't have clock_gettime() until recently, so use Mach's clock_get_time()
++	// instead. fortunately its mach_timespec_t seems identical to POSIX struct timespec
++	// so lots of code can be shared
++	clock_serv_t cclock;
++	mach_timespec_t now;
++
++	host_get_clock_service(mach_host_self(), SYSTEM_CLOCK, &cclock);
++	clock_get_time(cclock, &now);
++	mach_port_deallocate(mach_task_self(), cclock);
++
++#else // not __APPLE__ - other Unix-likes will hopefully support clock_gettime()
++	struct timespec now;
++	clock_gettime(D3_GETTIME_CLOCK, &now);
++#endif
++
++	long nsec = now.tv_nsec;
++	long long sec = now.tv_sec;
++	// set back first by 1.5ms so neither Sys_MillisecondsPrecise() nor Sys_Milliseconds()
++	// (which calls Sys_MillisecondsPrecise()) will ever return 0 or even a negative value
++	nsec -= 1500000;
++	if(nsec < 0)
++	{
++		nsec += 1000000000ll; // 1s in ns => definitely positive now
++		--sec;
++	}
++
++	first.tv_sec = sec;
++	first.tv_nsec = nsec;
++
++	double before = Sys_MillisecondsPrecise();
++	for ( int i=0; i<1000; ++i ) {
++		// volatile so the call doesn't get optimized away
++		volatile double x = Sys_MillisecondsPrecise();
++		(void)x;
++	}
++	double after = Sys_MillisecondsPrecise();
++	double callDiff = after - before;
++
++#ifdef D3_CpuPause
++	// figure out how long D3_CpuPause() instructions take
++	before = Sys_MillisecondsPrecise();
++	for( int i=0; i < 1000000; ++i ) {
++		// call it 4 times per loop, so the ratio between pause and loop-instructions is better
++		D3_CpuPause(); D3_CpuPause(); D3_CpuPause(); D3_CpuPause();
++	}
++	after = Sys_MillisecondsPrecise();
++	double diff = after - before;
++	double onePauseIterTime = diff / 1000000.0;
++	if ( onePauseIterTime > 0.00000001 ) {
++		double loopsPer10usec = 0.005 / onePauseIterTime;
++		pauseLoopsPer5usec = loopsPer10usec;
++		printf( "Posix_InitTime(): A call to Sys_MillisecondsPrecise() takes about %g nsec; 1mio pause loops took %g ms => pauseLoopsPer5usec = %zd\n",
++		        callDiff*1000.0, diff, pauseLoopsPer5usec );
++		if ( pauseLoopsPer5usec == 0 )
++			pauseLoopsPer5usec = 1;
++	} else {
++		assert( 0 && "apparently 1mio pause loops are so fast we can't even measure it?!" );
++		pauseLoopsPer5usec = 1000000;
++	}
++	// Note: Due to CPU frequency scaling this is not super precise, but it should be within
++	//   an order of magnitude of the real current value, I think, which should suffice for our purposes
++#else
++	printf( "Posix_InitTime(): A call to Sys_MillisecondsPrecise() takes about %g nsecs\n", callDiff*1000.0 );
++#endif
++}
++
++/*
++=======================
++Sys_MillisecondsPrecise
++=======================
++*/
++double Sys_MillisecondsPrecise() {
++#ifdef __APPLE__
++	// OSX didn't have clock_gettime() until recently, so use Mach's clock_get_time()
++	// instead. fortunately its mach_timespec_t seems identical to POSIX struct timespec
++	// so lots of code can be shared
++	clock_serv_t cclock;
++	mach_timespec_t now;
++
++	host_get_clock_service(mach_host_self(), SYSTEM_CLOCK, &cclock);
++	clock_get_time(cclock, &now);
++	mach_port_deallocate(mach_task_self(), cclock);
++
++#else // not __APPLE__ - other Unix-likes will hopefully support clock_gettime()
++	struct timespec now;
++	clock_gettime(D3_GETTIME_CLOCK, &now);
++#endif
++
++	long long sec = now.tv_sec - first.tv_sec;
++	long nsec = now.tv_nsec - first.tv_nsec;
++
++	double ret = sec * 1000.0;
++	ret += double(nsec) * 0.000001;
++	return ret;
++}
++
++
++
++/*
++=====================
++Sys_SleepUntilPrecise
++=====================
++*/
++void Sys_SleepUntilPrecise( double targetTimeMS ) {
++	double msec = targetTimeMS - Sys_MillisecondsPrecise();
++	if ( msec < 0.01 ) // don't bother for less than 10usec
++		return;
++
++	// at least on Linux, usleep() is pretty precise, so use it for everything but the last 100usec (*micro*seconds)
++	// if it isn't on other platforms, set a different value here with an #ifdef
++	static const double sleepThreshold = 0.100;
++
++	if ( msec > sleepThreshold ) {
++		useconds_t usec = (msec - sleepThreshold) * 1000.0;
++		// yes, usleep() is deprecated, I don't care, nanosleep() is more painful to use
++		usleep( usec );
++	}
++
++	// wait for the remaining time with a busy loop, as that has higher precision
++	do {
++#ifdef D3_CpuPause
++		for ( size_t i=0; i < pauseLoopsPer5usec; ++i ) {
++			// call it 4 times per loop, so the ratio between pause and loop-instructions is better
++			D3_CpuPause(); D3_CpuPause(); D3_CpuPause(); D3_CpuPause();
++		}
++#endif
++
++		msec = targetTimeMS - Sys_MillisecondsPrecise();
++	} while ( msec >= 0.01 );
++}
+ 
+ // ----------- lots of signal handling stuff ------------
+ 
+@@ -628,6 +799,8 @@ static bool createPathRecursive(char* path)
+ 
+ void Posix_InitSignalHandlers( void )
+ {
++	Posix_InitTime(); // the base time for Sys_MillisecondsPrecise() should be set very early
++
+ #ifdef D3_HAVE_LIBBACKTRACE
+ 	// can't use idStr here and thus can't use Sys_GetPath(PATH_EXE) => added Posix_GetExePath()
+ 	const char* exePath = Posix_GetExePath();
+diff --git a/neo/sys/stub/stub_gl.cpp b/neo/sys/stub/stub_gl.cpp
+index af571081..793293b7 100644
+--- a/neo/sys/stub/stub_gl.cpp
++++ b/neo/sys/stub/stub_gl.cpp
+@@ -391,7 +391,7 @@ GLExtension_t GLimp_ExtensionPointer( const char *a) { return StubFunction; };
+ bool GLimp_Init(glimpParms_t a) {return true;};
+ void GLimp_SetGamma(unsigned short*a, unsigned short*b, unsigned short*c) {};
+ void GLimp_ResetGamma() {}
+-bool GLimp_SetScreenParms(glimpParms_t parms) { return true; };
++bool GLimp_SetScreenParms(glimpParms_t parms, bool) { return true; };
+ void GLimp_Shutdown() {};
+ void GLimp_SwapBuffers() {};
+ void GLimp_ActivateContext() {};
+diff --git a/neo/sys/sys_public.h b/neo/sys/sys_public.h
+index 4875563d..8f40b31d 100644
+--- a/neo/sys/sys_public.h
++++ b/neo/sys/sys_public.h
+@@ -117,9 +117,18 @@ void			Sys_DebugVPrintf( const char *fmt, va_list arg );
+ // NOTE: due to SDL_TIMESLICE this is very bad portability karma, and should be completely removed
+ void			Sys_Sleep( int msec );
+ 
++// like Sys_Milliseconds(), but with higher precision
++double			Sys_MillisecondsPrecise( void );
++
+ // Sys_Milliseconds should only be used for profiling purposes,
+ // any game related timing information should come from event timestamps
+-unsigned int	Sys_Milliseconds( void );
++ID_INLINE unsigned int Sys_Milliseconds( void ) {
++	return (unsigned int)Sys_MillisecondsPrecise();
++}
++
++// sleep until Sys_MillisecondsPrecise() returns >= targetTimeMS
++// aims for about 0.01ms precision (but might busy wait for the last 1.5ms or so)
++void Sys_SleepUntilPrecise( double targetTimeMS );
+ 
+ // returns a selection of the CPUID_* flags
+ int				Sys_GetProcessorId( void );
+diff --git a/neo/sys/threads.cpp b/neo/sys/threads.cpp
+index 0b1132ae..fe19c0c2 100644
+--- a/neo/sys/threads.cpp
++++ b/neo/sys/threads.cpp
+@@ -68,14 +68,6 @@ void Sys_Sleep(int msec) {
+ 	SDL_Delay(msec);
+ }
+ 
+-/*
+-================
+-Sys_Milliseconds
+-================
+-*/
+-unsigned int Sys_Milliseconds() {
+-	return SDL_GetTicks();
+-}
+ 
+ /*
+ ==================
+diff --git a/neo/ui/DeviceContext.cpp b/neo/ui/DeviceContext.cpp
+index 6a5db6da..824838c3 100644
+--- a/neo/ui/DeviceContext.cpp
++++ b/neo/ui/DeviceContext.cpp
+@@ -995,7 +995,9 @@ idRegion *idDeviceContext::GetTextRegion(const char *text, float textScale, idRe
+ }
+ 
+ void idDeviceContext::DrawEditCursor( float x, float y, float scale ) {
+-	if ( (int)( com_ticNumber >> 4 ) & 1 ) {
++	// DG: fix cursor blinking speed for >60fps
++	unsigned scaledTicNumber = com_ticNumber / com_gameTicScale;
++	if ( ( scaledTicNumber >> 4 ) & 1 ) {
+ 		return;
+ 	}
+ 	SetFontByScale(scale);

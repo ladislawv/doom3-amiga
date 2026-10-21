@@ -1,0 +1,216 @@
+diff --git a/neo/game/Entity.cpp b/neo/game/Entity.cpp
+index 674e2038..07234344 100644
+--- a/neo/game/Entity.cpp
++++ b/neo/game/Entity.cpp
+@@ -436,6 +436,10 @@ idEntity::idEntity() {
+ 	memset( &refSound, 0, sizeof( refSound ) );
+ 
+ 	mpGUIState = -1;
++
++	animLODInterval = 0;
++	animLODLast = -1;
++	animLODNext = 0;
+ }
+ 
+ /*
+@@ -1479,12 +1483,69 @@ bool idEntity::UpdateRenderEntity( renderEntity_s *renderEntity, const renderVie
+ 
+ 	idAnimator *animator = GetAnimator();
+ 	if ( animator ) {
++		// animation level of detail (g_animLOD): between updates the renderer
++		// keeps the last frame (and its skinned model)
++		if ( animLODInterval > 0 && gameLocal.time < animLODNext && gameLocal.time != animLODLast ) {
++			return false;
++		}
+ 		return animator->CreateFrame( gameLocal.time, false );
+ 	}
+ 
+ 	return false;
+ }
+ 
++/*
++================
++EntityIntersectsView
++
++True if the entity's bounding sphere may be inside the view's frustum
++(g_animLOD; port, patch 0021, from ldhewm3-rearmed)
++================
++*/
++static bool EntityIntersectsView( const renderEntity_t &entity, const renderView_t &view ) {
++	const idVec3 center = entity.origin + entity.bounds.GetCenter() * entity.axis;
++	const idVec3 offset = center - view.vieworg;
++	const float radius = entity.bounds.GetRadius( entity.bounds.GetCenter() );
++	const float forward = offset * view.viewaxis[0];
++	if ( forward + radius <= 0.0f ) {
++		return false;
++	}
++	const float depth = forward > 0.0f ? forward : 0.0f;
++	const float horizontal = idMath::Fabs( offset * view.viewaxis[1] );
++	const float vertical = idMath::Fabs( offset * view.viewaxis[2] );
++	return horizontal - radius <= depth * idMath::Tan16( DEG2RAD( view.fov_x * 0.5f ) ) &&
++		vertical - radius <= depth * idMath::Tan16( DEG2RAD( view.fov_y * 0.5f ) );
++}
++
++/*
++================
++idEntity::AnimationLODInterval
++
++How often an entity at this distance from the view is animated (g_animLOD):
++every 96 ms from 768 units, 64 ms from 512, else every game tic (32 ms for
++the actors, the player apart: a tic at 30 Hz). An entity bound to another
++counts as that one.
++================
++*/
++int idEntity::AnimationLODInterval( const idVec3 &viewOrigin ) const {
++	if ( renderEntity.weaponDepthHack ) {
++		return 0;
++	}
++	const idEntity *lodEntity = GetBindMaster();
++	if ( !lodEntity ) {
++		lodEntity = this;
++	}
++	const bool actorLOD = lodEntity->IsType( idActor::Type ) && !lodEntity->IsType( idPlayer::Type );
++	const float distanceSqr = ( renderEntity.origin - viewOrigin ).LengthSqr();
++	if ( distanceSqr >= 768.0f * 768.0f ) {
++		return 96;
++	}
++	if ( distanceSqr >= 512.0f * 512.0f ) {
++		return 64;
++	}
++	return actorLOD ? 32 : 0;
++}
++
+ /*
+ ================
+ idEntity::ModelCallback
+@@ -5036,6 +5097,34 @@ void idAnimatedEntity::UpdateAnimation( void ) {
+ 		return;
+ 	}
+ 
++	// animation level of detail (g_animLOD): distant or unseen entities less
++	// often; those entering it start at a phase of their own, so that they do
++	// not all update on the same tic
++	int lodInterval = 0;
++	if ( g_animLOD.GetBool() && !gameLocal.inCinematic ) {
++		idPlayer *player = gameLocal.GetLocalPlayer();
++		renderView_t *playerView = player ? player->GetRenderView() : NULL;
++		if ( playerView ) {
++			lodInterval = AnimationLODInterval( playerView->vieworg );
++			if ( !renderEntity.weaponDepthHack && lodInterval < 96 &&
++					( !gameLocal.InPlayerPVS( this ) || !EntityIntersectsView( renderEntity, *playerView ) ) ) {
++				lodInterval = 96;
++			}
++		}
++	}
++	const bool enteringLOD = animLODInterval == 0 && lodInterval > 0;
++	animLODInterval = lodInterval;
++	if ( lodInterval > 0 && gameLocal.time < animLODNext ) {
++		return;
++	}
++	animLODLast = gameLocal.time;
++	animLODNext = lodInterval > 0 ? gameLocal.time + lodInterval : 0;
++	if ( enteringLOD && lodInterval > USERCMD_MSEC ) {
++		const idEntity *phaseMaster = GetBindMaster();
++		const int phaseEntity = phaseMaster ? phaseMaster->entityNumber : entityNumber;
++		animLODNext += ( phaseEntity % ( lodInterval / USERCMD_MSEC ) ) * USERCMD_MSEC;
++	}
++
+ 	// get the latest frame bounds
+ 	animator.GetBounds( gameLocal.time, renderEntity.bounds );
+ 	if ( renderEntity.bounds.IsCleared() && !fl.hidden ) {
+diff --git a/neo/game/Entity.h b/neo/game/Entity.h
+index c5151db8..f07c66ce 100644
+--- a/neo/game/Entity.h
++++ b/neo/game/Entity.h
+@@ -367,6 +367,14 @@ protected:
+ 	int						modelDefHandle;						// handle to static renderer model
+ 	refSound_t				refSound;							// used to present sound to the audio engine
+ 
++	// animation level of detail (g_animLOD, port, patch 0021, from ldhewm3-rearmed's
++	// Vita port): an entity far from the player or out of sight is animated, and
++	// its frame built for the renderer, every animLODInterval ms only
++	int						animLODInterval;
++	int						animLODLast;		// the game time of the last update
++	int						animLODNext;		// the game time of the next one
++	int						AnimationLODInterval( const idVec3 &viewOrigin ) const;
++
+ private:
+ 	idPhysics_Static		defaultPhysicsObj;					// default physics object
+ 	idPhysics *				physics;							// physics used for this entity
+diff --git a/neo/game/gamesys/SysCvar.cpp b/neo/game/gamesys/SysCvar.cpp
+index 887d2b6c..9fddfd26 100644
+--- a/neo/game/gamesys/SysCvar.cpp
++++ b/neo/game/gamesys/SysCvar.cpp
+@@ -148,6 +148,7 @@ idCVar g_showActiveEntities(		"g_showActiveEntities",		"0",			CVAR_GAME | CVAR_B
+ idCVar g_showEnemies(				"g_showEnemies",			"0",			CVAR_GAME | CVAR_BOOL, "draws boxes around monsters that have targeted the the player" );
+ 
+ idCVar g_frametime(					"g_frametime",				"0",			CVAR_GAME | CVAR_BOOL, "displays timing information for each game frame" );
++idCVar g_animLOD(					"g_animLOD",				"0",			CVAR_GAME | CVAR_BOOL, "animate entities 512 units away every 64 ms, 768 away or unseen every 96 ms (port, patch 0021)" );
+ idCVar g_profileThink(				"g_profileThink",			"0",			CVAR_GAME | CVAR_BOOL, "sums the game frame's parts and each entity class's think time until gameProfile print (port)" );
+ idCVar g_timeentities(				"g_timeEntities",			"0",			CVAR_GAME | CVAR_FLOAT, "when non-zero, shows entities whose think functions exceeded the # of milliseconds specified" );
+ 
+diff --git a/neo/game/gamesys/SysCvar.h b/neo/game/gamesys/SysCvar.h
+index 274b1e3a..70b3b809 100644
+--- a/neo/game/gamesys/SysCvar.h
++++ b/neo/game/gamesys/SysCvar.h
+@@ -86,6 +86,7 @@ extern idCVar	g_showEnemies;
+ 
+ extern idCVar	g_frametime;
+ extern idCVar	g_timeentities;
++extern idCVar	g_animLOD;
+ extern idCVar	g_profileThink;
+ 
+ extern idCVar	ai_debugScript;
+diff --git a/neo/renderer/Interaction.cpp b/neo/renderer/Interaction.cpp
+index 51f665f6..c5f78688 100644
+--- a/neo/renderer/Interaction.cpp
++++ b/neo/renderer/Interaction.cpp
+@@ -292,6 +292,24 @@ static srfTriangles_t *R_CreateLightTris( const idRenderEntityLocal *ent,
+ 	bool		includeBackFaces;
+ 	int			faceNum;
+ 
++	// port (patch 0021, from ldhewm3-rearmed's Vita port): an animated model's
++	// surface changes every frame, and culling its triangles to the light (facing
++	// and light volume, per triangle) costs more on this CPU than drawing them
++	// all: the light surface is the whole ambient surface. The falloff and
++	// projection textures are dark outside the light, and back faces are in the
++	// model's own stencil shadow.
++	if ( !r_cullDynamicLightTris.GetBool() && ent->parms.hModel != NULL &&
++			ent->parms.hModel->IsDynamicModel() != DM_STATIC ) {
++		newTri = R_AllocStaticTriSurf();
++		newTri->ambientSurface = const_cast<srfTriangles_t *>( tri );
++		newTri->numVerts = tri->numVerts;
++		R_ReferenceStaticTriSurfVerts( newTri, tri );
++		R_ReferenceStaticTriSurfIndexes( newTri, tri );
++		newTri->numIndexes = tri->numIndexes;
++		newTri->bounds = tri->bounds;
++		return newTri;
++	}
++
+ 	tr.pc.c_createLightTris++;
+ 	c_backfaced = 0;
+ 	c_distance = 0;
+diff --git a/neo/renderer/RenderSystem_init.cpp b/neo/renderer/RenderSystem_init.cpp
+index c1296c47..4f759075 100644
+--- a/neo/renderer/RenderSystem_init.cpp
++++ b/neo/renderer/RenderSystem_init.cpp
+@@ -112,6 +112,7 @@ idCVar r_skipROQ( "r_skipROQ", "0", CVAR_RENDERER | CVAR_BOOL, "skip ROQ decodin
+ idCVar r_ignore( "r_ignore", "0", CVAR_RENDERER, "used for random debugging without defining new vars" );
+ idCVar r_ignore2( "r_ignore2", "0", CVAR_RENDERER, "used for random debugging without defining new vars" );
+ idCVar r_usePreciseTriangleInteractions( "r_usePreciseTriangleInteractions", "0", CVAR_RENDERER | CVAR_BOOL, "1 = do winding clipping to determine if each ambiguous tri should be lit" );
++idCVar r_cullDynamicLightTris( "r_cullDynamicLightTris", "0", CVAR_RENDERER | CVAR_BOOL, "1: cull an animated model's triangles to each light, as before; 0: light all of them (port, patch 0021)" );
+ idCVar r_useEntityBoxRefs( "r_useEntityBoxRefs", "1", CVAR_RENDERER | CVAR_BOOL, "push an entity into the areas as a box, not as its eight corners (port, patch 0020)" );
+ idCVar r_useCulling( "r_useCulling", "2", CVAR_RENDERER | CVAR_INTEGER, "0 = none, 1 = sphere, 2 = box, 3 = sphere + box as before (port, patch 0020)", 0, 3, idCmdSystem::ArgCompletion_Integer<0,3> );
+ idCVar r_useLightCulling( "r_useLightCulling", "3", CVAR_RENDERER | CVAR_INTEGER, "0 = none, 1 = box, 2 = exact clip of polyhedron faces, 3 = also areas", 0, 3, idCmdSystem::ArgCompletion_Integer<0,3> );
+diff --git a/neo/renderer/tr_local.h b/neo/renderer/tr_local.h
+index b683e7ca..94dcb90f 100644
+--- a/neo/renderer/tr_local.h
++++ b/neo/renderer/tr_local.h
+@@ -872,6 +872,7 @@ extern idCVar r_useConstantMaterials;	// 1 = use pre-calculated material registe
+ extern idCVar r_useInteractionTable;	// create a full entityDefs * lightDefs table to make finding interactions faster
+ extern idCVar r_useNodeCommonChildren;	// stop pushing reference bounds early when possible
+ extern idCVar r_useSilRemap;			// 1 = consider verts with the same XYZ, but different ST the same for shadows
++extern idCVar r_cullDynamicLightTris;	// 0 = an animated model's light surface is all of it (patch 0021)
+ extern idCVar r_useEntityBoxRefs;		// 1 = an entity into the areas as a box (patch 0020)
+ extern idCVar r_useCulling;				// 0 = none, 1 = sphere, 2 = box (patch 0020), 3 = sphere + box as before
+ extern idCVar r_useLightCulling;		// 0 = none, 1 = box, 2 = exact clip of polyhedron faces

@@ -1,0 +1,1314 @@
+dhewm3 1.5.3pre.1305 amigaos-m68k Oct 20 2026 19:04:42 using SDL v2.33.0
+SDL video driver: amigaos3
+1768 MB System Memory (1704 MB free)
+stack: 9000000 bytes
+no networking on this platform (single player only)
+[1]----- Initializing File System -----
+[5]Current search path:
+[7]Stuff:amictld/work/map/save/base
+[10]Stuff:doom3/base
+[13]Addon pk4s:
+[21]WARNING: Couldn't find default.cfg in base/, trying again with demo/
+
+[34]----- Initializing File System -----
+[69826]Loaded pk4 Stuff:doom3/demo/demo00.pk4 with checksum 0xfe75bbef
+[69832]Current search path:
+[69834]Stuff:amictld/work/map/save/demo
+[69837]Stuff:doom3/demo
+[69839]Stuff:doom3/demo/demo00.pk4 (12234 files - 0xfe75bbef not referenced)
+[69845]Stuff:amictld/work/map/save/base
+[69847]Stuff:doom3/base
+[69849]Addon pk4s:
+[69863]----- Initializing Decls -----
+[69873]...loading 'materials/aaduffytest.mtr'
+[69909]...loading 'materials/alphalabs.mtr'
+[69936]...loading 'materials/andy.mtr'
+[70047]...loading 'materials/atest.mtr'
+[70070]...loading 'materials/base_door.mtr'
+[70092]...loading 'materials/base_floor.mtr'
+[70131]...loading 'materials/base_light.mtr'
+[70163]...loading 'materials/base_trim.mtr'
+[70208]...loading 'materials/base_wall.mtr'
+[70262]...loading 'materials/caves.mtr'
+[70281]...loading 'materials/char_common.mtr'
+[70308]...loading 'materials/characters.mtr'
+[70364]...loading 'materials/d3xpchang.mtr'
+[70384]...loading 'materials/decals.mtr'
+[70449]...loading 'materials/door.mtr'
+[70467]...loading 'materials/duffytest.mtr'
+[70485]...loading 'materials/fogs.mtr'
+[70504]...loading 'materials/gfx.mtr'
+[70523]...loading 'materials/glass.mtr'
+[70545]...loading 'materials/hell.mtr'
+[70599]...loading 'materials/invisible.mtr'
+[70622]...loading 'materials/jerry.mtr'
+[70640]...loading 'materials/kentest.mtr'
+[70670]...loading 'materials/ktest.mtr'
+[70698]...loading 'materials/lab.mtr'
+[70726]...loading 'materials/lab_floor.mtr'
+[70750]...loading 'materials/lights.mtr'
+[70795]...loading 'materials/mal.mtr'
+[70816]...loading 'materials/mapobjects.mtr'
+[70921]...loading 'materials/maxtextures.mtr'
+[70943]...loading 'materials/monsters.mtr'
+[71029]...loading 'materials/morgue.mtr'
+[71058]...loading 'materials/mp_gui.mtr'
+[71075]...loading 'materials/mp_lights.mtr'
+[71097]...loading 'materials/mre.mtr'
+[71115]...loading 'materials/object.mtr'
+[71154]...loading 'materials/outside.mtr'
+[71173]...loading 'materials/patd.mtr'
+[71258]...loading 'materials/patrick_d3ex.mtr'
+[71276]...loading 'materials/patricktest.mtr'
+[71341]...loading 'materials/pdtest.mtr'
+[71359]...loading 'materials/phook.mtr'
+[71378]...loading 'materials/recyc_door.mtr'
+[71395]...loading 'materials/recyc_floor.mtr'
+[71415]...loading 'materials/recyc_light.mtr'
+[71433]...loading 'materials/recyc_trim.mtr'
+[71449]...loading 'materials/recyc_wall.mtr'
+[71477]...loading 'materials/rock.mtr'
+[71498]...loading 'materials/scabby.mtr'
+[71517]...loading 'materials/senetemp.mtr'
+[71777]...loading 'materials/sfx.mtr'
+[71840]...loading 'materials/sfx_multiplayer.mtr'
+[71858]...loading 'materials/shaderdemo.mtr'
+[71892]...loading 'materials/skies.mtr'
+[71912]...loading 'materials/sound.mtr'
+[71939]...loading 'materials/specialcase.mtr'
+[71962]...loading 'materials/stevetest.mtr'
+[71987]...loading 'materials/stone.mtr'
+[72005]...loading 'materials/testinteractions.mtr'
+[72025]...loading 'materials/tim.mtr'
+[72047]...loading 'materials/tools.mtr'
+[72064]...loading 'materials/vehicles.mtr'
+[72082]...loading 'materials/video.mtr'
+[72104]...loading 'materials/vp_materials.mtr'
+[72128]...loading 'materials/washroom.mtr'
+[72151]...loading 'materials/weapons.mtr'
+[72218]...loading 'materials/zgraeme.mtr'
+[72246]...loading 'skins/skins.skin'
+[72277]...loading 'skins/skins_characters_npcs.skin'
+[72390]...loading 'skins/skins_characters_player.skin'
+[72425]...loading 'skins/skins_characters_suit.skin'
+[72450]...loading 'skins/skins_characters_suit_old.skin'
+[72470]...loading 'skins/skins_models_chars_labcoat.skin'
+[72491]...loading 'skins/skins_models_chars_maint.skin'
+[72512]...loading 'skins/skins_models_chars_marine.skin'
+[72530]...loading 'skins/skins_models_chars_sarge.skin'
+[72549]...loading 'skins/skins_models_chars_security.skin'
+[72570]...loading 'skins/skins_models_chars_suit.skin'
+[72589]...loading 'skins/skins_models_mapobjects.skin'
+[72609]...loading 'skins/skins_models_mapobjects_doors_hazdoor1.skin'
+[72629]...loading 'skins/skins_models_monsters.skin'
+[72650]...loading 'skins/skins_models_props.skin'
+[72668]...loading 'skins/skins_models_weapons.skin'
+[72690]...loading 'skins/skins_monsters_zombie_chaingun.skin'
+[72709]...loading 'skins/skins_monsters_zombies.skin'
+[72741]...loading 'skins/skins_npcs.skin'
+[72758]...loading 'skins/skins_player.skin'
+[72782]...loading 'skins/skins_poppy.skin'
+[72799]...loading 'skins/skins_security.skin'
+[72819]...loading 'skins/skins_teleporter.skin'
+[72836]...loading 'skins/skins_uacmarine.skin'
+[72854]...loading 'skins/skins_zcc.skin'
+[72871]...loading 'skins/skins_zmaint.skin'
+[72889]...loading 'skins/skins_zsec.skin'
+[72913]...loading 'sound/actions.sndshd'
+[72935]...loading 'sound/admin.sndshd'
+[72956]...loading 'sound/alarms.sndshd'
+[72976]...loading 'sound/alpha_labs21.sndshd'
+[72998]...loading 'sound/alphalabs1.sndshd'
+[73018]...loading 'sound/alphalabs3.sndshd'
+[73045]...loading 'sound/audiologs.sndshd'
+[73066]...loading 'sound/bloopers.sndshd'
+[73084]...loading 'sound/boxsounds.sndshd'
+[73102]...loading 'sound/bubbles.sndshd'
+[73120]...loading 'sound/caverns2.sndshd'
+[73137]...loading 'sound/chris.sndshd'
+[73155]...loading 'sound/commoutside.sndshd'
+[73173]...loading 'sound/computers.sndshd'
+[73191]...loading 'sound/cpu.sndshd'
+[73209]...loading 'sound/creepy_elements.sndshd'
+[73227]...loading 'sound/default.sndshd'
+[73246]...loading 'sound/delta1.sndshd'
+[73264]...loading 'sound/delta2a.sndshd'
+[73283]...loading 'sound/delta2b.sndshd'
+[73301]...loading 'sound/delta3.sndshd'
+[73319]...loading 'sound/delta4.sndshd'
+[73337]...loading 'sound/delta5.sndshd'
+[73354]...loading 'sound/doors.sndshd'
+[73376]...loading 'sound/duffy.sndshd'
+[73396]...loading 'sound/e3.sndshd'
+[73421]...loading 'sound/e3_drones.sndshd'
+[73436]...loading 'sound/e3_plain.sndshd'
+[73453]...loading 'sound/electrical.sndshd'
+[73471]...loading 'sound/enpro.sndshd'
+[73492]...loading 'sound/fans.sndshd'
+[73510]...loading 'sound/game.sndshd'
+[73528]...loading 'sound/gui.sndshd'
+[73547]...loading 'sound/guitest.sndshd'
+[73570]...loading 'sound/headtest.sndshd'
+[73588]...loading 'sound/hell.sndshd'
+[73608]...loading 'sound/items.sndshd'
+[73626]...loading 'sound/johnc.sndshd'
+[73642]...loading 'sound/ken.sndshd'
+[73658]...loading 'sound/lights.sndshd'
+[73690]...loading 'sound/lightsout.sndshd'
+[73707]...loading 'sound/machinery.sndshd'
+[73747]...loading 'sound/map10.sndshd'
+[73769]...loading 'sound/map_alphalabs4.sndshd'
+[73786]...loading 'sound/map_comm1.sndshd'
+[73805]...loading 'sound/map_cpu.sndshd'
+[73822]...loading 'sound/map_cpuboss.sndshd'
+[73840]...loading 'sound/map_ending.sndshd'
+[73859]...loading 'sound/map_hellhole.sndshd'
+[73877]...loading 'sound/map_marscity2.sndshd'
+[73896]...loading 'sound/map_site3.sndshd'
+[73915]...loading 'sound/marscity.sndshd'
+[73949]...loading 'sound/mc_underground.sndshd'
+[73971]...loading 'sound/mc_underground_chars.sndshd'
+[73994]...loading 'sound/metals.sndshd'
+[74012]...loading 'sound/monorail.sndshd'
+[74034]...loading 'sound/monster_boss_sabaoth.sndshd'
+[74053]...loading 'sound/monster_demon_archvile.sndshd'
+[74074]...loading 'sound/monster_demon_bruiser.sndshd'
+[74093]...loading 'sound/monster_demon_cacodemon.sndshd'
+[74113]...loading 'sound/monster_demon_cherub.sndshd'
+[74140]...loading 'sound/monster_demon_cyberdemon.sndshd'
+[74161]...loading 'sound/monster_demon_guardian.sndshd'
+[74181]...loading 'sound/monster_demon_hellknight.sndshd'
+[74204]...loading 'sound/monster_demon_imp.sndshd'
+[74226]...loading 'sound/monster_demon_lostsoul.sndshd'
+[74247]...loading 'sound/monster_demon_maggot.sndshd'
+[74271]...loading 'sound/monster_demon_mancubus.sndshd'
+[74291]...loading 'sound/monster_demon_pinky.sndshd'
+[74312]...loading 'sound/monster_demon_revenant.sndshd'
+[74333]...loading 'sound/monster_demon_tick.sndshd'
+[74352]...loading 'sound/monster_demon_trite.sndshd'
+[74372]...loading 'sound/monster_demon_vagary.sndshd'
+[74394]...loading 'sound/monster_demon_wraith.sndshd'
+[74415]...loading 'sound/monster_zombie_bernie.sndshd'
+[74435]...loading 'sound/monster_zombie_boney.sndshd'
+[74454]...loading 'sound/monster_zombie_chainsaw.sndshd'
+[74473]...loading 'sound/monster_zombie_civilian.sndshd'
+[74492]...loading 'sound/monster_zombie_commando.sndshd'
+[74517]...loading 'sound/monster_zombie_fat.sndshd'
+[74539]...loading 'sound/monster_zombie_maint.sndshd'
+[74560]...loading 'sound/monster_zombie_morgue.sndshd'
+[74580]...loading 'sound/monster_zombie_scientist.sndshd'
+[74599]...loading 'sound/monster_zombie_security.sndshd'
+[74620]...loading 'sound/monsters.sndshd'
+[74637]...loading 'sound/moveable.sndshd'
+[74660]...loading 'sound/mpsounds.sndshd'
+[74681]...loading 'sound/multiplayer.sndshd'
+[74701]...loading 'sound/music.sndshd'
+[74721]...loading 'sound/outdoor.sndshd'
+[74744]...loading 'sound/player.sndshd'
+[74768]...loading 'sound/radio.sndshd'
+[74792]...loading 'sound/recycling.sndshd'
+[74811]...loading 'sound/rooms.sndshd'
+[74829]...loading 'sound/roq.sndshd'
+[74846]...loading 'sound/soundscape.sndshd'
+[74864]...loading 'sound/speaker_test.sndshd'
+[74882]...loading 'sound/tele_in.sndshd'
+[74900]...loading 'sound/tim_temp.sndshd'
+[74917]...loading 'sound/video.sndshd'
+[74934]...loading 'sound/vo.sndshd'
+[74953]...loading 'sound/voc.sndshd'
+[74971]...loading 'sound/weapons.sndshd'
+[75003]...loading 'sound/whispers.sndshd'
+[75028]...loading 'sound/world_ambience.sndshd'
+[75051]...loading 'sound/xian.sndshd'
+[75068]...loading 'sound/zombie_sight_hack.sndshd'
+[75086]idFileSystem::OpenExplicitFileRead - reading from: Stuff:amictld/work/map/save/demo/config.spec
+[75095]writing to: Stuff:amictld/work/map/save/demo/config.spec
+[75103]Detected
+	1768 MB of System memory
+
+[75106]This system qualifies for Ultra quality!
+[75299]5151 strings read from strings/english.lang
+[75305]Couldn't open journal files
+[75310]couldn't exec editor.cfg
+[75331]execing default.cfg
+[75340]couldn't exec dhewm.cfg
+[75344]couldn't exec autoexec.cfg
+[75474]5151 strings read from strings/english.lang
+[75478]Running the game at com_gameHz = 30Hz, frametime 33ms
+[75483]----- Initializing OpenAL -----
+[75486]Sound disabled with s_noSound 1 !
+[75490]----- Initializing OpenGL -----
+[75493]Initializing OpenGL subsystem
+[75496]Will create a fullscreen-window with resolution 640x480 (r_mode = -1)
+[75501]SDL detected 1 displays: 
+[75504] 0: 640x480 at (0, 0) to (640, 480)
+[75507]Will use display 0 because mouse cursor is at (0, 0).
+[76282]Requested 8 color bits per chan, 8 alpha 24 depth, 8 stencil
+[76287]Got 8 stencil bits, 24 depth bits, color bits: r8 g8 b8 a8
+[76293]Detected keyboard layout as "english"
+[76296]OpenGL vendor: ogles2.library
+[76299]OpenGL renderer: V3D 4.2.14 (PiStorm), 8 QPUs, 64 KB VPM
+[76304]OpenGL version: OpenGL ES 2.0 ogles2.library 1.3
+[76308]...using GL_EXT_texture_filter_anisotropic
+[76311]...using GL_OES_texture_npot
+[76314] npotAvailable: 1
+[76316]...using GL_OES_packed_depth_stencil
+[76319] depthStencilAvailable: 1
+[76321]...using GL_EXT_texture_compression_s3tc
+[76325] textureCompressionAvailable: 1
+[76328]   maxTextureAnisotropy: 16.000000
+[76332]----- R_ReloadGLSLPrograms -----
+[76335]Loading main interaction shader
+[76368]VS:
+
+[76369]FS:
+
+[76371]Loading main interaction shader (Phong) 
+[76382]VS:
+
+[76383]FS:
+
+[76384]Loading default diffuse shader
+[76393]VS:
+
+[76394]FS:
+
+[76395]Loading skybox cubemap shader
+[76404]VS:
+
+[76405]FS:
+
+[76406]Loading reflection cubemap shader
+[76415]VS:
+
+[76416]FS:
+
+[76417]Loading diffuse cubemap shader
+[76425]VS:
+
+[76426]FS:
+
+[76427]Loading Zfill shader
+[76435]VS:
+
+[76436]FS:
+
+[76437]Loading Zfill shader (Clip plane version)
+[76446]VS:
+
+[76447]FS:
+
+[76448]Loading Fog shader
+[76455]VS:
+
+[76456]FS:
+
+[76458]Loading BlendLight shader
+[76465]VS:
+
+[76466]FS:
+
+[76468]Loading Stencil shadow shader
+[76476]VS:
+
+[76477]FS:
+
+[76478]-------------------------------
+[76481]Init Vertex Cache
+[76495]using GLSL renderSystem
+[76498]----- OpenGL Initialization complete-----
+[76502]regenerating _default.
+[76506]regenerating _white.
+[76508]regenerating _black.
+[76510]regenerating _borderClamp.
+[76513]regenerating _flat.
+[76515]regenerating _ambient.
+[76518]regenerating _specularTable.
+[76520]regenerating _specular2DTable.
+[76526]regenerating _ramp.
+[76529]regenerating _alphaRamp.
+[76531]regenerating _alphaNotch.
+[76534]regenerating _fog.
+[76538]regenerating _fogEnter.
+[76541]regenerating _normalCubeMap.
+[76546]regenerating _noFalloff.
+[76548]regenerating _quadratic.
+[76551]regenerating _cinematic.
+[76554]regenerating _scratch.
+[76556]regenerating _scratch2.
+[76558]regenerating _accum.
+[76560]regenerating _scratchCubeMap.
+[76564]regenerating _currentRender.
+[76567]reloading makeintensity( lights/squarelight1a).
+[76571]reloading lights/squarelight1.
+[76574]reloading guis/assets/splash/launch.
+[76577]reloading textures/bigchars.
+[76579]reloading textures/black.
+[76582]R_InitFrameBuffer Real[640, 480] -> Framebuffer[640,480]
+[76590]Not using framebuffer
+[76631]precompressed lights/squarelight1: light image, com_machineSpec >= 1
+[76858]precompressed guis/assets/splash/launch: format 00000000 (flags 00000040), depth 4 not used
+[77100]precompressed lights/squarelight1: light image, com_machineSpec >= 1
+[77312]precompressed guis/assets/splash/launch: format 00000000 (flags 00000040), depth 4 not used
+[78170]----- Initializing Game -----
+[78173]gamename: baseDOOM-1
+[78175]gamedate: Oct 20 2026
+[78182]...loading 'def/aas.def'
+[78201]...loading 'def/ammo.def'
+[78221]...loading 'def/bloopers.def'
+[78238]...loading 'def/cache.def'
+[78255]...loading 'def/char_sentry.def'
+[78281]...loading 'def/characters_eric.def'
+[78300]...loading 'def/characters_james.def'
+[78320]...loading 'def/chartest.def'
+[78336]...loading 'def/cinematics.def'
+[78364]...loading 'def/commo_hellgoo1.def'
+[78381]...loading 'def/damage.def'
+[78400]...loading 'def/debris.def'
+[78420]...loading 'def/env.def'
+[78467]...loading 'def/env_eric.def'
+[78492]...loading 'def/func.def'
+[78524]...loading 'def/gibs.def'
+[78543]...loading 'def/heads.def'
+[78572]...loading 'def/hellhole_seneca.def'
+[78589]...loading 'def/info.def'
+[78606]...loading 'def/items.def'
+[78628]...loading 'def/johnc.def'
+[78648]...loading 'def/map_admin.def'
+[78674]...loading 'def/map_alphalabs1.def'
+[78698]...loading 'def/map_alphalabs2.def'
+[78728]...loading 'def/map_alphalabs3.def'
+[78752]...loading 'def/map_alphalabs4.def'
+[78776]...loading 'def/map_caverns2.def'
+[78803]...loading 'def/map_comm1.def'
+[78823]...loading 'def/map_commoutside.def'
+[78843]...loading 'def/map_cpu1.def'
+[78864]...loading 'def/map_cpuboss.def'
+[78883]...loading 'def/map_delta1.def'
+[78901]...loading 'def/map_delta2a.def'
+[78929]...loading 'def/map_delta2b.def'
+[78951]...loading 'def/map_delta3.def'
+[78968]...loading 'def/map_delta4.def'
+[78989]...loading 'def/map_delta5.def'
+[79015]...loading 'def/map_enpro.def'
+[79053]...loading 'def/map_fragchamber.def'
+[79072]...loading 'def/map_hell1.def'
+[79091]...loading 'def/map_hellhole.def'
+[79120]...loading 'def/map_maledict.def'
+[79137]...loading 'def/map_marscity.def'
+[79209]...loading 'def/map_marscity2.def'
+[79230]...loading 'def/map_monorail.def'
+[79251]...loading 'def/map_recycling.def'
+[79270]...loading 'def/map_recycling2.def'
+[79291]...loading 'def/map_site3.def'
+[79310]...loading 'def/map_space.def'
+[79330]...loading 'def/map_underground.def'
+[79377]...loading 'def/maps.def'
+[79397]...loading 'def/misc.def'
+[79416]...loading 'def/monster_boss_cyberdemon.def'
+[79440]...loading 'def/monster_boss_guardian.def'
+[79463]...loading 'def/monster_boss_guardian_seeker.def'
+[79483]...loading 'def/monster_boss_maledict.def'
+[79502]...loading 'def/monster_boss_sabaoth.def'
+[79523]...loading 'def/monster_boss_vagary.def'
+[79544]...loading 'def/monster_default.def'
+[79568]...loading 'def/monster_demon_archvile.def'
+[79591]...loading 'def/monster_demon_cherub.def'
+[79611]...loading 'def/monster_demon_hellknight.def'
+[79635]...loading 'def/monster_demon_imp.def'
+[79664]...loading 'def/monster_demon_maggot.def'
+[79686]...loading 'def/monster_demon_mancubus.def'
+[79709]...loading 'def/monster_demon_pinky.def'
+[79739]...loading 'def/monster_demon_revenant.def'
+[79764]...loading 'def/monster_demon_sentry.def'
+[79785]...loading 'def/monster_demon_tick.def'
+[79809]...loading 'def/monster_demon_trite.def'
+[79834]...loading 'def/monster_demon_vulgar.def'
+[79861]...loading 'def/monster_demon_wraith.def'
+[79882]...loading 'def/monster_flying_cacodemon.def'
+[79904]...loading 'def/monster_flying_lostsoul.def'
+[79924]...loading 'def/monster_turret.def'
+[79943]...loading 'def/monster_zombie_base.def'
+[79962]...loading 'def/monster_zombie_bernie.def'
+[79983]...loading 'def/monster_zombie_boney.def'
+[80004]...loading 'def/monster_zombie_chainsaw.def'
+[80027]...loading 'def/monster_zombie_commando.def'
+[80050]...loading 'def/monster_zombie_commando_cgun.def'
+[80090]...loading 'def/monster_zombie_fat.def'
+[80120]...loading 'def/monster_zombie_fem.def'
+[80140]...loading 'def/monster_zombie_generic.def'
+[80168]...loading 'def/monster_zombie_jumpsuit.def'
+[80188]...loading 'def/monster_zombie_maint.def'
+[80210]...loading 'def/monster_zombie_morgue.def'
+[80230]...loading 'def/monster_zombie_sawyer.def'
+[80254]...loading 'def/monster_zsec_machinegun.def'
+[80286]...loading 'def/monster_zsec_pistol.def'
+[80312]...loading 'def/monster_zsec_shield.def'
+[80337]...loading 'def/monster_zsec_shotgun.def'
+[80363]...loading 'def/moveable.def'
+[80398]...loading 'def/moveable_items.def'
+[80423]...loading 'def/mp.def'
+[80447]...loading 'def/mpsounds.def'
+[80466]...loading 'def/npcs.def'
+[80502]...loading 'def/npcs_james.def'
+[80518]...loading 'def/path.def'
+[80541]...loading 'def/pda.def'
+[80559]...loading 'def/player.def'
+[80591]...loading 'def/player_cinematics.def'
+[80610]...loading 'def/powerups.def'
+[80629]...loading 'def/recycling1_seneca.def'
+[80648]...loading 'def/screenshots.def'
+[80674]...loading 'def/target.def'
+[80699]...loading 'def/test.def'
+[80721]...loading 'def/triggers.def'
+[80747]...loading 'def/weapon_bfg.def'
+[80762]...loading 'def/weapon_fists.def'
+[80780]...loading 'def/weapon_flashlight.def'
+[80802]...loading 'def/weapon_machinegun.def'
+[80823]...loading 'def/weapon_pda.def'
+[80840]...loading 'def/weapon_pistol.def'
+[80861]...loading 'def/weapon_shotgun.def'
+[80886]...loading 'fx/berserkspawn.fx'
+[80904]...loading 'fx/bigteleporter.fx'
+[80922]...loading 'fx/bigteleporter2.fx'
+[80939]...loading 'fx/bigteleporter3.fx'
+[80957]...loading 'fx/bigteleporter4.fx'
+[80976]...loading 'fx/blooddrip1.fx'
+[80999]...loading 'fx/bloodrip1.fx'
+[81015]...loading 'fx/bloodspurt1.fx'
+[81032]...loading 'fx/chaingunfire.fx'
+[81049]...loading 'fx/chaingunfire2.fx'
+[81067]...loading 'fx/chaingunmuzzle.fx'
+[81084]...loading 'fx/chainsawsmoke.fx'
+[81101]...loading 'fx/dimlights.fx'
+[81118]...loading 'fx/dm_laser.fx'
+[81135]...loading 'fx/dm_laser2.fx'
+[81152]...loading 'fx/earthquake.fx'
+[81169]...loading 'fx/explosion1.fx'
+[81185]...loading 'fx/explosion2.fx'
+[81202]...loading 'fx/explosion3.fx'
+[81221]...loading 'fx/explosion5.fx'
+[81238]...loading 'fx/explosion6.fx'
+[81256]...loading 'fx/floordust.fx'
+[81273]...loading 'fx/fracture.fx'
+[81290]...loading 'fx/fractureblue.fx'
+[81306]...loading 'fx/headsplat.fx'
+[81323]...loading 'fx/headspurt.fx'
+[81339]...loading 'fx/hkwalk.fx'
+[81356]...loading 'fx/itemspawn.fx'
+[81372]...loading 'fx/maggot_dude.fx'
+[81388]...loading 'fx/multiplayer.fx'
+[81405]...loading 'fx/pentagram.fx'
+[81422]...loading 'fx/plasma.fx'
+[81438]...loading 'fx/plasmaexplosion.fx'
+[81455]...loading 'fx/playergib.fx'
+[81472]...loading 'fx/playervaporize.fx'
+[81489]...loading 'fx/rocket_detonate.fx'
+[81506]...loading 'fx/rocket_fly.fx'
+[81524]...loading 'fx/rocket_residue.fx'
+[81540]...loading 'fx/skulltrail.fx'
+[81556]...loading 'fx/skulltrail2.fx'
+[81573]...loading 'fx/smallfire.fx'
+[81589]...loading 'fx/smallsparks.fx'
+[81606]...loading 'fx/smallsparks1fred.fx'
+[81623]...loading 'fx/smallsparks2fred.fx'
+[81640]...loading 'fx/smallsparks3fred.fx'
+[81658]...loading 'fx/smallsparks4fred.fx'
+[81676]...loading 'fx/sparks.fx'
+[81691]...loading 'fx/sparks2.fx'
+[81710]...loading 'fx/steam1.fx'
+[81734]...loading 'fx/teleporter.fx'
+[81751]...loading 'fx/teleporter1.fx'
+[81770]...loading 'fx/teleporter1_fly.fx'
+[81790]...loading 'fx/teleporter2.fx'
+[81808]...loading 'fx/teleporter3.fx'
+[81826]...loading 'fx/teleporterplayer.fx'
+[81844]...loading 'fx/turkeybeam.fx'
+[81865]...loading 'particles/alphalabs1.prt'
+[81884]...loading 'particles/archvile.prt'
+[81907]...loading 'particles/archyplay.prt'
+[81926]...loading 'particles/blooddrop.prt'
+[81945]...loading 'particles/caverns.prt'
+[81968]...loading 'particles/chang.prt'
+[82054]...loading 'particles/cpu.prt'
+[82075]...loading 'particles/cyberdemon.prt'
+[82108]...loading 'particles/delta3.prt'
+[82126]...loading 'particles/duffy.prt'
+[82172]...loading 'particles/examples.prt'
+[82192]...loading 'particles/explosions.prt'
+[82221]...loading 'particles/fire.prt'
+[82243]...loading 'particles/fredo.prt'
+[82263]...loading 'particles/hell1fire.prt'
+[82282]...loading 'particles/ktest.prt'
+[82430]...loading 'particles/ktest2.prt'
+[82453]...loading 'particles/mars_city1.prt'
+[82475]...loading 'particles/mars_city2.prt'
+[82495]...loading 'particles/mc_underground.prt'
+[82515]...loading 'particles/monorail.prt'
+[82534]...loading 'particles/monster_weapons.prt'
+[82581]...loading 'particles/multiplayer.prt'
+[82605]...loading 'particles/patrick2.prt'
+[82648]...loading 'particles/patrick3.prt'
+[82666]...loading 'particles/pfire.prt'
+[82684]...loading 'particles/recycling.prt'
+[82707]...loading 'particles/seneca.prt'
+[82768]...loading 'particles/site3.prt'
+[82789]...loading 'particles/steam.prt'
+[82824]...loading 'particles/weapons.prt'
+[82850]...loading 'particles/wormsteam.prt'
+[82872]...loading 'af/char_campbell.af'
+[82893]...loading 'af/char_hazmat.af'
+[82913]...loading 'af/char_lanternguy.af'
+[82934]...loading 'af/char_npc_base.af'
+[82954]...loading 'af/char_npc_misc.af'
+[82975]...loading 'af/char_poppy.af'
+[83002]...loading 'af/char_sentry.af'
+[83025]...loading 'af/char_wounded_marine.af'
+[83045]...loading 'af/default.af'
+[83064]...loading 'af/env_char_npcs_bag.af'
+[83082]...loading 'af/env_cranegame.af'
+[83103]...loading 'af/env_craneplatform_caverns1.af'
+[83122]...loading 'af/env_craneplatform_mcunderground.af'
+[83142]...loading 'af/env_evilmeat.af'
+[83159]...loading 'af/env_gibs_leftarm.af'
+[83178]...loading 'af/env_gibs_leftleg.af'
+[83196]...loading 'af/env_gibs_rtlolegstump.af'
+[83215]...loading 'af/env_gibs_rtuplegstump.af'
+[83233]...loading 'af/env_gibs_ruparmstub.af'
+[83251]...loading 'af/env_gibs_spine.af'
+[83271]...loading 'af/env_gibs_torso.af'
+[83289]...loading 'af/env_hellcage_long.af'
+[83309]...loading 'af/env_hellcage_medium.af'
+[83329]...loading 'af/env_hellcage_short.af'
+[83347]...loading 'af/env_hellchain.af'
+[83365]...loading 'af/env_juglamp.af'
+[83383]...loading 'af/env_mummy.af'
+[83402]...loading 'af/env_mummy_fixed.af'
+[83421]...loading 'af/env_pipe_ninetysix.af'
+[83439]...loading 'af/env_rope.af'
+[83456]...loading 'af/env_skeleton.af'
+[83476]...loading 'af/env_steampipe_a.af'
+[83496]...loading 'af/env_steampipe_b.af'
+[83516]...loading 'af/env_steampipe_blue_128.af'
+[83538]...loading 'af/env_steampipe_c.af'
+[83558]...loading 'af/env_steampipe_grey_128.af'
+[83579]...loading 'af/env_steampipe_hires.af'
+[83602]...loading 'af/env_steampipe_orange_128.af'
+[83622]...loading 'af/env_swing_tubearm.af'
+[83641]...loading 'af/env_swinglight_long.af'
+[83661]...loading 'af/env_swinglight_long_fixed.af'
+[83680]...loading 'af/env_swinglight_long_wbulbs.af'
+[83700]...loading 'af/env_swinglight_long_wbulbs_128.af'
+[83724]...loading 'af/env_swinglight_long_wbulbs_192.af'
+[83749]...loading 'af/env_swinglight_long_wbulbs_32.af'
+[83767]...loading 'af/env_swinglight_long_wbulbs_fixed.af'
+[83788]...loading 'af/env_swinglight_round.af'
+[83807]...loading 'af/env_swinglight_sl128.af'
+[83828]...loading 'af/env_swinglight_sl128_fixed.af'
+[83848]...loading 'af/env_swinglight_sl64.af'
+[83867]...loading 'af/env_vehicle_buggy.af'
+[83888]...loading 'af/env_vehicle_locust.af'
+[83912]...loading 'af/env_wirea.af'
+[83932]...loading 'af/env_wireb.af'
+[83950]...loading 'af/env_wirec.af'
+[83969]...loading 'af/env_xianbutton_1.af'
+[83988]...loading 'af/env_xianbutton_2.af'
+[84008]...loading 'af/env_xianbutton_3.af'
+[84027]...loading 'af/monster_boss_cyberdemon.af'
+[84047]...loading 'af/monster_boss_guardian.af'
+[84073]...loading 'af/monster_boss_sabaoth.af'
+[84099]...loading 'af/monster_demon_archvile.af'
+[84120]...loading 'af/monster_demon_baron.af'
+[84140]...loading 'af/monster_demon_cacodemon.af'
+[84159]...loading 'af/monster_demon_cherub.af'
+[84179]...loading 'af/monster_demon_hellknight.af'
+[84200]...loading 'af/monster_demon_imp.af'
+[84221]...loading 'af/monster_demon_lost.af'
+[84239]...loading 'af/monster_demon_maggot.af'
+[84259]...loading 'af/monster_demon_mancubus2.af'
+[84280]...loading 'af/monster_demon_pink.af'
+[84301]...loading 'af/monster_demon_revenant2.af'
+[84323]...loading 'af/monster_demon_tick.af'
+[84341]...loading 'af/monster_demon_trite.af'
+[84364]...loading 'af/monster_demon_vagary.af'
+[84389]...loading 'af/monster_demon_vulgar.af'
+[84412]...loading 'af/monster_demon_wraith.af'
+[84433]...loading 'af/monster_flying_cherub.af'
+[84453]...loading 'af/monster_sentry1.af'
+[84475]...loading 'af/monster_zombie_base.af'
+[84497]...loading 'af/monster_zombie_bernie.af'
+[84518]...loading 'af/monster_zombie_chainsaw.af'
+[84539]...loading 'af/monster_zombie_commando.af'
+[84559]...loading 'af/monster_zombie_commando_cgun.af'
+[84580]...loading 'af/monster_zombie_fat.af'
+[84600]...loading 'af/monster_zombie_maint.af'
+[84620]...loading 'af/monster_zombie_misc.af'
+[84641]...loading 'af/monster_zombie_morgue.af'
+[84663]...loading 'af/monster_zombie_sawyer.af'
+[84685]...loading 'af/monster_zombie_security_machinegun.af'
+[84708]...loading 'af/monster_zombie_security_pistol.af'
+[84737]...loading 'af/monster_zombie_security_shotgun.af'
+[84758]...loading 'af/monster_zombie_zfem.af'
+[84780]...loading 'af/player_doommarine.af'
+[84801]...loading 'af/player_npcs.af'
+[84825]...loading 'newpdas/admin_banks.pda'
+[84844]...loading 'newpdas/admin_dorweiler.pda'
+[84864]...loading 'newpdas/admin_moses.pda'
+[84884]...loading 'newpdas/admin_simons.pda'
+[84903]...loading 'newpdas/alphalabs1_berger.pda'
+[84923]...loading 'newpdas/alphalabs1_krietman.pda'
+[84941]...loading 'newpdas/alphalabs1_lipsitz.pda'
+[84960]...loading 'newpdas/alphalabs1_smith.pda'
+[84980]...loading 'newpdas/alphalabs2_chin.pda'
+[85006]...loading 'newpdas/alphalabs2_connors.pda'
+[85027]...loading 'newpdas/alphalabs3_abrams.pda'
+[85046]...loading 'newpdas/alphalabs3_lamia.pda'
+[85065]...loading 'newpdas/alphalabs3_nelson.pda'
+[85085]...loading 'newpdas/alphalabs3_poota.pda'
+[85104]...loading 'newpdas/alphalabs4_kaczynski.pda'
+[85124]...loading 'newpdas/caverns1_cody.pda'
+[85144]...loading 'newpdas/comm1_blake.pda'
+[85168]...loading 'newpdas/comm1_finch.pda'
+[85187]...loading 'newpdas/comm1_wolfe.pda'
+[85206]...loading 'newpdas/commoutside_holiday.pda'
+[85225]...loading 'newpdas/commoutside_ridge.pda'
+[85244]...loading 'newpdas/cpu_bates.pda'
+[85263]...loading 'newpdas/cpu_haskell.pda'
+[85282]...loading 'newpdas/cpuboss_tooloose.pda'
+[85301]...loading 'newpdas/default.pda'
+[85319]...loading 'newpdas/delta1_mora.pda'
+[85339]...loading 'newpdas/delta1_price.pda'
+[85357]...loading 'newpdas/delta2a_cinders.pda'
+[85376]...loading 'newpdas/delta2a_raleigh.pda'
+[85394]...loading 'newpdas/delta2a_wilson.pda'
+[85412]...loading 'newpdas/delta2b_bullman.pda'
+[85432]...loading 'newpdas/delta2b_erikson.pda'
+[85451]...loading 'newpdas/delta2b_mcneil.pda'
+[85470]...loading 'newpdas/delta2b_stemmons.pda'
+[85489]...loading 'newpdas/delta3_cerano.pda'
+[85508]...loading 'newpdas/delta3_lee.pda'
+[85526]...loading 'newpdas/delta3_shultz.pda'
+[85545]...loading 'newpdas/delta4_gilbert.pda'
+[85562]...loading 'newpdas/delta5_jackson.pda'
+[85582]...loading 'newpdas/delta5_swann.pda'
+[85601]...loading 'newpdas/enpro_chasar.pda'
+[85620]...loading 'newpdas/enpro_hammer.pda'
+[85639]...loading 'newpdas/enpro_raad.pda'
+[85656]...loading 'newpdas/hell_garlick.pda'
+[85676]...loading 'newpdas/hellhole_id.pda'
+[85701]...loading 'newpdas/info_emails.pda'
+[85725]...loading 'newpdas/marscity2_caseon.pda'
+[85752]...loading 'newpdas/marscity2_duncan.pda'
+[85771]...loading 'newpdas/marscity2_stanton.pda'
+[85790]...loading 'newpdas/marscity2_tyson.pda'
+[85810]...loading 'newpdas/mc1_berneche.pda'
+[85829]...loading 'newpdas/mcunderground_baston.pda'
+[85849]...loading 'newpdas/mcunderground_delahue.pda'
+[85869]...loading 'newpdas/mcunderground_ryan.pda'
+[85887]...loading 'newpdas/mcunderground_young.pda'
+[85907]...loading 'newpdas/monorail_cullen.pda'
+[85926]...loading 'newpdas/monorail_harding.pda'
+[85945]...loading 'newpdas/monorail_hollies.pda'
+[85963]...loading 'newpdas/monorail_ross.pda'
+[85982]...loading 'newpdas/personal.pda'
+[86000]...loading 'newpdas/recycling1_garza.pda'
+[86020]...loading 'newpdas/recycling1_sadowayj.pda'
+[86039]...loading 'newpdas/recycling2_johnson.pda'
+[86057]...loading 'newpdas/recycling2_moen.pda'
+[86077]...loading 'newpdas/site3_davis.pda'
+[86103]...loading 'newpdas/site3_rogers.pda'
+[86122]...loading 'newpdas/videos.pda'
+[86141]Initializing event system
+[86144]...474 event definitions
+[86146]Initializing class hierarchy
+[86150]...142 classes, 382992 bytes for event callbacks
+[86155]Initializing scripts
+[86174]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86183]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86191]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86199]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86224]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86233]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86241]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86249]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86272]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86280]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86289]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86297]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86351]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86359]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86368]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86376]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86413]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86421]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86430]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86438]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86464]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86472]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86480]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86488]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86513]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86522]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86530]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86539]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86566]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86575]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86583]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86591]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86621]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86629]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86638]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86646]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86680]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86689]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86698]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86706]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86747]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86758]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86766]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86775]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86815]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86823]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86832]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86840]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86877]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86886]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86896]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86904]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86936]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86944]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[86957]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[86968]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87003]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87012]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87021]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87029]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87067]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87075]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87084]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87092]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87121]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87129]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87138]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87146]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87177]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87186]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87194]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87202]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87236]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87245]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87253]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87261]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87286]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87296]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87304]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87312]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87447]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87456]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87464]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87476]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87505]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87514]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87522]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87531]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87598]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87607]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87615]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87624]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87674]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87684]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87692]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87701]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87742]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87758]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87766]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87774]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87832]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87840]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87849]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87857]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87909]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87918]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87926]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87936]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[87982]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87991]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[87999]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88007]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88059]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88067]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88076]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88084]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88132]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88141]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88149]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88157]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88222]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88231]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88239]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88247]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88303]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88312]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88321]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88329]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88371]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88380]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88388]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88397]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88439]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88447]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88456]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88464]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88499]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88508]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88517]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88525]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88558]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88567]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88575]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88583]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88620]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88628]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88637]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88645]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88677]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88687]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88695]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88703]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88783]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88797]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88807]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88815]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88861]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88869]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88877]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88886]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88974]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88982]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[88990]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[88999]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[89051]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[89060]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[89068]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[89083]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[89140]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[89148]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[89157]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[89165]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[89208]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[89217]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[89225]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[89233]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[89358]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[89366]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[89374]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[89382]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[89461]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[89469]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[89478]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[89486]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[89549]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[89557]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[89565]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[89575]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[89788]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[89809]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[89818]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[89830]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[89883]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[89891]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[89900]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[89908]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[90076]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[90085]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[90093]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[90101]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[90248]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[90257]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[90265]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[90273]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[90474]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[90483]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[90491]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[90499]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[90581]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[90589]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[90598]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[90606]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[90687]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[90695]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[90703]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[90712]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[90834]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[90843]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[90851]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[90859]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[90884]Non-portable: path contains uppercase characters: demo/Stuff:doom3/demo/demo00.pk4/script/script
+[90892]Non-portable: path contains uppercase characters: demo/Stuff:doom3/demo/demo00.pk4/script/script
+[90900]Non-portable: path contains uppercase characters: base/Stuff:doom3/demo/demo00.pk4/script/script
+[90908]Non-portable: path contains uppercase characters: base/Stuff:doom3/demo/demo00.pk4/script/script
+[90998]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[91013]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[91023]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[91031]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[91415]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[91424]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[91433]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[91441]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[91488]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[91497]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[91507]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[91515]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[91617]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[91626]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[91634]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[91643]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[91837]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[91852]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[91861]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[91869]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[91994]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[92002]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[92010]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[92019]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[92176]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[92196]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[92204]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[92212]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[92282]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[92290]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[92298]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[92306]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[92431]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[92440]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[92448]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[92456]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[92750]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[92766]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[92775]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[92783]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[92986]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[92995]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[93004]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[93012]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[93207]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[93222]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[93230]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[93238]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[93498]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[93507]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[93515]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[93523]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[93574]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[93582]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[93590]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[93598]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[93812]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[93833]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[93841]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[93849]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[94136]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[94152]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[94160]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[94168]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[94279]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[94287]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[94295]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[94304]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[94541]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[94554]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[94562]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[94570]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[94688]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[94696]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[94711]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[94722]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[94821]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[94830]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[94838]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[94847]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[94927]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[94935]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[94944]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[94952]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[94985]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[94993]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[95001]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[95017]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[95561]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[95569]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[95577]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[95586]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[95795]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[95810]Non-portable: path contains uppercase characters: demo/Stuff:amictld/work/map/save/demo/script/script
+[95819]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[95828]Non-portable: path contains uppercase characters: base/Stuff:amictld/work/map/save/demo/script/script
+[95934]Compiled 'script/doom_main.script': 9760 ms
+[95938]----- Compile stats -----
+[95941]Files loaded:
+[95942]   script/doom_main.script
+[95946]   script/doom_events.script
+[95948]   script/doom_util.script
+[95951]   script/weapon_base.script
+[95953]   script/ai_base.script
+[95955]   script/weapon_fists.script
+[95959]   script/weapon_pistol.script
+[95962]   script/weapon_shotgun.script
+[95965]   script/weapon_machinegun.script
+[95968]   script/weapon_chaingun.script
+[95971]   script/weapon_handgrenade.script
+[95974]   script/weapon_plasmagun.script
+[95977]   script/weapon_rocketlauncher.script
+[95980]   script/weapon_bfg.script
+[95983]   script/weapon_soulcube.script
+[95986]   script/weapon_chainsaw.script
+[95989]   script/weapon_flashlight.script
+[95992]   script/weapon_pda.script
+[95994]   script/ai_monster_base.script
+[95997]   script/ai_monster_zombie_base.script
+[96000]   script/ai_monster_demon_archvile.script
+[96004]   script/ai_monster_demon_cherub.script
+[96008]   script/ai_monster_demon_hellknight.script
+[96011]   script/ai_monster_demon_imp.script
+[96014]   script/ai_monster_demon_maggot.script
+[96018]   script/ai_monster_demon_mancubus.script
+[96022]   script/ai_monster_demon_pinky.script
+[96025]   script/ai_monster_demon_revenant.script
+[96029]   script/ai_monster_demon_trite.script
+[96034]   script/ai_monster_demon_wraith.script
+[96037]   script/ai_monster_flying_lostsoul.script
+[96041]   script/ai_monster_flying_cacodemon.script
+[96045]   script/ai_monster_zombie.script
+[96048]   script/ai_monster_zombie_morgue.script
+[96052]   script/ai_monster_zombie_sawyer.script
+[96055]   script/ai_monster_zombie_bernie.script
+[96058]   script/ai_monster_zombie_commando_cgun.script
+[96062]   script/ai_monster_zombie_commando_tentacle.script
+[96072]   script/ai_monster_zombie_security_pistol.script
+[96079]   script/ai_monster_turret.script
+[96082]   script/ai_monster_boss_vagary.script
+[96085]   script/ai_monster_boss_cyberdemon.script
+[96089]   script/ai_monster_boss_guardian.script
+[96093]   script/ai_monster_boss_guardian_seeker.script
+[96097]   script/ai_monster_boss_sabaoth.script
+[96100]   script/ai_character.script
+[96103]   script/ai_character_prone.script
+[96106]   script/ai_character_sentry.script
+[96109]   script/ai_player.script
+[96111]   script/ai_alphalabs2_scientist1.script
+[96116]   script/map_admin1.script
+[96119]   script/map_alphalabs1.script
+[96122]   script/map_alphalabs2.script
+[96125]   script/map_alphalabs3_crane.script
+[96128]   script/map_alphalabs3.script
+[96131]   script/map_alphalabs4.script
+[96134]   script/map_caves.script
+[96136]   script/map_caves2.script
+[96139]   script/map_comm1.script
+[96141]   script/map_commoutside_lift.script
+[96144]   script/map_commoutside.script
+[96148]   script/map_cpu.script
+[96150]   script/map_cpuboss.script
+[96152]   script/map_delta1.script
+[96155]   script/map_delta2a.script
+[96157]   script/map_delta2b.script
+[96160]   script/map_delta3.script
+[96162]   script/map_delta5.script
+[96165]   script/map_enpro.script
+[96167]   script/map_hell1.script
+[96170]   script/map_hellhole.script
+[96172]   script/map_recycling1.script
+[96175]   script/map_recycling2.script
+[96178]   script/map_site3.script
+[96180]   script/map_marscity1.script
+[96183]   script/map_marscity2.script
+[96186]   script/map_mc_underground.script
+[96189]   script/map_monorail.script
+[96193]   script/ai_follower.script
+[96196]Memory usage:
+[96198]     Strings: 79, 9648 bytes
+[96200]  Statements: 67881, 1357620 bytes
+[96203]   Functions: 2109, 250532 bytes
+[96206]   Variables: 147288 bytes
+[96209]    Mem used: 2575852 bytes
+[96211] Static data: 2477552 bytes
+[96214]   Allocated: 3480988 bytes
+[96216] Thread size: 13210 bytes
+[96220]...6 aas types
+[96223]----- Initializing Session -----
+[96232]WARNING: Couldn't load gui: 'guis/mainmenu.gui'
+[96295]Non-portable: path contains uppercase characters: demo/Stuff:doom3/demo/demo00.pk4/guis/guis/test
+[96303]Non-portable: path contains uppercase characters: demo/Stuff:doom3/demo/demo00.pk4/guis/guis/test
+[96311]Non-portable: path contains uppercase characters: base/Stuff:doom3/demo/demo00.pk4/guis/guis/test
+[96319]Non-portable: path contains uppercase characters: base/Stuff:doom3/demo/demo00.pk4/guis/guis/test
+[96449]Non-portable: path contains uppercase characters: demo/Stuff:doom3/demo/demo00.pk4/guis/guis/test
+[96457]Non-portable: path contains uppercase characters: demo/Stuff:doom3/demo/demo00.pk4/guis/guis/test
+[96468]Non-portable: path contains uppercase characters: base/Stuff:doom3/demo/demo00.pk4/guis/guis/test
+[96476]Non-portable: path contains uppercase characters: base/Stuff:doom3/demo/demo00.pk4/guis/guis/test
+[97991]idFileSystem::OpenExplicitFileRead - reading from: Stuff:amictld/work/map/save/demo/doomkey
+[98002]idFileSystem::OpenExplicitFileRead - reading from: Stuff:doom3/demo/doomkey
+[98008]Couldn't read doomkey.
+[98011]idFileSystem::OpenExplicitFileRead - reading from: Stuff:amictld/work/map/save/demo/xpkey
+[98018]idFileSystem::OpenExplicitFileRead - reading from: Stuff:doom3/demo/xpkey
+[98024]Couldn't read xpkey.
+[98027]Detected
+	1768 MB of System memory
+
+[98030]This system qualifies for Ultra quality!
+[98034]----- Warnings -----
+[98036]during dhewm 3 initialization...
+[98039]WARNING: Couldn't find default.cfg in base/, trying again with demo/
+
+[98044]WARNING: Couldn't load gui: 'guis/mainmenu.gui'
+[98048]2 warnings
+[98052]in_grabKeyboard: Will *not* grab the keyboard if mouse is grabbed, so global keyboard-shortcuts (like Alt-Tab) will still work
+[101766]----- Game Map Shutdown -----
+[102859]reloading guis/demo_mainmenu.gui.
+[102918]reloading guis/restart.gui.
+[102948]reloading guis/gameover.gui.
+[102993]reloading guis/msg.gui.
+[103022]reloading guis/takeNotes.gui.
+[103069]reloading guis/intro.gui.
+[103122]----- Map Initialization -----
+[103131]Map: game/demo_mc_underground
+[111754]----- Game Map Init -----
+[120907]collision data:
+[120950]   721 models
+[120951] 69250 vertices (1623 KB)
+[120954]128065 edges (4502 KB)
+[120956] 55477 polygons (3881 KB)
+[120958]  5639 brushes (777 KB)
+[120961] 24881 nodes (680 KB)
+[120963]100541 polygon refs (785 KB)
+[120966] 26540 brush refs (207 KB)
+[120968] 38026 internal edges
+[120970]  4376 sharp edges
+[120972]     0 contained polygons removed
+[120975]     0 polygons merged
+[120978] 12457 KB total memory used
+[120980]4455 msec to load collision data.
+[120986]map bounds are (6152.0, 5344.0, 2560.0)
+[120990]max clip sector is (192.3, 334.0, 320.0)
+[121009]    4 KB passage memory used to build PVS
+[121014]   20 msec to calculate PVS
+[121017]   58 areas
+[121018]  134 portals
+[121022]    9 areas visible on average
+[121025]  464 bytes PVS data
+[121028][Load AAS]
+[121030]loading maps/game/demo_mc_underground.aas48
+[121422]done.
+[121436][Load AAS]
+[121441]loading maps/game/demo_mc_underground.aas96
+[121447][Load AAS]
+[121449]loading maps/game/demo_mc_underground.aas_guardian
+[121455][Load AAS]
+[121456]loading maps/game/demo_mc_underground.aas_mancubus
+[121462][Load AAS]
+[121464]loading maps/game/demo_mc_underground.aas_sabaoth
+[121470][Load AAS]
+[121471]loading maps/game/demo_mc_underground.aas_cyberdemon
+[121676]Entering doom_main()
+[121679]Exiting doom_main()
+[121682]Spawning entities
+[130210]loaded collision model models/mapobjects/cpu/comrack.lwo
+[130586]loaded collision model models/mapobjects/utility/binplug/binplug_c.lwo
+[130673]loaded collision model models/mapobjects/doors/techdoor1/techdr1rt.lwo
+[130901]loaded collision model models/mapobjects/doors/delelev/delelevrt.lwo
+[132765]loaded collision model models/mapobjects/elevators/elevator_door.lwo
+[134199]loaded collision model models/mapobjects/elevators/elevator.lwo
+[134409]loaded collision model models/mapobjects/signs/marquee/marquee.lwo
+[138908]loaded collision model models/mapobjects/mc_underground/mcucave.ASE
+[139103]loaded collision model models/mapobjects/filler/tbox8.ase
+[139134]loaded collision model models/mapobjects/filler/tbox2.ase
+[139691]loaded collision model models/mapobjects/filler/mkeyboard.lwo
+[140057]loaded collision model models/mapobjects/guiobjects/techdrpanel1/techdrpanel1.lwo
+[140161]loaded collision model models/mapobjects/doors/techdoor1/techdr1frame.lwo
+[140245]loaded collision model models/mapobjects/doors/techdoor1/techdr1lft.lwo
+[140346]loaded collision model models/mapobjects/filler/cola1.lwo
+[140656]loaded collision model models/mapobjects/airlock/airlockcomp.lwo
+[141377]loaded collision model models/mapobjects/mc_underground/outside/mc_ug_out.lwo
+[141513]loaded collision model models/mapobjects/lights/klaxon/klaxon.lwo
+[141954]loaded collision model models/mapobjects/guiobjects/mc_constand/mc_constand.lwo
+[142132]loaded collision model models/mapobjects/skmachines/skcube.lwo
+[142222]loaded collision model models/mapobjects/doors/techdoor2/techdr2rt.lwo
+[142629]removed 4 degenerate triangles
+[142640]loaded collision model models/mapobjects/delta1/warfoot/warfoot.lwo
+[142885]loaded collision model models/mapobjects/doors/delelev/delelevlf.lwo
+[143689]loaded collision model models/mapobjects/airlock/airlockdoorgui.lwo
+[143827]loaded collision model models/mapobjects/airlock/airlockdoor.lwo
+[143938]loaded collision model models/mapobjects/filler/toolchest.lwo
+[144204]loaded collision model models/mapobjects/healthgui/healthgui.lwo
+[144653]loaded collision model models/mapobjects/swinglights/swinglight_long_wbulbs_bulb.ase
+[144684]loaded collision model models/mapobjects/swinglights/swinglight_long_wbulbs_bulb_broken.ase
+[144889]loaded collision model models/mapobjects/cpu/serverplate.lwo
+[145189]loaded collision model models/mapobjects/cpu/cpufloorinsert2.lwo
+[145621]loaded collision model models/mapobjects/utility/trapbra/trapbra.lwo
+[146662]loaded collision model models/mapobjects/swinglights/swinglight1c.lwo
+[146774]loaded collision model models/mapobjects/doors/techdoor2/techdr2frame.lwo
+[146859]loaded collision model models/mapobjects/doors/techdoor2/techdr2lft.lwo
+[147424]loaded collision model models/mapobjects/matt_test/mc_underthing1.ASE
+[147733]loaded collision model models/mapobjects/mcity/mc_underarm/underarmhand.lwo
+[147825]loaded collision model models/mapobjects/mcity/mc_underarm/underarmfingers.lwo
+[147922]loaded collision model models/mapobjects/mcity/mc_underarm/underarmbase.lwo
+[148015]loaded collision model models/mapobjects/mcity/mc_underarm/underarmarm.lwo
+[148179]loaded collision model models/mapobjects/lab/mfscomp/mfscompcell.lwo
+[148675]loaded collision model models/mapobjects/airlock/airlockvertlock.lwo
+[148777]loaded collision model models/mapobjects/airlock/airlockbrace.lwo
+[148994]loaded collision model models/mapobjects/shipping_crates/shipping_crates.lwo
+[149354]loaded collision model models/mapobjects/airlock/airlockhallgui.lwo
+[149689]loaded collision model models/mapobjects/com/modconsole3.lwo
+[149844]loaded collision model models/mapobjects/com/modconsole2.lwo
+[150219]loaded collision model models/mapobjects/com/modconsole6.lwo
+[150709]loaded collision model models/mapobjects/com/modconsole1.lwo
+[151141]loaded collision model models/mapobjects/utility/binplug/binplug_o.lwo
+[151231]loaded collision model models/mapobjects/utility/tecknob2/tecknob2.lwo
+[151354]loaded collision model models/mapobjects/cpu/cpuoverdoor.lwo
+[152148]loaded collision model models/mapobjects/lab/diamondbox/diamondbox_sm.lwo
+[152996]loaded collision model models/mapobjects/mc_underground/outside/mc_ug_out2.lwo
+[153335]loaded collision model models/mapobjects/com/joint/joint.lwo
+[155995]loaded collision model models/mapobjects/caves/crane/cranecomp.lwo
+[156630]loaded collision model models/mapobjects/mc_underground/mcucave_b.ASE
+[156716]loaded collision model models/mapobjects/mc_underground/mcucave_c.ASE
+[157166]loaded collision model models/mapobjects/storagecab/wallcabinet/wallcabinetdoor.lwo
+[159604]loaded collision model models/mapobjects/storagecab/pegmount/pegmount.lwo
+[160894]loaded collision model models/mapobjects/com/platguistand/platguistand.lwo
+[161743]loaded collision model models/mapobjects/mcity/deskcomp/deskcomp.lwo
+[162703]loaded collision model models/mapobjects/filler/lunchbag.lwo
+[162824]loaded collision model models/mapobjects/filler/tbox1.ase
+[163215]loaded collision model models/mapobjects/shelf/shelf.lwo
+[167784]loaded collision model models/mapobjects/monitors/hangingmonitor.lwo
+[168022]loaded collision model models/mapobjects/mc_underground/outside/mc_ug_out3.lwo
+[170484]WARNING: underground_cin_player_1 has no AAS file
+[172374]...2533 entities spawned, 18 inhibited
+
+[172383]==== Processing events ====
+[172818]SpawnPlayer: 0
+[178707]loaded collision model models/weapons/shell1/mshell_lo.lwo
+[178723]loaded collision model models/weapons/shell1/sshell_bigger.lwo
+[178758]----- idRenderModelManagerLocal::EndLevelLoad -----
+[178767]    0 models purged from previous level, [178770] 1261 models kept.
+[178772]----- idImageManager::EndLevelLoad -----
+[178778]   10 purged from previous
+[178781]  157 kept from previous
+[178783] 1793 new loaded
+[178785]all images loaded in   0.0 seconds
+[239664]136542 msec to load game/demo_mc_underground
+[239774]idRenderWorld::GenerateAllInteractions, msec = 103, staticAllocCount = 0.
+[239796]interactionTable size: 4028556 bytes
+[239799]42158 interaction take 4721696 bytes
+[239827]benchmark: 0 seconds of warm-up, then counting frames for 5 seconds
+[240799]Wrote screenshots/shot00001.tga
+[244842]benchmark: 119 frames rendered in 5.0 seconds = 23.7 fps
+[244858]benchmark: per frame 14.2 ms game, 2.8 ms renderer front end, 6.3 ms back end; 29.5 game tics a second
+[244867]benchmark: back end per frame: 0.0 ms view set-up, 0.8 depth fill, 4.4 interactions, 1.0 shader passes, 0.0 fog, 0.0 post, 0.4 swap
+[244877]benchmark: front end per frame: 0.0 ms view set-up, 0.2 visible lights and entities, 0.1 light surfaces, 2.3 model surfaces, 0.0 subviews, 0.1 the rest; inside them 0.1 dynamic models, 0.4 interactions created, 0.0 light triangles later
+[244894]benchmark: front end's model surfaces per frame: 0.0 ms entity scissors, 0.6 ambient draw surfaces (with the dynamic models), 1.7 active interactions (with those created)
+[244907]benchmark: front end's interactions per frame: 24 visited, 17 of them culled or scissored by the view frustum (0.7 ms), 37 light surfaces and 15 shadow surfaces linked; 25 ambient draw surfaces
+[244921]benchmark: 6811 clock reads per frame (Sys_MillisecondsPrecise)
+[245029]----- Game Map Shutdown -----
+[245373]idRenderSystem::Shutdown()
+[245380]Shutting down backend thread[245446]Shutting down OpenGL subsystem
+[245992]----- Game Shutdown -----
+[245999]----- Game Map Shutdown -----
+[246007]Shutdown event system

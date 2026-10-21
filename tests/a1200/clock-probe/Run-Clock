@@ -1,0 +1,9 @@
+; Run-Clock - what one clock read costs (PLAN.md section 14): Emu68's
+; counter through Supervisor(), timer.device's ReadEClock (SDL's performance
+; counter) and GetSysTime. Nothing is shown; about 2 seconds.
+;   CD to this directory, then:   Execute Run-Clock
+FailAt 21
+MakeDir results >NIL:
+clock_probe 10000 >results/clock.txt
+Echo "exit code $RC" >>results/clock.txt
+Type results/clock.txt

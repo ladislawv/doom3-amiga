@@ -1,0 +1,58 @@
+diff --git a/neo/renderer/Interaction.cpp b/neo/renderer/Interaction.cpp
+index c5f78688..587897cc 100644
+--- a/neo/renderer/Interaction.cpp
++++ b/neo/renderer/Interaction.cpp
+@@ -674,7 +674,12 @@ idInteraction::HasShadows
+ ===============
+ */
+ ID_INLINE bool idInteraction::HasShadows( void ) const {
+-	return ( !lightDef->parms.noShadows && !entityDef->parms.noShadow && lightDef->lightShader->LightCastsShadows() );
++	// port (patch 0023): with r_shadows 0 no interaction has shadows, so
++	// AddActiveInteraction takes the no-shadow path (the entity's scissor, no
++	// view frustum cull, nothing for entities out of sight) instead of only
++	// the back end skipping the shadows; r_useShadowsFrontEnd 1 as before
++	return ( !lightDef->parms.noShadows && !entityDef->parms.noShadow && lightDef->lightShader->LightCastsShadows() &&
++		( r_shadows.GetBool() || r_useShadowsFrontEnd.GetBool() ) );
+ }
+ 
+ /*
+diff --git a/neo/renderer/RenderSystem_init.cpp b/neo/renderer/RenderSystem_init.cpp
+index 4f759075..b6eef61d 100644
+--- a/neo/renderer/RenderSystem_init.cpp
++++ b/neo/renderer/RenderSystem_init.cpp
+@@ -112,6 +112,7 @@ idCVar r_skipROQ( "r_skipROQ", "0", CVAR_RENDERER | CVAR_BOOL, "skip ROQ decodin
+ idCVar r_ignore( "r_ignore", "0", CVAR_RENDERER, "used for random debugging without defining new vars" );
+ idCVar r_ignore2( "r_ignore2", "0", CVAR_RENDERER, "used for random debugging without defining new vars" );
+ idCVar r_usePreciseTriangleInteractions( "r_usePreciseTriangleInteractions", "0", CVAR_RENDERER | CVAR_BOOL, "1 = do winding clipping to determine if each ambiguous tri should be lit" );
++idCVar r_useShadowsFrontEnd( "r_useShadowsFrontEnd", "0", CVAR_RENDERER | CVAR_BOOL, "1: the front end prepares shadows even with r_shadows 0, as before (port, patch 0023)" );
+ idCVar r_cullDynamicLightTris( "r_cullDynamicLightTris", "0", CVAR_RENDERER | CVAR_BOOL, "1: cull an animated model's triangles to each light, as before; 0: light all of them (port, patch 0021)" );
+ idCVar r_useEntityBoxRefs( "r_useEntityBoxRefs", "1", CVAR_RENDERER | CVAR_BOOL, "push an entity into the areas as a box, not as its eight corners (port, patch 0020)" );
+ idCVar r_useCulling( "r_useCulling", "2", CVAR_RENDERER | CVAR_INTEGER, "0 = none, 1 = sphere, 2 = box, 3 = sphere + box as before (port, patch 0020)", 0, 3, idCmdSystem::ArgCompletion_Integer<0,3> );
+diff --git a/neo/renderer/tr_light.cpp b/neo/renderer/tr_light.cpp
+index bbf19110..bfc40e97 100644
+--- a/neo/renderer/tr_light.cpp
++++ b/neo/renderer/tr_light.cpp
+@@ -432,8 +432,9 @@ void idRenderWorldLocal::CreateLightDefInteractions( idRenderLightLocal *ldef )
+ 
+ 			// if the entity isn't viewed
+ 			if ( tr.viewDef && edef->viewCount != tr.viewCount ) {
+-				// if the light doesn't cast shadows, skip
+-				if ( !ldef->lightShader->LightCastsShadows() ) {
++				// if the light doesn't cast shadows, skip (nor with shadows off: patch 0023)
++				if ( !ldef->lightShader->LightCastsShadows() ||
++						( !r_shadows.GetBool() && !r_useShadowsFrontEnd.GetBool() ) ) {
+ 					continue;
+ 				}
+ 				// if we are suppressing its shadow in this view, skip
+diff --git a/neo/renderer/tr_local.h b/neo/renderer/tr_local.h
+index 94dcb90f..6f2a55d6 100644
+--- a/neo/renderer/tr_local.h
++++ b/neo/renderer/tr_local.h
+@@ -872,6 +872,7 @@ extern idCVar r_useConstantMaterials;	// 1 = use pre-calculated material registe
+ extern idCVar r_useInteractionTable;	// create a full entityDefs * lightDefs table to make finding interactions faster
+ extern idCVar r_useNodeCommonChildren;	// stop pushing reference bounds early when possible
+ extern idCVar r_useSilRemap;			// 1 = consider verts with the same XYZ, but different ST the same for shadows
++extern idCVar r_useShadowsFrontEnd;	// 1 = shadow front-end work even with r_shadows 0, as before (patch 0023)
+ extern idCVar r_cullDynamicLightTris;	// 0 = an animated model's light surface is all of it (patch 0021)
+ extern idCVar r_useEntityBoxRefs;		// 1 = an entity into the areas as a box (patch 0020)
+ extern idCVar r_useCulling;				// 0 = none, 1 = sphere, 2 = box (patch 0020), 3 = sphere + box as before

@@ -3,12 +3,20 @@
 # port's options and patches, drawn by Mesa's llvmpipe under xvfb-run.
 #   bash build_host.sh            reset ~/d3es, apply patches/, build
 #   NOPATCH=1 bash build_host.sh  the same without patches (upstream as pinned)
+#   AL=1 bash build_host.sh       with the port's OpenAL subset (build_al.sh) in
+#                                 place of OpenAL Soft, into ~/doom3-build/host-al/game
 # Output: ~/doom3-build/host/dhewm3. Run it with run_host.sh.
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
 D3ES_SRC=${D3ES_SRC:-$HOME/d3es}
 OUT=${OUT:-$HOME/doom3-build/host}
 [ -n "$NOPATCH" ] && OUT=${OUT}-upstream
+ALLIB=
+if [ -n "${AL:-}" ]; then
+    OUT=$HOME/doom3-build/host-al/game
+    ALLIB=$HOME/doom3-build/host-al/libd3al.a
+    [ -f "$ALLIB" ] || { echo "no $ALLIB: run build_al.sh first"; exit 1; }
+fi
 
 [ -d "$D3ES_SRC/.git" ] || { echo "no $D3ES_SRC: run sources.sh first"; exit 1; }
 mkdir -p "$(dirname "$OUT")"
@@ -45,6 +53,6 @@ cmake -S "$D3ES_SRC/neo" -B "$OUT" -G Ninja \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DCMAKE_DISABLE_FIND_PACKAGE_CURL=ON \
     -DHARDLINK_GAME=ON -DBASE=ON -DD3XP=OFF -DDEDICATED=OFF -DCORE=ON \
-    -DSDL2=ON $SINGLE >"$OUT.cmake.log" 2>&1 || { tail -30 "$OUT.cmake.log"; exit 1; }
+    -DSDL2=ON $SINGLE ${ALLIB:+-DOPENAL_LIBRARY=$ALLIB} >"$OUT.cmake.log" 2>&1 || { tail -30 "$OUT.cmake.log"; exit 1; }
 ninja -C "$OUT" >"$OUT.build.log" 2>&1 || { grep -m20 -B2 -A6 "error" "$OUT.build.log"; exit 1; }
 ls -l "$OUT/dhewm3"
