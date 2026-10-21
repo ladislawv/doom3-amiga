@@ -1,0 +1,8 @@
+unit 2, amplitude 8000, 1024 frames a block, 64 blocks, ln_Pri 60, task pri 0, SDL's waits 0
+done
+unit 2, amplitude 8000, 1024 frames a block, 64 blocks, ln_Pri 0, task pri 10, SDL's waits 0
+done
+unit 2, amplitude 8000, 1024 frames a block, 64 blocks, ln_Pri 0, task pri 0, SDL's waits 1
+done
+unit 2, amplitude 8000, 1024 frames a block, 64 blocks, ln_Pri 60, task pri 10, SDL's waits 1
+done

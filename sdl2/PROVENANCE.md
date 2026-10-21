@@ -17,3 +17,13 @@
   did a game's mouse look. Now the event pump sets `IDCMP_DELTAMOVE` on its
   windows while the mode is on, and sends Intuition's movement deltas as
   relative motion.
+- `patches/0103-os3-ahi-format.patch` (this port, 2026-10-21): the AHI audio
+  driver's format search (`OS3AHI_OpenDevice`) kept the format after the one it
+  matched: its `for` loop tested `!found` in the condition, so the increment ran
+  once more after a match, and `AUDIO_S16MSB` became `AUDIO_S16LSB`. SDL then
+  converted the application's big-endian samples to little-endian, and AHI,
+  told `AHIST_S16S`, played them byte-swapped: noise at every level, on every
+  AHI unit (a capture of what the driver sent with `CMD_WRITE` read as a clean
+  tone only little-endian). The loop now stops at the match. SDL's Paula driver
+  was not affected. ogles2's ports may have the same bug (its `0002` patch
+  touches this file but not this loop).

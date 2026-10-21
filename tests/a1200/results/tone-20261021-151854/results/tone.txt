@@ -1,0 +1,12 @@
+block 1024
+driver ahi: 22050 Hz, 2 ch, format 0x9010, 1024 frames a block
+step 1: amplitude 8000 of 32767 (24%)
+callbacks 65, longest gap 61 ms (a block is 46 ms), gaps over 70 ms: 0
+block 2048
+driver ahi: 22050 Hz, 2 ch, format 0x9010, 2048 frames a block
+step 1: amplitude 8000 of 32767 (24%)
+callbacks 33, longest gap 101 ms (a block is 92 ms), gaps over 70 ms: 32
+block 4096
+driver ahi: 22050 Hz, 2 ch, format 0x9010, 4096 frames a block
+step 1: amplitude 8000 of 32767 (24%)
+callbacks 17, longest gap 201 ms (a block is 185 ms), gaps over 70 ms: 16

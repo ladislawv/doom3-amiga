@@ -1,0 +1,4 @@
+unit 2, amplitude 8000, 1024 frames a block, 64 blocks
+done
+unit 0, amplitude 8000, 1024 frames a block, 64 blocks
+done

@@ -18,6 +18,11 @@ EndIf
 If EXISTS {EXE}.dump
   SetEnv D3AL_DUMP results/{EXE}-snd
 EndIf
+; a <EXE>.audio file next to it: SDL's audio driver for this build (one word,
+; e.g. paula; the default is ahi); sound itself needs "+set s_noSound 0" in its .args
+If EXISTS {EXE}.audio
+  SetEnv SDL_AUDIODRIVER `Type {EXE}.audio`
+EndIf
 ; a bench.cfg in the package (e.g. tests/a1200/play/low.cfg) is run first by
 ; every build: the game finds it in its save directory
 If EXISTS bench.cfg
@@ -37,6 +42,7 @@ EndIf
 {EXE} +set fs_basepath "{DATA}" +set s_noSound 1 +set image_usePrecompressedTextures 1 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth 640 +set r_customHeight 480 +set com_benchmarkWarmup {WARMUP} +set com_benchmarkSeconds {SECS} +set sensitivity 0 $args +map {MAP} >results/{EXE}.txt
 Echo "exit code $RC" >>results/{EXE}.txt
 UnSetEnv D3AL_DUMP
+UnSetEnv SDL_AUDIODRIVER
 Copy save/dhewm3log.txt results/{EXE}.log QUIET
 Avail FLUSH >NIL:
 Avail >results/{EXE}-avail-after.txt

@@ -10,6 +10,7 @@
 # settings file every build runs (as bench.cfg). PCSAMPLE=1 adds the PC sampler
 # (tests/a1200/build_pc_sample.sh bench). DUMP=1 turns on the OpenAL subset's
 # output dump for every build (D3AL_DUMP; give them +set s_noSound 0).
+# A build's SDL audio driver: "name@driver:args", e.g. "paula@paula:+set s_noSound 0".
 # Another map: edit .def MAP in the package's Run-Bench (amictl -a takes no "/").
 # ogles2.library and v3dglslc come from ogles2's build (~/ogles2-build), copied
 # to ~/ogles2-build/direct-libs.
@@ -27,8 +28,11 @@ mv $P/dhewm3-game $P/dhewm3-a
 for v in "$@"; do
     n=${v%%:*}
     args=${v#*:}
+    drv=
+    case $n in *@*) drv=${n#*@}; n=${n%%@*} ;; esac
     [ -f $P/dhewm3-$n ] || cp $P/dhewm3-a $P/dhewm3-$n
     printf '%s %s' "$A" "$args" > $P/dhewm3-$n.args
+    [ -n "$drv" ] && printf '%s' "$drv" > $P/dhewm3-$n.audio
     # a marker file must not be empty: amictl does not upload empty files
     [ -n "${DUMP:-}" ] && echo dump > $P/dhewm3-$n.dump
 done

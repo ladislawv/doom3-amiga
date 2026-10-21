@@ -1,0 +1,8 @@
+driver ahi: 22050 Hz, 2 ch, format 0x9010, 1024 frames a block
+step 1: amplitude 1000 of 32767 (3%)
+step 2: amplitude 4000 of 32767 (12%)
+step 3: amplitude 8000 of 32767 (24%)
+step 4: amplitude 16000 of 32767 (49%)
+step 5: amplitude 24000 of 32767 (73%)
+step 6: amplitude 32000 of 32767 (98%)
+callbacks 388, longest gap 60 ms (a block is 46 ms), gaps over 70 ms: 0

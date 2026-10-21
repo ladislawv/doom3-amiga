@@ -74,7 +74,8 @@ OpenAL subset `src/al`, the libnix additions `src/amiga`); SDL2 changes in `sdl2
   not prepared by `reopen.sh` writes the wrong lines into the patch (a backup is kept).
 - amictl does not upload empty files, and `-a` values may not contain `/` (a map name:
   edit `.def MAP` in the package's script).
-- SDL2_68k's `SDL_getenv` sees only `SDL_setenv`'s values, not `ENV:`; use `getenv`.
+- SDL2_68k's `SDL_getenv` sees only `SDL_setenv`'s values, and libnix's `getenv` only the
+  shell's local variables (`Set`), neither `ENV:` (`SetEnv`): use dos.library's `GetVar`.
 - The executables keep only global symbols: a profile's function also holds the static
   functions after it (`pcsample_report.py` prints each symbol's span).
 - The game detects "Ultra" quality from the memory on every fresh package: settings go on the

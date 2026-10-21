@@ -1,0 +1,10 @@
+Boing 2026 on V3D 4.2.14 (PiStorm), 8 QPUs, 64 KB VPM, 640x480, MSAA 4x
+render scale 100%: the room at 640x480
+ms: shadow 1.11  reflection 0.65  bloom 2.30  scene 10.35  composite 2.82  swap 0.04
+ms: shadow 1.11  reflection 0.59  bloom 2.37  scene 10.83  composite 2.85  swap 0.03
+ms: shadow 1.11  reflection 0.72  bloom 2.94  scene 10.24  composite 2.75  swap 0.04
+ms: shadow 1.10  reflection 0.61  bloom 2.37  scene 10.70  composite 2.82  swap 0.03
+ms: shadow 1.10  reflection 0.75  bloom 2.29  scene 10.25  composite 3.21  swap 0.03
+ms: shadow 1.10  reflection 0.58  bloom 2.35  scene 10.30  composite 2.97  swap 0.04
+ms: shadow 1.12  reflection 0.73  bloom 2.32  scene 10.47  composite 2.78  swap 0.04
+900 frames in 14.6 s: 61.44 fps at 640x480

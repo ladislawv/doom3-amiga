@@ -1,0 +1,4 @@
+SDL_AHI_UNIT as GetVar sees it in this task: (not set)
+driver ahi: 22050 Hz, 2 ch, format 0x9010, 1024 frames a block
+step 1: amplitude 8000 of 32767 (24%)
+callbacks 65, longest gap 61 ms (a block is 46 ms), gaps over 70 ms: 0

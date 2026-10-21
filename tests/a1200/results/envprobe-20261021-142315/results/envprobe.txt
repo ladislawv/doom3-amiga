@@ -1,0 +1,3 @@
+D3PROBE_GLOBAL: getenv (null) | GetVar results/x-snd
+D3PROBE_LOCAL: getenv local-value | GetVar local-value
+Workbench: getenv (null) | GetVar 47.5

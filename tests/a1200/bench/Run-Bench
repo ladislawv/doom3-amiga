@@ -34,7 +34,7 @@ If {OGLES2PROBE} EQ 1
 EndIf
 Echo "Doom 3 builds on {MAP}: {WARMUP} s warm-up, {SECS} s counted"
 ; AmigaDOS has no loops: a script with one line per build, then run it
-List PAT="dhewm3-~(#?.(args|dump))" LFORMAT "Execute bench-one %N {MAP} {WARMUP} {SECS} {DATA}" >T:d3bench-run
+List PAT="dhewm3-~(#?.(args|dump|audio))" LFORMAT "Execute bench-one %N {MAP} {WARMUP} {SECS} {DATA}" >T:d3bench-run
 Execute T:d3bench-run
 Delete T:d3bench-run QUIET >NIL:
 If {OGLES2PROBE} EQ 1

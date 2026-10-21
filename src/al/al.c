@@ -23,9 +23,11 @@
  *   D3AL_RATE     output rate in Hz (default 22050)
  *   D3AL_SAMPLES  samples per audio callback (default 1024)
  *   SDL_AUDIODRIVER  SDL's audio driver (default "ahi" on AmigaOS)
- *   (read with the C library's getenv: SDL2_68k's SDL_getenv sees only what SDL_setenv set)
- *   D3AL_DUMP     a diagnostic: PREFIX.raw gets the first 30 s of the mixed
- *                 output (16-bit stereo, this machine's byte order) and
+ *   (on AmigaOS read with GetVar, local then global: libnix's getenv sees only
+ *   the shell's local variables (Set), not ENV: (SetEnv), and SDL2_68k's
+ *   SDL_getenv only what SDL_setenv set; elsewhere the C library's getenv)
+ *   D3AL_DUMP     a diagnostic: PREFIX.raw gets 30 s of the mixed output from
+ *                 the first sound on (16-bit stereo, this machine's byte order) and
  *                 PREFIX.txt one line per alBufferData (format, rate, frames,
  *                 peak, mean level), both written when the device closes
  *
@@ -39,6 +41,10 @@
 #include "AL/al.h"
 #include "AL/alc.h"
 #include "SDL.h"
+
+#ifdef __amigaos3__
+#include <proto/dos.h>
+#endif
 
 #define AL_MAX_SOURCES	256
 #define AL_MAX_QUEUE	16
@@ -96,13 +102,13 @@ static struct {
 static ALCdevice *const theDevice = (ALCdevice *)&al;
 static ALCcontext *const theContext = (ALCcontext *)&al.context;
 
-static void Lock( void ) {
+static void LockMixer( void ) {
 	if ( al.dev ) {
 		SDL_LockAudioDevice( al.dev );
 	}
 }
 
-static void Unlock( void ) {
+static void UnlockMixer( void ) {
 	if ( al.dev ) {
 		SDL_UnlockAudioDevice( al.dev );
 	}
@@ -129,8 +135,21 @@ static alBuf_t *Buf( ALuint name ) {
 	return &al.buf[name - 1];
 }
 
+/* a setting from the environment (the header's comment), or NULL; the value
+   stays valid until the fourth call after this one */
+static const char *Env( const char *name ) {
+#ifdef __amigaos3__
+	static char vals[4][256];
+	static int next;
+	char *v = vals[next++ & 3];
+	return GetVar( (CONST_STRPTR)name, (STRPTR)v, sizeof( vals[0] ), 0 ) >= 0 ? v : NULL;
+#else
+	return getenv( name );
+#endif
+}
+
 static int EnvInt( const char *name, int def, int lo, int hi ) {
-	const char *s = getenv( name );
+	const char *s = Env( name );
 	int v;
 	if ( !s || !*s ) {
 		return def;
@@ -324,6 +343,17 @@ static void SDLCALL MixCallback( void *user, Uint8 *stream, int len ) {
 			int v = al.acc[i];
 			out[i] = (Sint16)( v > 32767 ? 32767 : v < -32768 ? -32768 : v );
 		}
+		if ( al.dump && al.dumpFrames == 0 ) {
+			/* the window starts with the first sound, not at the device's
+			   opening: the A1200 spends minutes loading the map in silence */
+			for ( i = 0; i < n * 2 && out[i] == 0; i++ ) {
+			}
+			if ( i == n * 2 ) {
+				out += n * 2;
+				frames -= n;
+				continue;
+			}
+		}
 		if ( al.dump && al.dumpFrames < al.dumpMax ) {
 			int m = al.dumpMax - al.dumpFrames < n ? al.dumpMax - al.dumpFrames : n;
 			memcpy( al.dump + al.dumpFrames * 2, out, m * 2 * sizeof( Sint16 ) );
@@ -355,7 +385,7 @@ ALC_API ALCdevice *ALC_APIENTRY alcOpenDevice( const ALCchar *devicename ) {
 	al.up[1] = 1.0f;
 	al.maxSources = EnvInt( "D3AL_VOICES", 32, 1, AL_MAX_SOURCES );
 
-	driver = getenv( "SDL_AUDIODRIVER" );
+	driver = Env( "SDL_AUDIODRIVER" );
 #ifdef __amigaos3__
 	if ( !driver || !*driver ) {
 		driver = "ahi";	/* SDL2_68k's default is its Paula driver */
@@ -393,7 +423,7 @@ ALC_API ALCdevice *ALC_APIENTRY alcOpenDevice( const ALCchar *devicename ) {
 	}
 	al.opened = 1;
 	{
-		const char *dump = getenv( "D3AL_DUMP" );
+		const char *dump = Env( "D3AL_DUMP" );
 		if ( dump && *dump && strlen( dump ) < sizeof( al.dumpPrefix ) - 8 ) {
 			strcpy( al.dumpPrefix, dump );
 			al.dumpMax = al.rate * 30;
@@ -495,11 +525,11 @@ ALC_API void ALC_APIENTRY alcDestroyContext( ALCcontext *context ) {
 		al.alcError = ALC_INVALID_CONTEXT;
 		return;
 	}
-	Lock();
+	LockMixer();
 	for ( i = 0; i < AL_MAX_SOURCES; i++ ) {
 		al.src[i].used = 0;
 	}
-	Unlock();
+	UnlockMixer();
 	al.context = 0;
 }
 
@@ -689,9 +719,9 @@ AL_API void AL_APIENTRY alListenerf( ALenum param, ALfloat value ) {
 
 AL_API void AL_APIENTRY alListener3f( ALenum param, ALfloat v1, ALfloat v2, ALfloat v3 ) {
 	if ( param == AL_POSITION ) {
-		Lock();
+		LockMixer();
 		al.pos[0] = v1; al.pos[1] = v2; al.pos[2] = v3;
-		Unlock();
+		UnlockMixer();
 	} else if ( param != AL_VELOCITY ) {
 		SetError( AL_INVALID_ENUM );
 	}
@@ -711,10 +741,10 @@ AL_API void AL_APIENTRY alListenerfv( ALenum param, const ALfloat *values ) {
 		alListener3f( param, values[0], values[1], values[2] );
 		break;
 	case AL_ORIENTATION:
-		Lock();
+		LockMixer();
 		al.at[0] = values[0]; al.at[1] = values[1]; al.at[2] = values[2];
 		al.up[0] = values[3]; al.up[1] = values[4]; al.up[2] = values[5];
-		Unlock();
+		UnlockMixer();
 		break;
 	default:
 		SetError( AL_INVALID_ENUM );
@@ -783,7 +813,7 @@ AL_API void AL_APIENTRY alGenBuffers( ALsizei n, ALuint *buffers ) {
 		SetError( AL_INVALID_VALUE );
 		return;
 	}
-	Lock();
+	LockMixer();
 	for ( i = 0; i < n; i++ ) {
 		for ( j = 0; j < al.numBufs && al.buf[j].used; j++ ) {
 		}
@@ -791,7 +821,7 @@ AL_API void AL_APIENTRY alGenBuffers( ALsizei n, ALuint *buffers ) {
 			int grow = al.numBufs ? al.numBufs * 2 : 1024;
 			alBuf_t *nb = (alBuf_t *)realloc( al.buf, grow * sizeof( alBuf_t ) );
 			if ( !nb ) {
-				Unlock();
+				UnlockMixer();
 				alDeleteBuffers( i, buffers );
 				SetError( AL_OUT_OF_MEMORY );
 				return;
@@ -803,7 +833,7 @@ AL_API void AL_APIENTRY alGenBuffers( ALsizei n, ALuint *buffers ) {
 		al.buf[j].used = 1;
 		buffers[i] = j + 1;
 	}
-	Unlock();
+	UnlockMixer();
 }
 
 static int BufferInUse( ALuint name ) {
@@ -827,15 +857,15 @@ AL_API void AL_APIENTRY alDeleteBuffers( ALsizei n, const ALuint *buffers ) {
 		SetError( AL_INVALID_VALUE );
 		return;
 	}
-	Lock();
+	LockMixer();
 	for ( i = 0; i < n; i++ ) {
 		if ( buffers[i] != 0 && !Buf( buffers[i] ) ) {
-			Unlock();
+			UnlockMixer();
 			SetError( AL_INVALID_NAME );
 			return;
 		}
 		if ( buffers[i] != 0 && BufferInUse( buffers[i] ) ) {
-			Unlock();
+			UnlockMixer();
 			SetError( AL_INVALID_OPERATION );
 			return;
 		}
@@ -847,7 +877,7 @@ AL_API void AL_APIENTRY alDeleteBuffers( ALsizei n, const ALuint *buffers ) {
 			memset( b, 0, sizeof( *b ) );
 		}
 	}
-	Unlock();
+	UnlockMixer();
 }
 
 AL_API ALboolean AL_APIENTRY alIsBuffer( ALuint buffer ) {
@@ -890,9 +920,9 @@ AL_API void AL_APIENTRY alBufferData( ALuint buffer, ALenum format, const ALvoid
 			d[i] = (short)( ( u[i] - 128 ) << 8 );
 		}
 	}
-	Lock();
+	LockMixer();
 	if ( BufferInUse( buffer ) ) {
-		Unlock();
+		UnlockMixer();
 		free( d );
 		SetError( AL_INVALID_OPERATION );
 		return;
@@ -902,7 +932,7 @@ AL_API void AL_APIENTRY alBufferData( ALuint buffer, ALenum format, const ALvoid
 	b->frames = frames;
 	b->channels = channels;
 	b->rate = freq;
-	Unlock();
+	UnlockMixer();
 	LogBuffer( buffer, channels, freq, d, frames );
 }
 
@@ -962,7 +992,7 @@ AL_API void AL_APIENTRY alGenSources( ALsizei n, ALuint *sources ) {
 		SetError( AL_INVALID_VALUE );
 		return;
 	}
-	Lock();
+	LockMixer();
 	for ( i = 0; i < n; i++ ) {
 		for ( j = 0; j < al.maxSources && al.src[j].used; j++ ) {
 		}
@@ -978,11 +1008,11 @@ AL_API void AL_APIENTRY alGenSources( ALsizei n, ALuint *sources ) {
 		for ( i = 0; i < got; i++ ) {
 			al.src[sources[i] - 1].used = 0;
 		}
-		Unlock();
+		UnlockMixer();
 		SetError( AL_OUT_OF_MEMORY );
 		return;
 	}
-	Unlock();
+	UnlockMixer();
 }
 
 AL_API void AL_APIENTRY alDeleteSources( ALsizei n, const ALuint *sources ) {
@@ -996,11 +1026,11 @@ AL_API void AL_APIENTRY alDeleteSources( ALsizei n, const ALuint *sources ) {
 			return;
 		}
 	}
-	Lock();
+	LockMixer();
 	for ( i = 0; i < n; i++ ) {
 		al.src[sources[i] - 1].used = 0;
 	}
-	Unlock();
+	UnlockMixer();
 }
 
 AL_API ALboolean AL_APIENTRY alIsSource( ALuint source ) {
@@ -1044,9 +1074,9 @@ AL_API void AL_APIENTRY alSource3f( ALuint source, ALenum param, ALfloat v1, ALf
 		return;
 	}
 	if ( param == AL_POSITION ) {
-		Lock();
+		LockMixer();
 		s->pos[0] = v1; s->pos[1] = v2; s->pos[2] = v3;
-		Unlock();
+		UnlockMixer();
 	} else if ( param != AL_VELOCITY && param != AL_DIRECTION ) {
 		SetError( AL_INVALID_ENUM );
 	}
@@ -1088,7 +1118,7 @@ AL_API void AL_APIENTRY alSourcei( ALuint source, ALenum param, ALint value ) {
 			SetError( AL_INVALID_OPERATION );
 			return;
 		}
-		Lock();
+		LockMixer();
 		s->qlen = value ? 1 : 0;
 		s->queue[0] = (ALuint)value;
 		s->isStatic = value != 0;
@@ -1096,7 +1126,7 @@ AL_API void AL_APIENTRY alSourcei( ALuint source, ALenum param, ALint value ) {
 		s->processed = 0;
 		s->frame = 0;
 		s->frac = 0;
-		Unlock();
+		UnlockMixer();
 		break;
 	case AL_LOOPING:
 		s->looping = value != 0;
@@ -1237,7 +1267,7 @@ AL_API void AL_APIENTRY alSourcePlay( ALuint source ) {
 	if ( !s ) {
 		return;
 	}
-	Lock();
+	LockMixer();
 	if ( s->state == AL_PAUSED ) {
 		s->state = AL_PLAYING;
 	} else {
@@ -1249,7 +1279,7 @@ AL_API void AL_APIENTRY alSourcePlay( ALuint source ) {
 		s->started = 0;
 		s->state = s->qlen > 0 ? AL_PLAYING : AL_STOPPED;
 	}
-	Unlock();
+	UnlockMixer();
 }
 
 AL_API void AL_APIENTRY alSourceStop( ALuint source ) {
@@ -1257,11 +1287,11 @@ AL_API void AL_APIENTRY alSourceStop( ALuint source ) {
 	if ( !s ) {
 		return;
 	}
-	Lock();
+	LockMixer();
 	if ( s->state != AL_INITIAL ) {
 		StopSource( s );
 	}
-	Unlock();
+	UnlockMixer();
 }
 
 AL_API void AL_APIENTRY alSourceRewind( ALuint source ) {
@@ -1269,11 +1299,11 @@ AL_API void AL_APIENTRY alSourceRewind( ALuint source ) {
 	if ( !s ) {
 		return;
 	}
-	Lock();
+	LockMixer();
 	StopSource( s );
 	s->state = AL_INITIAL;
 	s->processed = 0;
-	Unlock();
+	UnlockMixer();
 }
 
 AL_API void AL_APIENTRY alSourcePause( ALuint source ) {
@@ -1281,11 +1311,11 @@ AL_API void AL_APIENTRY alSourcePause( ALuint source ) {
 	if ( !s ) {
 		return;
 	}
-	Lock();
+	LockMixer();
 	if ( s->state == AL_PLAYING ) {
 		s->state = AL_PAUSED;
 	}
-	Unlock();
+	UnlockMixer();
 }
 
 AL_API void AL_APIENTRY alSourcePlayv( ALsizei n, const ALuint *sources ) { int i; for ( i = 0; i < n; i++ ) alSourcePlay( sources[i] ); }
@@ -1309,14 +1339,14 @@ AL_API void AL_APIENTRY alSourceQueueBuffers( ALuint source, ALsizei nb, const A
 			return;
 		}
 	}
-	Lock();
+	LockMixer();
 	if ( s->isStatic ) {
-		Unlock();
+		UnlockMixer();
 		SetError( AL_INVALID_OPERATION );
 		return;
 	}
 	if ( s->qlen + nb > AL_MAX_QUEUE ) {
-		Unlock();
+		UnlockMixer();
 		SetError( AL_INVALID_OPERATION );
 		return;
 	}
@@ -1327,7 +1357,7 @@ AL_API void AL_APIENTRY alSourceQueueBuffers( ALuint source, ALsizei nb, const A
 		/* a stopped queue: the new buffers wait to be played (as OpenAL Soft) */
 		s->qcur = s->processed;
 	}
-	Unlock();
+	UnlockMixer();
 }
 
 AL_API void AL_APIENTRY alSourceUnqueueBuffers( ALuint source, ALsizei nb, ALuint *buffers ) {
@@ -1340,9 +1370,9 @@ AL_API void AL_APIENTRY alSourceUnqueueBuffers( ALuint source, ALsizei nb, ALuin
 		SetError( AL_INVALID_VALUE );
 		return;
 	}
-	Lock();
+	LockMixer();
 	if ( s->isStatic || nb > s->processed ) {
-		Unlock();
+		UnlockMixer();
 		SetError( AL_INVALID_VALUE );
 		return;
 	}
@@ -1356,5 +1386,5 @@ AL_API void AL_APIENTRY alSourceUnqueueBuffers( ALuint source, ALsizei nb, ALuin
 	if ( s->qcur < 0 ) {
 		s->qcur = 0;
 	}
-	Unlock();
+	UnlockMixer();
 }

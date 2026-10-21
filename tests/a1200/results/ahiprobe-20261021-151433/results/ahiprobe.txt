@@ -1,0 +1,27 @@
+ahi.device 6.7; audio modes in memory:
+  0x003b0001  USB PnP Sound Device: 16 bit stereo++ (4 bpf) driver usbaudio   hifi 0 bits 16 stereo 1 maxch 128
+  0x00020001  Paula:14 bit stereo++ calibrated         driver paula      hifi 0 bits 14 stereo 1 maxch 128
+  0x00020003  Paula:14 bit stereo calibrated           driver paula      hifi 0 bits 14 stereo 1 maxch 128
+  0x00020005  Paula:14 bit mono calibrated             driver paula      hifi 0 bits 14 stereo 0 maxch 128
+  0x00020007  Paula:8 bit stereo++                     driver paula      hifi 0 bits 8 stereo 1 maxch 128
+  0x00020009  Paula:8 bit stereo                       driver paula      hifi 0 bits 8 stereo 1 maxch 128
+  0x0002000b  Paula:8 bit mono                         driver paula      hifi 0 bits 8 stereo 0 maxch 128
+  0x0002000d  Paula:HiFi 14 bit stereo++ calibrated    driver paula      hifi 1 bits 14 stereo 1 maxch 128
+  0x0002000e  Paula:HiFi 14 bit stereo calibrated      driver paula      hifi 1 bits 14 stereo 1 maxch 128
+  0x0002000f  Paula:HiFi 14 bit mono calibrated        driver paula      hifi 1 bits 14 stereo 0 maxch 128
+  0x00020010  Paula:HiFi 8 bit stereo++                driver paula      hifi 1 bits 8 stereo 1 maxch 128
+  0x00020011  Paula:HiFi 8 bit stereo                  driver paula      hifi 1 bits 8 stereo 1 maxch 128
+  0x00020012  Paula:HiFi 8 bit mono                    driver paula      hifi 1 bits 8 stereo 0 maxch 128
+  0x00020018  Paula:DMA 8 bit stereo                   driver paula      hifi 1 bits 8 stereo 1 maxch 4
+  0x00010001  Filesave:HiFi 8 bit mono, 8SVX           driver filesave   hifi 1 bits 8 stereo 0 maxch 128
+  0x00010002  Filesave:HiFi 16 bit stereo++, AIFF      driver filesave   hifi 1 bits 16 stereo 1 maxch 128
+  0x00010003  Filesave:HiFi 16 bit mono, AIFF          driver filesave   hifi 1 bits 16 stereo 0 maxch 128
+  0x00010004  Filesave:HiFi 16 bit stereo++, AIFC      driver filesave   hifi 1 bits 16 stereo 1 maxch 128
+  0x00010005  Filesave:HiFi 16 bit mono, AIFC          driver filesave   hifi 1 bits 16 stereo 0 maxch 128
+  0x00010006  Filesave:HiFi 16 bit stereo++, Studio 16 driver filesave   hifi 1 bits 16 stereo 1 maxch 128
+  0x00010007  Filesave:HiFi 16 bit mono, Studio 16     driver filesave   hifi 1 bits 16 stereo 0 maxch 128
+  0x00030001  Unit 0:HiFi 16 bit mono                  driver device     hifi 1 bits 16 stereo 0 maxch 128
+  0x00030002  Unit 0:HiFi 16 bit stereo++              driver device     hifi 1 bits 16 stereo 1 maxch 128
+  0x00030003  Unit 0:16 bit mono                       driver device     hifi 0 bits 16 stereo 0 maxch 128
+  0x00030004  Unit 0:16 bit stereo++                   driver device     hifi 0 bits 16 stereo 1 maxch 128
+playing through 0x0002000d (mixing at 22030 Hz), amplitude 8000, 3 s
