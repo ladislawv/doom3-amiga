@@ -23,7 +23,7 @@ index 7d3ecf50..4e035248 100644
  
          intuiwin = data->window;
  
-+        /* SDL's relative mouse mode (patch 0101): Intuition reports the
++        /* SDL's relative mouse mode (patch 0003): Intuition reports the
 +           mouse's own movement (IDCMP_DELTAMOVE) instead of the pointer's
 +           position, which stops at the screen's edge. The moves queued
 +           before a switch are in the other form: dropped. */
@@ -64,7 +64,7 @@ index 502ce7f7..11adeda1 100644
  }
  
 +/*
-+ * Relative mouse mode (doom3-amiga's sdl2 patch 0101). Without it SDL emulates
++ * Relative mouse mode (ogles2 ports/sdl2 patch 0003). Without it SDL emulates
 + * relative mode by warping the pointer back to the window's centre, and
 + * OS3_WarpMouse cannot warp: the hidden pointer ran into the screen's edge and
 + * a game's mouse look stopped there. Here the mode is only recorded; the event
@@ -107,7 +107,7 @@ index f11bbab9..5d7a059a 100644
  extern void OS3_InitMouse(void);
  extern void OS3_QuitMouse(void);
  
-+/* SDL's relative mouse mode is on: the windows report IDCMP_DELTAMOVE (patch 0101) */
++/* SDL's relative mouse mode is on: the windows report IDCMP_DELTAMOVE (patch 0003) */
 +extern SDL_bool OS3_relative_mouse;
 +
  #endif /* SDL_os3mouse_h_ */
