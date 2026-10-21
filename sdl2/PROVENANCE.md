@@ -23,3 +23,11 @@
   AHI unit (a capture of what the driver sent with `CMD_WRITE` read as a clean
   tone only little-endian). The loop now stops at the match. SDL's Paula driver
   was not affected. ogles2's port had the same bug; it took the fix.
+- `patches/0102-os3-text-input.patch` (this port, 2026-10-21): text input. The
+  amigaos3 video driver sent no `SDL_TEXTINPUT`, and SDL2 programs take typed
+  text only from it (Doom 3's console got Return but no letters). A key's press
+  now also goes through the user's keymap (`keymap.library`'s `MapRawKey`, with
+  the message's qualifiers and previous keys for dead keys); its printable
+  characters (ISO 8859-1) go to SDL as UTF-8 while SDL's text input is active.
+  **Open:** since this patch, typing in Doom 3's console has frozen the A1200
+  (doom3 PLAN.md section 14); not offered to ogles2 until that is found.
