@@ -1,0 +1,86 @@
+diff --git a/libSDL2-amigaos3-main/src/audio/amigaos3/SDL_os3paula.c b/libSDL2-amigaos3-main/src/audio/amigaos3/SDL_os3paula.c
+index 5a9c724c..f8e0b3c5 100644
+--- a/libSDL2-amigaos3-main/src/audio/amigaos3/SDL_os3paula.c
++++ b/libSDL2-amigaos3-main/src/audio/amigaos3/SDL_os3paula.c
+@@ -208,6 +208,8 @@ static int OS3PAULA_OpenDevice(_THIS, const char *devname)
+     if (data->period < 124) data->period = 124;
+ 
+     data->bufsize = (ULONG)_this->spec.size;
++    data->ticks = (ULONG)_this->spec.samples * 50 / (ULONG)_this->spec.freq;
++    if (data->ticks < 1) data->ticks = 1;
+     if (data->bufsize & 1) data->bufsize++;
+ 
+     DLOG("OpenDevice: freq=%d fmt=0x%x ch=%d samples=%d size=%lu period=%u",
+@@ -240,21 +242,38 @@ static int OS3PAULA_OpenDevice(_THIS, const char *devname)
+     return 0;
+ }
+ 
++/* WaitDevice (patch 0103): the thread always sleeps here, about a buffer's
++   playing time at least. A request audio.device hands back at once -- with
++   an error, e.g. its channels taken by a user of higher precedence
++   (ADIOERR_NOALLOCATION) -- or no device open let the audio thread loop
++   without sleeping at its priority (10, SDL's TIME_CRITICAL): the
++   application's own task (0) and everything between starved (Doom 3's main
++   menu hung, the Amiga's network with it, while the Workbench still took
++   clicks; doom3-amiga, 2026-10-22). Errors are counted and the first one is
++   reported when the device closes (from the application's task, not this
++   thread). */
+ static void OS3PAULA_WaitDevice(_THIS)
+ {
+     struct OS3PaulaData *data = (struct OS3PaulaData *)_this->hidden;
++    struct IOAudio *req;
+ 
+-    if (!data->dev_open || data->playing < 1)
++    if (!data->dev_open) {
++        data->idle_waits++;
++        Delay(data->ticks);
++        return;
++    }
++    if (data->playing < 1)
+         return;
+ 
+-    DLOG("WaitDevice: playing=%d cur=%d CheckIO...", data->playing, data->current);
+-
+-    if (!CheckIO((struct IORequest *)data->req[data->current])) {
+-        DLOG("WaitDevice: not done, calling WaitIO...");
+-        WaitIO((struct IORequest *)data->req[data->current]);
+-        DLOG("WaitDevice: WaitIO returned");
+-    } else {
+-        DLOG("WaitDevice: already done");
++    req = data->req[data->current];
++    if (!CheckIO((struct IORequest *)req)) {
++        WaitIO((struct IORequest *)req);
++    }
++    if (req->ioa_Request.io_Error) {
++        if (!data->errors)
++            data->first_error = req->ioa_Request.io_Error;
++        data->errors++;
++        Delay(data->ticks);
+     }
+ }
+ 
+@@ -322,6 +341,9 @@ static void OS3PAULA_CloseDevice(_THIS)
+     if (!data) return;
+ 
+     DLOG("CloseDevice: dev_open=%d playing=%d", data->dev_open, data->playing);
++    if (data->errors || data->idle_waits)
++        SDL_Log("Paula audio: %lu requests handed back with an error (the first: io_Error %d), %lu waits with no device",
++                (unsigned long)data->errors, (int)data->first_error, (unsigned long)data->idle_waits);
+ 
+     if (data->dev_open && data->req[0]) {
+         if (data->req[1] && data->playing > 1) {
+diff --git a/libSDL2-amigaos3-main/src/audio/amigaos3/SDL_os3paula.h b/libSDL2-amigaos3-main/src/audio/amigaos3/SDL_os3paula.h
+index 6e04c70e..d064b574 100644
+--- a/libSDL2-amigaos3-main/src/audio/amigaos3/SDL_os3paula.h
++++ b/libSDL2-amigaos3-main/src/audio/amigaos3/SDL_os3paula.h
+@@ -36,6 +36,10 @@ struct OS3PaulaData {
+     int              playing;      /* count of submitted requests */
+     int              dev_open;     /* 1 after LazyOpen succeeds */
+     ULONG            clock;        /* PAL=3546895, NTSC=3579545 */
++    ULONG            ticks;        /* one buffer's playing time in DOS ticks, at least 1 */
++    ULONG            errors;       /* requests handed back with an error (patch 0103) */
++    ULONG            idle_waits;   /* waits with no device open */
++    BYTE             first_error;  /* the first io_Error, reported at CloseDevice */
+ };
+ 
+ extern AudioBootStrap OS3PAULA_bootstrap;

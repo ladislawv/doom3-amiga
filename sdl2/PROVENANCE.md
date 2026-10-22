@@ -29,5 +29,24 @@
   now also goes through the user's keymap (`keymap.library`'s `MapRawKey`, with
   the message's qualifiers and previous keys for dead keys); its printable
   characters (ISO 8859-1) go to SDL as UTF-8 while SDL's text input is active.
-  **Open:** since this patch, typing in Doom 3's console has frozen the A1200
-  (doom3 PLAN.md section 14); not offered to ogles2 until that is found.
+  Typing in Doom 3's console froze the A1200 after this patch: that was the
+  spinlock livelock 0104 fixes, not this patch; with 0104, typing works.
+- `patches/0103-os3-paula-no-spin.patch` (this port, 2026-10-22): the Paula
+  driver's `WaitDevice` always sleeps, about a buffer's time at least, when
+  audio.device hands a request back at once (an error) or no device is open,
+  and the errors are reported when the device closes. Written for the menu
+  freeze before its cause was known (0104); sound on its own.
+- `patches/0104-os3-atomics-no-spin.patch` (this port, 2026-10-22): SDL's
+  atomics without spinlocks, and `SDL_AtomicLock`'s wait a real sleep. The
+  build has no native atomics (`HAVE_GCC_ATOMICS` off), so `SDL_atomic.c`
+  emulated every atomic operation with one of 32 spinlocks, whose waiter loops
+  on `SDL_Delay(0)`; exec always runs the highest-priority ready task, so
+  `Delay(0)` gives nothing to a holder of lower priority. When the audio thread
+  (priority 10) wanted the lock the game's task (0) held, it spun for ever and
+  everything under priority 10 stopped: Doom 3's main menu froze the whole
+  A1200 at random, 20 s to 14 min in (doom3 PLAN.md section 14, caught by a
+  flight recorder). On AmigaOS 3 the atomics now run under `Forbid()`, atomic
+  against every task on its one CPU, and `SDL_AtomicLock` sleeps a tick
+  (`SDL_Delay(1)`) between tries. ogles2's `ports/sdl2` took the same fix as
+  its `0005-os3-atomics-no-spin.patch` (2026-10-22, its comments without this
+  port's name); when this port takes ogles2's copies again, 0104 goes.

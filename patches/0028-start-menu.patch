@@ -1,0 +1,33 @@
+diff --git a/neo/framework/Session.cpp b/neo/framework/Session.cpp
+index babd89cd..f8a63647 100644
+--- a/neo/framework/Session.cpp
++++ b/neo/framework/Session.cpp
+@@ -777,6 +777,20 @@ static void Session_TimeCmdDemo_f( const idCmdArgs &args ) {
+ Session_Disconnect_f
+ ================
+ */
++/*
++================
++Session_StartMenu_f
++
++port (patch 0028): the main menu as the game opens it at start-up when its
++command line carries no commands (idCommonLocal::Init). A command line with
+++exec gets no menu; disconnect would also stop the (absent) session and
++unmute the sound system, which hung the A1200 about 20 s into the menu.
++================
++*/
++static void Session_StartMenu_f( const idCmdArgs &args ) {
++	sessLocal.StartMenu( true );
++}
++
+ static void Session_Disconnect_f( const idCmdArgs &args ) {
+ 	sessLocal.Stop();
+ 	sessLocal.StartMenu();
+@@ -3182,6 +3196,7 @@ void idSessionLocal::Init() {
+ 	cmdSystem->AddCommand( "compressDemo", Session_CompressDemo_f, CMD_FL_SYSTEM, "compresses a demo file", idCmdSystem::ArgCompletion_DemoName );
+ #endif
+ 
++	cmdSystem->AddCommand( "startMenu", Session_StartMenu_f, CMD_FL_SYSTEM, "opens the main menu, as at start-up (port, patch 0028)" );
+ 	cmdSystem->AddCommand( "disconnect", Session_Disconnect_f, CMD_FL_SYSTEM, "disconnects from a game" );
+ 
+ 	cmdSystem->AddCommand( "demoShot", Session_DemoShot_f, CMD_FL_SYSTEM, "writes a screenshot for a demo" );

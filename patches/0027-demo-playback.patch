@@ -1,0 +1,64 @@
+diff --git a/neo/renderer/GuiModel.cpp b/neo/renderer/GuiModel.cpp
+index 96533bb2..270bb851 100644
+--- a/neo/renderer/GuiModel.cpp
++++ b/neo/renderer/GuiModel.cpp
+@@ -132,11 +132,11 @@ void idGuiModel::ReadFromDemo( idDemoFile *demo ) {
+ 	demo->ReadInt( i );
+ 	indexes.SetNum( i, false );
+ 	for ( j = 0; j < i; j++ ) {
+-#if GL_INDEX_TYPE == GL_UNSIGNED_SHORT
+-		demo->ReadShort( indexes[j] );
+-#else
+-		demo->ReadInt( indexes[j] );
+-#endif
++		// port (patch 0027): a demo stores an index as an int (WriteToDemo, id's demos),
++		// whatever the size of glIndex_t; reading a short left the stream behind
++		int index;
++		demo->ReadInt( index );
++		indexes[j] = index;
+ 	}
+ 
+ 	i = surfaces.Num();
+diff --git a/neo/renderer/Model.cpp b/neo/renderer/Model.cpp
+index ddaa77b2..3a42bb48 100644
+--- a/neo/renderer/Model.cpp
++++ b/neo/renderer/Model.cpp
+@@ -2177,8 +2177,13 @@ void idRenderModelStatic::ReadFromDemoFile( class idDemoFile *f ) {
+ 
+ 		f->ReadInt( tri->numIndexes );
+ 		R_AllocStaticTriSurfIndexes( tri, tri->numIndexes );
+-		for ( j = 0; j < tri->numIndexes; ++j )
+-			f->ReadInt( (int&)tri->indexes[j] );
++		for ( j = 0; j < tri->numIndexes; ++j ) {
++			// port (patch 0027): an int per index in the demo; through an int& into a 16-bit
++			// glIndex_t it overwrote the next index and wrote past the last
++			int index;
++			f->ReadInt( index );
++			tri->indexes[j] = index;
++		}
+ 
+ 		f->ReadInt( tri->numVerts );
+ 		R_AllocStaticTriSurfVerts( tri, tri->numVerts );
+@@ -2227,7 +2232,7 @@ void idRenderModelStatic::WriteToDemoFile( class idDemoFile *f ) {
+ 		srfTriangles_t *tri = surf->geometry;
+ 		f->WriteInt( tri->numIndexes );
+ 		for ( j = 0; j < tri->numIndexes; ++j )
+-			f->WriteInt( (int&)tri->indexes[j] );
++			f->WriteInt( (int)tri->indexes[j] );	// patch 0027: the index's value, not 4 bytes from a 16-bit index
+ 		f->WriteInt( tri->numVerts );
+ 		for ( j = 0; j < tri->numVerts; ++j ) {
+ 			f->WriteVec3( tri->verts[j].xyz );
+diff --git a/neo/sound/snd_emitter.cpp b/neo/sound/snd_emitter.cpp
+index e0230b35..75548131 100644
+--- a/neo/sound/snd_emitter.cpp
++++ b/neo/sound/snd_emitter.cpp
+@@ -952,7 +952,8 @@ void idSoundEmitterLocal::StopSound( const s_channelType channel ) {
+ 		chan->ALStop();
+ 
+ 		// if this was an onDemand sound, purge the sample now
+-		if ( chan->leadinSample->onDemand ) {
++		// (port, patch 0027: none with s_noSound 1, where a render demo still stops its sounds)
++		if ( chan->leadinSample && chan->leadinSample->onDemand ) {
+ 			chan->leadinSample->PurgeSoundSample();
+ 		}
+ 

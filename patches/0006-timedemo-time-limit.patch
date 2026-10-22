@@ -1,8 +1,20 @@
 diff --git a/neo/framework/Session.cpp b/neo/framework/Session.cpp
-index d9c4fbb9..33f88319 100644
+index 2c46d138..70951910 100644
 --- a/neo/framework/Session.cpp
 +++ b/neo/framework/Session.cpp
-@@ -2363,11 +2363,23 @@ void	idSessionLocal::DrawWipeModel() {
+@@ -687,6 +687,11 @@ Session_TimeDemo_f
+ static void Session_TimeDemo_f( const idCmdArgs &args ) {
+ 	if ( args.Argc() >= 2 ) {
+ 		sessLocal.TimeRenderDemo( va( "demos/%s", args.Argv(1) ), ( args.Argc() > 2 ) );
++		// port (patch 0006): "timeDemo demo1 usecache quit" quits after the timed pass,
++		// as timeDemoQuit does, which has no precaching pass
++		if ( args.Argc() > 3 && !idStr::Icmp( args.Argv( 3 ), "quit" ) && sessLocal.timeDemo == TD_YES ) {
++			sessLocal.timeDemo = TD_YES_THEN_QUIT;
++		}
+ 	}
+ }
+ 
+@@ -2368,11 +2373,23 @@ void	idSessionLocal::DrawWipeModel() {
  idSessionLocal::AdvanceRenderDemo
  ===============
  */

@@ -60,8 +60,10 @@ EndIf
 Set quality ""
 If EXISTS {QUALITY}.cfg
   ; the game finds it in its save directory (first in its search path)
-  MakeDir save save/demo >NIL:
+  ; save/demo for the free demo's data, save/base for the full game's
+  MakeDir save save/demo save/base >NIL:
   Copy {QUALITY}.cfg save/demo/ QUIET
+  Copy {QUALITY}.cfg save/base/ QUIET
   Set quality "+exec {QUALITY}.cfg"
 EndIf
 

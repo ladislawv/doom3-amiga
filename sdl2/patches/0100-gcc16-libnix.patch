@@ -1,3 +1,16 @@
+diff --git a/libSDL2-amigaos3-main/Makefile.libnix b/libSDL2-amigaos3-main/Makefile.libnix
+index c13cd4d2..7c92f0d9 100644
+--- a/libSDL2-amigaos3-main/Makefile.libnix
++++ b/libSDL2-amigaos3-main/Makefile.libnix
+@@ -18,7 +18,7 @@ EXAMPLE_DIR = $(BUILD_DIR)/examples
+ CFLAGS = -std=gnu99 -O2 -m68040 -noixemul -mhard-float \
+          -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare \
+          -I./include -I./src \
+-         -D__AMIGAOS3__ -DSDL_OS3_DEBUG
++         -D__AMIGAOS3__
+ # ogles2 (ports/sdl2): its headers (include/ and the generated proto/ogles2.h)
+ CFLAGS += $(OGLES2_CFLAGS)
+ 
 diff --git a/libSDL2-amigaos3-main/include/SDL_config_amigaos3.h b/libSDL2-amigaos3-main/include/SDL_config_amigaos3.h
 index 87d41a7e..bf382768 100644
 --- a/libSDL2-amigaos3-main/include/SDL_config_amigaos3.h
@@ -23,7 +36,7 @@ index a5d2a9cb..5a9c724c 100644
  #include <proto/graphics.h>
  #include <graphics/gfxbase.h>
 diff --git a/libSDL2-amigaos3-main/src/libm/math_private.h b/libSDL2-amigaos3-main/src/libm/math_private.h
-index ee67c444..2c40a827 100644
+index ee67c444..491e224c 100644
 --- a/libSDL2-amigaos3-main/src/libm/math_private.h
 +++ b/libSDL2-amigaos3-main/src/libm/math_private.h
 @@ -27,7 +27,7 @@

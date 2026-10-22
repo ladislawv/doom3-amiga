@@ -31,8 +31,10 @@ EndIf
 ; a bench.cfg in the package (e.g. tests/a1200/play/low.cfg) is run first by
 ; every build: the game finds it in its save directory
 If EXISTS bench.cfg
-  MakeDir save save/demo >NIL:
+  ; save/demo for the free demo's data, save/base for the full game's
+  MakeDir save save/demo save/base >NIL:
   Copy bench.cfg save/demo/ QUIET
+  Copy bench.cfg save/base/ QUIET
   Set args "+exec bench.cfg $args"
 EndIf
 Echo "{EXE}: loading {MAP} ($args)"

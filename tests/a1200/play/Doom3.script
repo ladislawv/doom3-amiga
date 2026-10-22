@@ -1,0 +1,56 @@
+; Doom3.script - starts Doom 3 from Stuff:doom3 (the Doom3 icon runs it) on the A1200, the game's data in
+; base/ (the full game) or demo/ (the free demo) next to it, at the main menu.
+;   Execute Stuff:doom3/Doom3.script   (or double-click the Doom3 icon)
+;   Another size:          Execute Stuff:doom3/Doom3.script W=1280 H=720
+;   Other settings:        QUALITY=medium or high (default low: low.cfg)
+;   Lights:                LIGHTS=8 (default 12; 0 for all: slower, no popping)
+;   Sound:                 AUDIO=ahi (default paula), VOICES=, RATE=, SOUND=0 for none
+;   Straight into a map:   MAP=game/mars_city1
+; Quit from the game's menu. Settings the game saves go to save/ in this drawer.
+.key W/K,H/K,QUALITY/K,LIGHTS/K,AUDIO/K,VOICES/K,RATE/K,SOUND/K,HZ/K,MAP/K
+.def W 1920
+.def H 1080
+.def QUALITY "low"
+.def LIGHTS 12
+.def AUDIO "paula"
+.def VOICES 32
+.def RATE 22050
+.def SOUND 1
+.def HZ 20
+.def MAP ""
+.bra {
+.ket }
+
+FailAt 21
+CD Stuff:doom3
+Stack 9000000
+Avail FLUSH >NIL:
+
+Set nosound 1
+If {SOUND} EQ 1
+  Set nosound 0
+EndIf
+; the settings file, where the game looks first (its save directory: save/base
+; for the full game, save/demo for the demo)
+MakeDir save save/base save/demo >NIL:
+Copy {QUALITY}.cfg save/base/ QUIET
+Copy {QUALITY}.cfg save/demo/ QUIET
+; no map: "startMenu" (patch 0028) opens the main menu (the game opens it by itself only
+; when its command line holds no commands, and +exec is one)
+Set map "+startMenu"
+If NOT "{MAP}" EQ ""
+  Set map "+map {MAP}"
+EndIf
+
+; the OpenAL subset's settings (global variables: the game reads them with GetVar)
+SetEnv SDL_AUDIODRIVER {AUDIO}
+SetEnv D3AL_VOICES {VOICES}
+SetEnv D3AL_RATE {RATE}
+
+; the game's output to T:doom3-out.txt, to read after a problem (the icon's
+; launcher gives the script NIL:)
+dhewm3 >T:doom3-out.txt +set fs_basepath "Stuff:doom3" +set s_noSound $nosound +set image_usePrecompressedTextures 1 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth {W} +set r_customHeight {H} +set com_gameHz {HZ} +set r_swapInterval 0 +exec {QUALITY}.cfg +set r_maxLights {LIGHTS} $map
+
+UnSetEnv SDL_AUDIODRIVER
+UnSetEnv D3AL_VOICES
+UnSetEnv D3AL_RATE
