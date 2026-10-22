@@ -95,10 +95,22 @@ index 83738e6a..da0c82ae 100644
  		Sys_CreateThread( BackgroundDownloadThread, &backgroundThread_exit, backgroundThread, "backgroundDownload" );
  	} else {
 diff --git a/neo/framework/Session.cpp b/neo/framework/Session.cpp
-index cf188548..7a719434 100644
+index cf188548..74d6626f 100644
 --- a/neo/framework/Session.cpp
 +++ b/neo/framework/Session.cpp
-@@ -2712,7 +2712,12 @@ void idSessionLocal::Frame() {
+@@ -519,6 +519,11 @@ void idSessionLocal::CompleteWipe() {
+ 	while ( com_ticNumber < wipeStopTic ) {
+ #if ID_CONSOLE_LOCK
+ 		emptyDrawCount = 0;
++#endif
++#ifdef D3_SINGLE_TASK
++		// nobody else runs the tics: without this the wipe never ends (a map
++		// loaded while the game runs, e.g. a level change, hung here)
++		common->Async();
+ #endif
+ 		UpdateScreen( true );
+ 	}
+@@ -2712,7 +2717,12 @@ void idSessionLocal::Frame() {
  		if ( latchedTicNumber >= minTic ) {
  			break;
  		}
