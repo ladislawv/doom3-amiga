@@ -1,7 +1,9 @@
-; Doom3.script - starts Doom 3 from Stuff:doom3 (the Doom3 icon runs it) on the A1200, the game's data in
-; base/ (the full game) or demo/ (the free demo) next to it, at the main menu.
-;   Execute Stuff:doom3/Doom3.script   (or double-click the Doom3 icon)
-;   Another size:          Execute Stuff:doom3/Doom3.script W=1280 H=720
+; Doom3.script - starts Doom 3 from its drawer, the game's data in base/ (the
+; full game) or demo/ (the free demo) next to it, at the main menu. The Doom3
+; program (the icon) runs it in its drawer, wherever that is; from a Shell,
+; run Doom3 with options (Doom3 QUALITY=high), or CD to the drawer and run
+; Execute Doom3.script with them.
+;   Another size:          W=1280 H=720 (default 1920x1080)
 ;   Other settings:        QUALITY=medium or high (default low: low.cfg)
 ;   Lights:                LIGHTS=8 (default 12; 0 for all: slower, no popping)
 ;   Sound:                 AUDIO=ahi (default paula), VOICES=, RATE=, SOUND=0 for none
@@ -22,9 +24,21 @@
 .ket }
 
 FailAt 21
-CD Stuff:doom3
+; the game's drawer: the current directory
+Set d3dir `CD`
 Stack 9000000
 Avail FLUSH >NIL:
+
+; ogles2.library 1.3 or newer: one in LIBS: is found before the one in libs/
+; (the file's version string; Version by library name would search LIBS:
+; only, not this drawer's libs/)
+If EXISTS LIBS:ogles2.library
+  Version >NIL: LIBS:ogles2.library 1 3
+  If WARN
+    RequestChoice >NIL: "Doom 3" "Doom 3 needs ogles2.library 1.3 or newer.*NAn older one in LIBS: is found first:*Ncopy the one in Doom 3's libs/ drawer to LIBS:." "OK"
+    Quit 20
+  EndIf
+EndIf
 
 Set nosound 1
 If {SOUND} EQ 1
@@ -49,7 +63,7 @@ SetEnv D3AL_RATE {RATE}
 
 ; the game's output to T:doom3-out.txt, to read after a problem (the icon's
 ; launcher gives the script NIL:)
-dhewm3 >T:doom3-out.txt +set fs_basepath "Stuff:doom3" +set s_noSound $nosound +set image_usePrecompressedTextures 1 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth {W} +set r_customHeight {H} +set com_gameHz {HZ} +set r_swapInterval 0 +exec {QUALITY}.cfg +set r_maxLights {LIGHTS} $map
+dhewm3 >T:doom3-out.txt +set fs_basepath "$d3dir" +set s_noSound $nosound +set image_usePrecompressedTextures 1 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth {W} +set r_customHeight {H} +set com_gameHz {HZ} +set r_swapInterval 0 +exec {QUALITY}.cfg +set r_maxLights {LIGHTS} $map
 
 UnSetEnv SDL_AUDIODRIVER
 UnSetEnv D3AL_VOICES

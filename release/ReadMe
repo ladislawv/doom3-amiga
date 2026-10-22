@@ -1,0 +1,278 @@
+
+                    DOOM 3 for AmigaOS 3 on the PiStorm
+                    ===================================
+
+                        Version @VERSION@ (@DATE@)
+
+Doom 3 (id Software, 2004) running natively on a 68k Amiga with a PiStorm:
+the game code runs on Emu68, and the graphics are drawn by the Raspberry
+Pi 4's VideoCore GPU through ogles2.library (OpenGL ES 2.0 for AmigaOS 3).
+The port is based on dhewm3/d3es, the GPL release of Doom 3's source.
+
+The game's data is NOT included: you need your own copy of Doom 3 (the
+GOG.com or Steam release, or a boxed copy updated to 1.3.1).
+
+
+CONTENTS
+--------
+
+  1. What you need
+  2. Installing
+  3. Starting the game
+  4. Options
+  5. Speed and quality
+  6. Sound
+  7. Playing
+  8. Troubleshooting
+  9. Known limitations
+ 10. What is in the drawer
+ 11. Licences and source code
+ 12. Credits
+
+
+1. WHAT YOU NEED
+----------------
+
+Hardware
+  - An Amiga with a PiStorm and a Raspberry Pi 4 (or CM4). Tested on an
+    A1200 with a Pi 4.
+  - The Pi's HDMI output for the picture (the game draws on an RTG screen).
+
+Software
+  - Emu68 (tested: 1.1.0-beta.1) with its VideoCore RTG driver.
+  - AmigaOS 3.x (tested: 3.2.3) with Picasso96 (or CyberGraphX).
+  - A 32-bit RTG screen mode at the size you want to play in. The default
+    is 1920x1080: check that Picasso96Mode (Prefs) has a 1920x1080 mode
+    with 32-bit depth (16.7 million colours), or play at another size
+    (section 4).
+  - Plenty of Fast RAM: tested with the 1.8 GB Emu68 gives a Pi 4.
+  - About 1.6 GB free on a partition for the game's data, and 30 MB for
+    this drawer.
+  - ogles2.library 1.3 is included (libs/). If an older ogles2.library is
+    installed in LIBS:, the game asks you to update it.
+
+Game data (not included)
+  The nine files from the "base" folder of Doom 3 1.3.1:
+
+    File          Bytes         MD5
+    pak000.pk4    353,159,257   71b8d37b2444d3d86a36fd61783844fe
+    pak001.pk4    229,649,726   4bc4f3ba04ec2b4f4837be40e840a3c1
+    pak002.pk4    416,937,674   fa84069e9642ad9aa4b49624150cc345
+    pak003.pk4    317,590,154   f22d8464997924e4913e467e7d62d5fe
+    pak004.pk4    237,752,384   38561a3c73f93f2e6fd31abf1d4e9102
+    pak005.pk4        552,334   2afd4ece27d36393b7538d55a345b90d
+    pak006.pk4        218,751   a6e7003fa9dcc75073dc02b56399b370
+    pak007.pk4        192,031   6319f086f930ec1618ab09b4c20c268c
+    pak008.pk4         12,243   28750b7841de9453eb335bad6841a2a5
+
+  The GOG.com and Steam versions have exactly these files. A boxed copy
+  needs the 1.3.1 patch (pak008.pk4 comes from it). "Doom 3: BFG Edition"
+  will NOT work: its data is in a different format.
+
+  The free 2004 demo works too: put its demo00.pk4 (483,535,485 bytes,
+  MD5 70c2c63ef1190158f1ebd6c255b22d8e) into the demo/ drawer instead.
+
+
+2. INSTALLING
+-------------
+
+  1. Unpack the archive where you want the game, for example to Work:
+     (LhA x Doom3-Amiga-@VERSION@.lha Work:). This makes the drawer Doom3.
+     It can be anywhere, on any partition.
+
+  2. Copy the nine pak00?.pk4 files into Doom3/base/. On the PC they are
+     in the game's installation folder, under "base" (GOG: for example
+     C:\GOG Games\Doom 3\base; Steam: ...\steamapps\common\Doom 3\base).
+     Copy them over the network, or with a CF or SD card. Only the
+     pak*.pk4 files are needed.
+
+  3. If you like, check them on the Amiga: MD5Sum Doom3/base/#?.pk4 and
+     compare with the list in section 1. A damaged file makes the game
+     stop while loading.
+
+Nothing is copied to your system: ogles2.library and its shader
+compiler are taken from Doom3/libs/, the game's compiled shaders from
+Doom3/shaders/. Settings and saved games go to Doom3/save/.
+
+
+3. STARTING THE GAME
+--------------------
+
+Double-click the Doom3 icon. The game loads for a while, then its screen
+opens with the main menu. Starting a new game loads the first level, which
+takes about a minute and a half.
+
+From a Shell:
+
+    Work:Doom3/Doom3
+    Work:Doom3/Doom3 QUALITY=medium W=1280 H=720
+
+(the options are in section 4). Doom3 is a small program that runs the
+script Doom3.script in its drawer, with the right stack (9 MB) and
+settings; it can be started from any directory.
+
+Quit from the game's main menu (Exit), or type "quit" in the console.
+
+
+4. OPTIONS
+----------
+
+Options are given to Doom3 in a Shell (Doom3 KEY=VALUE ...) or as the
+icon's Tool Types: select the Doom3 icon, choose Icons > Information,
+change a value (e.g. QUALITY=low into QUALITY=medium) and save. The icon
+holds the main options at their defaults; the others can be added the
+same way. A Tool Type in parentheses, e.g. (QUALITY=high), is ignored.
+
+  W=1920 H=1080     The screen size (a 32-bit RTG mode of that size must
+                    exist). Smaller is a little faster.
+  QUALITY=low       low, medium or high: the graphics settings (low.cfg,
+                    medium.cfg, high.cfg in the drawer). See section 5.
+  LIGHTS=12         The most lights drawn in a frame: the nearest and
+                    largest ones are kept. Fewer is faster; 0 draws them
+                    all (slower, but no lights popping in and out).
+  AUDIO=paula       paula (the Amiga's own sound chip, the default) or
+                    ahi (through AHI). See section 6.
+  SOUND=1           0 turns sound off.
+  VOICES=32         The most sounds playing at once.
+  RATE=22050        The mixing rate in Hz (Paula plays at most 22050).
+  HZ=20             The game's tics a second (20 is smoother here than
+                    Doom 3's own 60, which the Amiga cannot keep up with).
+  MAP=game/mars_city1
+                    Starts straight in a level instead of the main menu.
+
+The game's own menus (Options > System) can change the quality too, but
+it takes effect only at the next start, and the QUALITY setting is
+applied again at every start: use QUALITY to choose.
+
+
+5. SPEED AND QUALITY
+--------------------
+
+Doom 3 was made for PCs far faster than any Amiga, so expect a playable
+but not smooth game. Measured on an A1200 with a Pi 4 (its ARM at
+2.2 GHz):
+
+  Doom 3's own benchmark (timedemo demo1, a busy scene):
+    1920x1080, QUALITY=low, LIGHTS=12      16.9 frames a second
+  The port's own benchmark (a quieter scene):
+    1920x1080, QUALITY=low, LIGHTS=12      21 frames a second
+    640x480,   QUALITY=low, LIGHTS=12      24 frames a second
+    1920x1080, QUALITY=high                15 frames a second
+
+  low      Reduced texture sizes, no shadows, no special effects (blood,
+           decals, muzzle flashes, shell casings). The fastest.
+  medium   Full-size textures and shadows, effects still off.
+  high     Full textures, shadows and all the effects.
+
+The processor (Emu68 running the game's 68k code) is the limit more than
+the GPU, so smaller screen sizes help less than you might expect.
+
+
+6. SOUND
+--------
+
+The default is the Amiga's own Paula chip, mixed to 8-bit mono at 22 kHz.
+It costs little and needs nothing installed. AUDIO=ahi plays through AHI
+instead (AHI 6 with a mode set in AHI Prefs), in 16-bit: better
+for USB or other sound cards, but it takes more of the processor.
+
+Speech, music and effects all play. There is no reverb or 3D effect
+(EAX), as on a PC without it.
+
+
+7. PLAYING
+----------
+
+The controls are Doom 3's own (W A S D to move, the mouse to look and
+shoot, Space to jump, C to crouch, F for the flashlight, 1-9 for weapons,
+Tab for the PDA); change them in Options > Controls.
+
+  - The console: the key left of 1, below Esc.
+  - Saved games and settings: Doom3/save/base/.
+  - The game's last output (for problem reports): T:doom3-out.txt, until
+    the Amiga is switched off.
+
+
+8. TROUBLESHOOTING
+------------------
+
+Nothing happens when I double-click the icon
+  Look at T:doom3-out.txt (e.g. "Type T:doom3-out.txt" in a Shell). It
+  holds the game's messages. Common reasons:
+  - "... .library failed to load": a system library is missing, or LIBS:
+    is not assigned (Assign LIBS: should list SYS:Libs). Reboot.
+  - No game data: the pak00?.pk4 files are not in Doom3/base/.
+
+A requester says Doom 3 needs ogles2.library 1.3 or newer
+  An older ogles2.library in LIBS: is found before the one in Doom3/libs/.
+  Copy Doom3/libs/ogles2.library to LIBS: (and Doom3/libs/v3dglslc too),
+  or install ogles2 1.3.1 from its own release.
+
+The screen stays black or the game stops at once
+  The screen mode is missing: add a 32-bit mode of that size in
+  Picasso96Mode, or start with W= and H= of a mode you have.
+
+The game is much slower than in section 5
+  Check the quality (QUALITY=low) and that nothing else is busy. The
+  first time a new effect appears the game may stop for a moment while a
+  shader is prepared.
+
+The Amiga freezes
+  Please report it, with T:doom3-out.txt if you can still read it, what
+  you were doing, and your settings.
+
+
+9. KNOWN LIMITATIONS
+--------------------
+
+  - Single player only: there is no networking (multiplayer).
+  - The expansion "Resurrection of Evil" (d3xp) is not supported.
+  - Lights limited by LIGHTS can pop in and out as you move.
+  - Levels take a minute or two to load.
+  - Changing the quality in the game's menu takes effect only at the next
+    start, and QUALITY is applied at every start.
+  - A timedemo with sound off (SOUND=0) crashes; run timedemos with sound.
+
+
+10. WHAT IS IN THE DRAWER
+-------------------------
+
+  Doom3              Starts the game (the icon); runs Doom3.script
+  Doom3.script       The settings: screen, quality, sound; then the game
+  dhewm3             The game itself
+  low.cfg, medium.cfg, high.cfg
+                     The three quality settings
+  libs/              ogles2.library 1.3 and its shader compiler v3dglslc
+  shaders/           The game's shaders, compiled ahead of time
+  base/              Doom 3's data goes here (pak000.pk4 - pak008.pk4)
+  demo/              Or the free demo's data (demo00.pk4)
+  save/              Made at the first start: settings and saved games
+  licences/          The licences of the parts
+  ReadMe             This text
+
+
+11. LICENCES AND SOURCE CODE
+----------------------------
+
+  - The game (dhewm3, d3es-multithread, and this port's changes): GNU
+    General Public License version 3, with id Software's additional terms
+    (licences/Doom3-GPL.txt). The source code of this version:
+    @SOURCE@
+  - Doom 3's data is id Software's (ZeniMax) and not part of this release.
+  - SDL2 (SDL2_68k by Steffen Haeuser): zlib licence (licences/SDL2.txt).
+  - ogles2.library: Hyperion MiniGL Open Source License; its shader
+    compiler v3dglslc is Mesa (MIT) (licences/ogles2/).
+  - zlib: zlib licence (licences/zlib.txt); dlmalloc and libnix: public
+    domain.
+
+
+12. CREDITS
+-----------
+
+  - Doom 3 by id Software; its source code released under the GPL.
+  - dhewm3 by Daniel Gibson and contributors; d3wasm by Gabriel Cuvillier;
+    d3es-multithread by Emile Belanger.
+  - SDL2_68k by Steffen "MagicSN" Haeuser.
+  - Emu68 by Michal Schulz; PiStorm by Claude Schwarz and contributors.
+  - ogles2.library, and this port, by R-Typer and Ladislawv, with
+    Claude Opus 5.5 (Anthropic's AI assistant).

@@ -5,3 +5,8 @@
 *.lha binary
 *.zip binary
 *.pk4 binary
+# the release's icons and ogles2's compiled shaders
+*.info binary
+*.v3dp binary
+*.v3ds binary
+*.v3dw binary
