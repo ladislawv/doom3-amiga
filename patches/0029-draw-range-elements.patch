@@ -1,0 +1,83 @@
+diff --git a/neo/renderer/RenderSystem_init.cpp b/neo/renderer/RenderSystem_init.cpp
+index 134b1327..ee1e7e07 100644
+--- a/neo/renderer/RenderSystem_init.cpp
++++ b/neo/renderer/RenderSystem_init.cpp
+@@ -149,6 +149,7 @@ idCVar r_flareSize( "r_flareSize", "1", CVAR_RENDERER | CVAR_FLOAT, "scale the f
+ idCVar r_useExternalShadows( "r_useExternalShadows", "1", CVAR_RENDERER | CVAR_INTEGER, "1 = skip drawing caps when outside the light volume, 2 = force to no caps for testing", 0, 2, idCmdSystem::ArgCompletion_Integer<0,2> );
+ idCVar r_useOptimizedShadows( "r_useOptimizedShadows", "1", CVAR_RENDERER | CVAR_BOOL, "use the dmap generated static shadow volumes" );
+ idCVar r_useScissor( "r_useScissor", "1", CVAR_RENDERER | CVAR_BOOL, "scissor clip as portals and lights are processed" );
++idCVar r_useDrawRange( "r_useDrawRange", "1", CVAR_RENDERER | CVAR_BOOL, "give the GL each draw's vertex range (glDrawRangeElements, where the GL has it)" );
+ idCVar r_useBindCache( "r_useBindCache", "1", CVAR_RENDERER | CVAR_BOOL, "skip texture binds and unit selects already in place (port, patch 0016)" );
+ 
+ idCVar r_screenFraction( "r_screenFraction", "100", CVAR_RENDERER | CVAR_INTEGER, "for testing fill rate, the resolution of the entire screen can be changed" );
+@@ -230,6 +231,7 @@ idCVar r_maxFps( "r_maxFps", "0", CVAR_RENDERER | CVAR_INTEGER, "Limit maximum F
+ // define qgl functions
+ #define QGLPROC(name, rettype, args) rettype (GL_APIENTRYP q##name) args;
+ #include "renderer/qgl_proc.h"
++void ( GL_APIENTRYP qglDrawRangeElements )( GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices );
+ 
+ /*
+ =================
+@@ -507,6 +509,11 @@ void R_InitOpenGL( void ) {
+ 
+ #include "renderer/qgl_proc.h"
+ 
++	// optional: none is no error (the draws then use glDrawElements)
++	qglDrawRangeElements = ( void ( GL_APIENTRYP )( GLenum, GLuint, GLuint, GLsizei, GLenum, const void * ) )
++		GLimp_ExtensionPointer( "glDrawRangeElements" );
++	common->Printf( "glDrawRangeElements: %s\n", qglDrawRangeElements ? "found" : "none" );
++
+ 	// input and sound systems need to be tied to the new window
+ 	Sys_InitInput();
+ 	soundSystem->InitHW();
+diff --git a/neo/renderer/qgl.h b/neo/renderer/qgl.h
+index 0a622a47..1d8ba0a9 100644
+--- a/neo/renderer/qgl.h
++++ b/neo/renderer/qgl.h
+@@ -51,4 +51,9 @@ GLExtension_t GLimp_ExtensionPointer( const char *name );
+ #define QGLPROC(name, rettype, args) extern rettype (GL_APIENTRYP q##name) args;
+ #include "renderer/qgl_proc.h"
+ 
++// glDrawRangeElements (OpenGL ES 3.0, and ogles3.library's GLES2 contexts):
++// NULL where the library has none. With the range given, the library does not
++// scan the indices for it (the AmigaOS 3 port, r_useDrawRange)
++extern void (GL_APIENTRYP qglDrawRangeElements)( GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices );
++
+ #endif
+diff --git a/neo/renderer/tr_local.h b/neo/renderer/tr_local.h
+index 990956b4..2f71b36f 100644
+--- a/neo/renderer/tr_local.h
++++ b/neo/renderer/tr_local.h
+@@ -903,7 +903,8 @@ extern idCVar r_useIndexBuffers;		// if 0, don't use ARB_vertex_buffer_object fo
+ extern idCVar r_useEntityCallbacks;		// if 0, issue the callback immediately at update time, rather than defering
+ extern idCVar r_lightAllBackFaces;		// light all the back faces, even when they would be shadowed
+ 
+-extern idCVar r_skipPostProcess;		// skip all post-process renderings
++extern idCVar r_skipPostProcess;
++extern idCVar r_useDrawRange;		// glDrawRangeElements with each surface's vertex range		// skip all post-process renderings
+ extern idCVar r_skipSuppress;			// ignore the per-view suppressions
+ extern idCVar r_skipInteractions;		// skip all light/surface interaction drawing
+ extern idCVar r_skipFrontEnd;			// bypasses all front end work, but 2D gui rendering still draws
+diff --git a/neo/renderer/tr_render.cpp b/neo/renderer/tr_render.cpp
+index 83cc20d7..9ee90ed6 100644
+--- a/neo/renderer/tr_render.cpp
++++ b/neo/renderer/tr_render.cpp
+@@ -50,7 +50,17 @@ void RB_DrawElementsWithCounters( const drawSurf_t *surf ) {
+ 	backEnd.pc.c_drawElements++;
+ 
+ 	if ( surf->indexCache ) {
+-		qglDrawElements( GL_TRIANGLES, surf->numIndexes, GL_INDEX_TYPE, (int *)vertexCache.Position( surf->indexCache ) );
++		// The surface's indices address its own vertices, the ambient cache
++		// block the attributes start at (its size may be rounded up: a few
++		// vertices more is still inside the block). The range spares the
++		// library the scan for it (ogles3.library: about 2 us a draw).
++		if ( qglDrawRangeElements && surf->ambientCache && surf->ambientCache->size >= (int)sizeof( idDrawVert ) &&
++			 r_useDrawRange.GetBool() ) {
++			qglDrawRangeElements( GL_TRIANGLES, 0, surf->ambientCache->size / sizeof( idDrawVert ) - 1, surf->numIndexes,
++								  GL_INDEX_TYPE, (int *)vertexCache.Position( surf->indexCache ) );
++		} else {
++			qglDrawElements( GL_TRIANGLES, surf->numIndexes, GL_INDEX_TYPE, (int *)vertexCache.Position( surf->indexCache ) );
++		}
+ 		backEnd.pc.c_vboIndexes += surf->numIndexes;
+ 	} else {
+ 		static bool bOnce = true;

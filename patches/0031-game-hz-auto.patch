@@ -1,0 +1,139 @@
+diff --git a/neo/framework/Common.cpp b/neo/framework/Common.cpp
+index 1569ea7f..5837ccfa 100644
+--- a/neo/framework/Common.cpp
++++ b/neo/framework/Common.cpp
+@@ -113,6 +113,22 @@ int    com_gameFrameLengthMS = 16; // length of one frame in msec, 1000 / com_ga
+ float  com_preciseFrameLengthMS = 16.6667f;    // 1000.0f / gameHzVal
+ float  com_gameTicScale = 1.0f; // com_gameHzVal/60.0f, multiply stuff assuming one tic is 16ms with this
+ 
++// The AmigaOS 3 port (patch 0031): the game's tick rate follows the frame rate
++// it reaches, 5 Hz above it, between com_gameHzMin and com_gameHzMax. Doom 3
++// renders one frame a game tic, so a fixed rate caps the frame rate at it
++// (20 Hz: 20 fps where the A1200 could show more), and a rate the machine
++// cannot keep runs several tics a frame. The effective rate is set directly
++// (Com_SetGameHz), not com_gameHz, which stays the player's start value and is
++// not written to the configuration at every change.
++#ifdef __amigaos3__
++#define COM_GAMEHZAUTO_DEFAULT "1"
++#else
++#define COM_GAMEHZAUTO_DEFAULT "0"
++#endif
++idCVar com_gameHzAuto( "com_gameHzAuto", COM_GAMEHZAUTO_DEFAULT, CVAR_BOOL | CVAR_ARCHIVE | CVAR_SYSTEM, "adapt the game's tick rate to the frame rate reached, between com_gameHzMin and com_gameHzMax" );
++idCVar com_gameHzMin( "com_gameHzMin", "20", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_SYSTEM, "com_gameHzAuto's lowest tick rate", 10, 250 );
++idCVar com_gameHzMax( "com_gameHzMax", "60", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_SYSTEM, "com_gameHzAuto's highest tick rate", 10, 250 );
++
+ double com_preciseFrameTimeMS = 0; // like com_frameTime but as double: time (since start) for the current frame in milliseconds
+ 
+ // com_speeds times
+@@ -257,6 +273,8 @@ private:
+ idCommonLocal	commonLocal;
+ idCommon *		common = &commonLocal;
+ 
++void Com_AutoGameHz( void );	// patch 0031 (below)
++
+ // DG: updates com_frameTime based on the current tic number and USERCMD_MSEC (com_gameFrameTime == 1000/com_gameHz)
+ void Com_UpdateFrameTime() {
+ 	// It used to be just com_frameTime = com_ticNumber * USERCMD_MSEC;
+@@ -2460,6 +2478,7 @@ void idCommonLocal::Frame( void ) {
+ 		if ( com_gameHz.IsModified() ) {
+ 			UpdateGameHz();
+ 		}
++		Com_AutoGameHz();
+ 
+ 		eventLoop->RunEventLoop();
+ 
+@@ -3341,14 +3360,13 @@ void idCommonLocal::ShutdownGame( bool reloading ) {
+ 	fileSystem->Shutdown( reloading );
+ }
+ 
+-// DG: for configurable framerate
+-void idCommonLocal::UpdateGameHz()
++// The tick rate in effect: com_gameHz's, or com_gameHzAuto's choice.
++static void Com_SetGameHz( int hz )
+ {
+-	com_gameHz.ClearModified();
+-	com_gameHzVal = com_gameHz.GetInteger();
++	com_gameHzVal = hz;
+ 
+ 	if ( com_gameHzVal > 250 ) {
+-		Warning( "Setting com_gameHz to values above 250 is known to cause bugs! You generally shouldn't do this, it's only for testing/debugging purposes!" );
++		common->Warning( "Setting com_gameHz to values above 250 is known to cause bugs! You generally shouldn't do this, it's only for testing/debugging purposes!" );
+ 	}
+ 
+ 	com_preciseFrameLengthMS = 1000.0f / com_gameHzVal;
+@@ -3360,13 +3378,74 @@ void idCommonLocal::UpdateGameHz()
+ 
+ 	com_gameTicScale = com_gameHzVal / 60.0f; // TODO: or / 62.5?
+ 
+-	Printf( "Running the game at com_gameHz = %dHz, frametime %dms\n", com_gameHzVal, com_gameFrameLengthMS );
++	common->Printf( "Running the game at com_gameHz = %dHz, frametime %dms\n", com_gameHzVal, com_gameFrameLengthMS );
+ 
+ 	if ( game != NULL ) {
+ 		game->SetGameHz( com_gameHzVal, com_gameFrameLengthMS, com_gameTicScale );
+ 	}
+ }
+ 
++// DG: for configurable framerate
++void idCommonLocal::UpdateGameHz()
++{
++	com_gameHz.ClearModified();
++	Com_SetGameHz( com_gameHz.GetInteger() );
++}
++
++/*
++==================
++Com_AutoGameHz
++
++com_gameHzAuto, once a frame: over each half second, the frames rendered; the
++tick rate then 5 Hz above them (the developer's rule), within com_gameHzMin
++and com_gameHzMax. Frames capped by the rate push it up 5 Hz a half second;
++frames the machine cannot render at a higher rate hold it 5 Hz above them.
++Changed only by 2 Hz or more (the console logs each change). A half second
++with one frame of more than 500 ms (a load, a hitch) is not counted.
++==================
++*/
++void Com_AutoGameHz( void )
++{
++	static int windowStart = 0, windowFrames = 0, lastFrame = 0, longFrame = 0;
++	int now, lo, hi, hz;
++	float fps;
++
++	if ( !com_gameHzAuto.GetBool() ) {
++		windowStart = 0;
++		return;
++	}
++	now = Sys_Milliseconds();
++	if ( !windowStart ) {
++		windowStart = lastFrame = now;
++		windowFrames = 0;
++		longFrame = 0;
++		return;
++	}
++	if ( now - lastFrame > 500 ) {
++		longFrame = 1;
++	}
++	lastFrame = now;
++	windowFrames++;
++	if ( now - windowStart < 500 ) {
++		return;
++	}
++	fps = windowFrames * 1000.0f / ( now - windowStart );
++	windowStart = now;
++	windowFrames = 0;
++	if ( longFrame ) {
++		longFrame = 0;
++		return;
++	}
++
++	lo = com_gameHzMin.GetInteger();
++	hi = idMath::ClampInt( lo, 250, com_gameHzMax.GetInteger() );
++	hz = idMath::ClampInt( lo, hi, (int)( fps + 0.5f ) + 5 );
++	if ( ( hz > com_gameHzVal ? hz - com_gameHzVal : com_gameHzVal - hz ) >= 2 ||
++		 ( hz != com_gameHzVal && ( hz == lo || hz == hi ) ) ) {
++		Com_SetGameHz( hz );
++	}
++}
++
+ // DG: below here are hacks to allow adding callbacks and exporting additional functions to the
+ //     Game DLL without breaking the ABI. See Common.h for longer explanation...
+ 

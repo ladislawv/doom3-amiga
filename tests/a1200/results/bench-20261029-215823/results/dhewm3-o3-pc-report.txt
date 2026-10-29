@@ -1,0 +1,154 @@
+samples 91904 ready 91904 wait 0 other 0 bad 0
+91904 samples with a PC (the program ready to run, stopped by the sampler)
+
+by module:
+   58.90%   54136  game
+   25.19%   23149  ogles3.library
+   13.65%   12548  exec.library
+    1.08%     993  mathffp.library
+    1.02%     933  elsewhere
+    0.05%      49  utility.library
+    0.05%      49  i2c.library
+    0.02%      16  lowlevel.library
+    0.01%       7  mathieeedoubtrans.library
+    0.01%       6  dos.library
+    0.01%       6  dopus5.library
+    0.00%       4  mathieeesingtrans.library
+    0.00%       4  muirexx.library
+    0.00%       3  mathieeedoubbas.library
+    0.00%       1  VideoCore.card
+
+the game's samples by area (by function name; inlined code counts where it was inlined):
+   22.70%   20860  other
+   16.01%   14714  renderer front end
+   13.98%   12851  renderer back end
+    3.78%    3472  C library
+    1.55%    1424  sound
+    0.84%     772  animation and skinning
+    0.03%      31  guis
+    0.01%       6  scripts
+    0.01%       6  game logic
+
+by function (the game's; libraries in brackets), top 60:
+   24.30%   24.30%   22334  [ogles3.library (above its vectors)]
+   13.65%   37.95%   12548  [exec.library]
+    7.42%   45.38%    6823  inflate {6360 bytes}
+    5.63%   51.01%    5175  RB_RenderView() {5060 bytes}
+    2.49%   53.50%    2287  unzReadCurrentFile {1120 bytes}
+    2.36%   55.85%    2165  idSampleDecoderLocal::ClearDecoder() {15074 bytes}
+    1.62%   57.48%    1491  crc32_combine_op {6666 bytes}
+    1.44%   58.92%    1326  RB_ComputeMVP(drawSurf_s const*, float*) {2284 bytes}
+    1.43%   60.34%    1310  R_CullLocalBox(idBounds const&, float const*, int, idPlane const*) {324 bytes}
+    1.36%   61.70%    1248  free {166 bytes}
+    1.35%   63.05%    1241  idSIMD_Generic::MinMax(idVec3&, idVec3&, idDrawVert const*, short const*, int) {230 bytes}
+    1.35%   64.40%    1237  aglSetBitmap {26718 bytes}
+    1.25%   65.65%    1150  R_CalcInteractionCullBits(idRenderEntityLocal const*, srfTriangles_s const*, idRenderLightLocal const*, srfCullInfo_t&) {1438 bytes}
+    1.16%   66.81%    1067  idFile_InZip::Read(void*, int) {56 bytes}
+    1.08%   67.89%     993  [mathffp.library]
+    1.06%   68.95%     974  crc32_z {1070 bytes}
+    1.02%   69.97%     933  [0800....]
+    1.00%   70.97%     923  idDemoFile::Read(void*, int) {56 bytes}
+    1.00%   71.97%     915  idSIMD_Generic::Dot(float*, idPlane const&, idDrawVert const*, int) {102 bytes}
+    0.89%   72.85%     815  [ogles3.library]
+    0.88%   73.74%     812  idSIMD_Generic::DeriveTangents(idPlane*, idDrawVert*, int, short const*, int) {1686 bytes}
+    0.88%   74.61%     807  memcpy {32 bytes}
+    0.72%   75.33%     659  idSIMD_Generic::CmpLT(unsigned char*, unsigned char, float const*, float, int) {310 bytes}
+    0.66%   75.99%     605  idSIMD_Generic::MinMax(idVec3&, idVec3&, idDrawVert const*, int) {224 bytes}
+    0.62%   76.61%     572  LittleRevBytes(void*, int, int) {140 bytes}
+    0.62%   77.23%     567  idWinding::ClipInPlace(idPlane const&, float, bool) {1048 bytes}
+    0.54%   77.76%     492  idSoundWorldLocal::ResolveOrigin(int, soundPortalTrace_s const*, int, float, idVec3 const&, idSoundEmitterLocal*) {1532 bytes}
+    0.52%   78.28%     477  idSIMD_Generic::TransformVerts(idDrawVert*, int, idJointMat const*, idVec4 const*, int const*, int) {486 bytes}
+    0.52%   78.80%     474  idInteraction::AddActiveInteraction() {2692 bytes}
+    0.49%   79.29%     448  idRenderWorldLocal::CreateLightDefInteractions(idRenderLightLocal*) {446 bytes}
+    0.41%   79.70%     378  idVertexCache::Position(vertCache_s*) {540 bytes}
+    0.41%   80.11%     377  RB_SetDrawInteraction(shaderStage_t const*, float const*, idImage**, idVec4*, float*) {368 bytes}
+    0.41%   80.52%     377  idSoundCache::ReloadSounds(bool) {5008 bytes}
+    0.39%   80.91%     363  malloc {260 bytes}
+    0.38%   81.30%     353  R_AddModelSurfaces() {1796 bytes}
+    0.38%   81.68%     350  idFile::ReadFloat(float&) {58 bytes}
+    0.37%   82.05%     342  idSIMD_Generic::DeriveUnsmoothedTangents(idDrawVert*, dominantTri_s const*, int) {450 bytes}
+    0.36%   82.42%     335  RB_GLSL_T_RenderShaderPasses(drawSurf_s const*, float const*) {2002 bytes}
+    0.36%   82.78%     332  crc32 {4 bytes}
+    0.36%   83.13%     329  R_GlobalPlaneToLocal(float const*, idPlane const&, idPlane&) {212 bytes}
+    0.35%   83.48%     321  GL_BindImage(int, idImage*) {80 bytes}
+    0.33%   83.82%     305  idSIMD_Generic::Dot(float*, idVec3 const&, idPlane const*, int) {100 bytes}
+    0.32%   84.13%     292  qsort {302 bytes}
+    0.31%   84.44%     286  idCompressor_None::Read(void*, int) {36 bytes}
+    0.29%   84.73%     264  idFileSystemLocal::AddToReadCount(int) {16 bytes}
+    0.29%   85.02%     263  idSIMD_Generic::NormalizeTangents(idDrawVert*, int) {396 bytes}
+    0.27%   85.29%     248  idInteraction::CreateInteraction(idRenderModel const*) {868 bytes}
+    0.27%   85.56%     248  idMaterial::EvaluateRegisters(float*, float const*, viewDef_s const*, idSoundEmitter*) const {1224 bytes}
+    0.27%   85.83%     247  R_AddDrawSurf(srfTriangles_s const*, viewEntity_s const*, renderEntity_s const*, idMaterial const*, idScreenRect const&) {1172 bytes}
+    0.25%   86.07%     226  RB_T_GLSL_FillDepthBuffer(drawSurf_s const*) {1074 bytes}
+    0.25%   86.32%     226  idFile::ReadInt(int&) {52 bytes}
+    0.24%   86.56%     223  idMD5Mesh::UpdateSurface(renderEntity_s const*, idJointMat const*, modelSurface_s*) {990 bytes}
+    0.23%   86.79%     213  RB_SubmittInteraction(drawInteraction_t*, void (*)(drawInteraction_t const*)) {314 bytes}
+    0.22%   87.01%     204  R_WindingFromTriangles(srfTriangles_s const*, short*) {5092 bytes}
+    0.22%   87.24%     203  idScreenRect::Equals(idScreenRect const&) const {52 bytes}
+    0.22%   87.46%     202  R_RegenerateWorld_f(idCmdArgs const&) {2774 bytes}
+    0.22%   87.67%     198  idImage::IsBoundOn(int) {104 bytes}
+    0.22%   87.89%     198  memset {172 bytes}
+    0.21%   88.10%     192  idSoundEmitterLocal::Spatialize(idVec3, int, idRenderWorld*) {638 bytes}
+    0.20%   88.30%     185  idRenderWorldLocal::PushVolumeIntoTree_r(idRenderEntityLocal*, idRenderLightLocal*, idSphere const*, int, idVec3 const*, int) {584 bytes}
+
+approximate inclusive time (the PC's function or a code address on the stack; 60000 samples), top 60:
+   63.90%   38341  Sys_MillisecondsPrecise() {400 bytes}
+   46.54%   27923  idCommonLocal::Frame() {536 bytes}
+   43.55%   26131  RB_SwapBuffers(void const*) {86 bytes}
+   42.80%   25679  RB_DrawView(void const*) {1370 bytes}
+   42.48%   25490  RB_ExecuteBackEndCommands(emptyCommand_t const*) {13884 bytes}
+   41.70%   25017  idImageManager::GetNextAllocImage() {88 bytes}
+   41.41%   24849  idRenderSystemLocal::BeginFrame(int, int) {630 bytes}
+   41.35%   24813  Sys_TimeStampToStr(long) {3114 bytes}
+   41.11%   24667  idImage::ActuallyLoadImage(bool) {998 bytes}
+   39.08%   23449  idRenderSystemLocal::BackendThreadTask() {308 bytes}
+   38.49%   23096  idSessionLocal::StartWipe(char const*, bool) {450 bytes}
+   38.17%   22904  main {4188 bytes}
+   37.69%   22613  RB_RenderView() {5060 bytes}
+   35.27%   21160  RB_ComputeMVP(drawSurf_s const*, float*) {2284 bytes}
+   34.46%   20677  __INIT_LIST__ {80 bytes}
+   32.77%   19665  __vfprintf_total_size {14302 bytes}
+   32.46%   19474  idRenderSystemLocal::RenderCommands(renderCrop_t*, unsigned char*) {992 bytes}
+   29.23%   17537  aglSetBitmap {26718 bytes}
+   26.91%   16148  idCollisionModelManagerLocal::DebugOutput(idVec3 const&) {11610 bytes}
+   25.87%   15522  [ogles3.library]
+   25.45%   15273  idDemoFile::Read(void*, int) {56 bytes}
+   25.19%   15112  unzReadCurrentFile {1120 bytes}
+   25.06%   15035  read {276 bytes}
+   24.95%   14973  crc32 {4 bytes}
+   24.79%   14874  inflate {6360 bytes}
+   24.36%   14616  idSessionLocal::AdvanceRenderDemo(bool) {824 bytes}
+   24.18%   14505  crc32_combine_op {6666 bytes}
+   23.85%   14308  idFile::ReadInt(int&) {52 bytes}
+   23.67%   14203  idFile_InZip::Read(void*, int) {56 bytes}
+   23.53%   14120  idSessionLocal::Frame() {3588 bytes}
+   23.00%   13798  RB_GLSL_DrawInteractions() {682 bytes}
+   22.93%   13756  RB_GLSL_RenderDrawSurfChainWithFunction(drawSurf_s const*, void (*)(drawSurf_s const*, viewLight_s const*), viewLight_s const*) {966 bytes}
+   22.73%   13640  idRenderSystemLocal::EndFrame(int*, int*) {1190 bytes}
+   22.30%   13377  RB_SubmittInteraction(drawInteraction_t*, void (*)(drawInteraction_t const*)) {314 bytes}
+   22.11%   13264  RB_DrawElementsWithCounters(drawSurf_s const*) {120 bytes}
+   21.79%   13071  idRenderWorldLocal::ProcessDemoCommand(idDemoFile*, renderView_s*, int*) {8864 bytes}
+   21.55%   12932  SDL_UnlockMutex {42 bytes}
+   20.75%   12451  idSessionLocal::Draw() {1164 bytes}
+   20.43%   12260  idRenderWorldLocal::RenderScene(renderView_s const*) {1048 bytes}
+   20.43%   12258  R_RenderView(viewDef_s*) {2158 bytes}
+   19.88%   11926  Sys_LeaveCriticalSection(int) {76 bytes}
+   18.57%   11143  idCommonLocal::Async() {300 bytes}
+   18.12%   10873  R_AddModelSurfaces() {1796 bytes}
+   17.25%   10353  vfprintf {44 bytes}
+   16.81%   10087  idAsyncNetwork::RunFrame() {120 bytes}
+   15.22%    9130  vsprintf {88 bytes}
+   14.54%    8724  malloc {260 bytes}
+   13.26%    7955  GL_BindImage(int, idImage*) {80 bytes}
+   13.12%    7869  idCommonLocal::Error(char const*, ...) {26566 bytes}
+   12.42%    7450  R_CullLocalBox(idBounds const&, float const*, int, idPlane const*) {324 bytes}
+   12.41%    7448  [exec.library]
+   12.33%    7398  RB_GLSL_DrawShaderPasses(drawSurf_s**, int) {434 bytes}
+   12.22%    7333  RB_GLSL_T_RenderShaderPasses(drawSurf_s const*, float const*) {2002 bytes}
+   12.12%    7271  R_AddDrawSurf(srfTriangles_s const*, viewEntity_s const*, renderEntity_s const*, idMaterial const*, idScreenRect const&) {1172 bytes}
+   11.23%    6740  memcpy {32 bytes}
+   10.95%    6567  idInteraction::AddActiveInteraction() {2692 bytes}
+   10.73%    6437  idRenderWorldLocal::ReadRenderEntity() {2202 bytes}
+    9.65%    5788  idGuiModel::ReadFromDemo(idDemoFile*) {1434 bytes}
+    9.59%    5751  R_CalcInteractionCullBits(idRenderEntityLocal const*, srfTriangles_s const*, idRenderLightLocal const*, srfCullInfo_t&) {1438 bytes}
+    9.02%    5413  idFile::ReadFloat(float&) {58 bytes}

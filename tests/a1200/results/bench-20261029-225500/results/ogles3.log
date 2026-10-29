@@ -1,0 +1,87 @@
+     1 ogles3.library 1.0 init
+     2 open (count 1)
+     3 GPU submission lock "V3D 4.2 submit" at 0x08FCDA30
+     4 device: V3D 4.2.14 (PiStorm), 8 QPUs, 64 KB VPM, clipper granularity 256
+     5 device: GPU-visible RAM (device tree memory): 0x01000000-0x2E9FFFFF
+     6 device: GPU-visible RAM (device tree memory): 0x40000000-0x79DFFFFF
+     7 device: memory region "expansion memory" 0x08000020-0x2E9FFFFF fast: the GPU reaches it
+     8 device: memory region "expansion memory" 0x01000020-0x07FFFFFF fast: the GPU reaches it
+     9 device: memory region "expansion memory" 0x41000020-0x79DFFFFF fast: the GPU reaches it
+    10 device: memory region "memory" 0x00C00020-0x00C7FFFF fast: OUTSIDE the GPU-visible RAM
+    11 device: memory region "chip memory" 0x00001020-0x001FFFFF chip: OUTSIDE the GPU-visible RAM
+    12 aglCreateContext2: probes "P" (ENV:OGLES3/Probe)
+    13 display: application window, all of its screen (no copy), 1920x1080, BGRA
+    14 device: context pools for 1920x1080, D32F, 26033024 bytes of GPU memory in use
+    15 aglCreateContext2: context 0x09329884, OpenGL ES 2.0, 1920x1080
+    16 compiler: CaffeineOS:Libs/v3dglslc3, 19041020 bytes, id 71566D3E
+    17 glLinkProgram: OGLES3Cache:69857faeac3b989dd306640f.v3dp (5 variants, 3968 bytes of code)
+    18 glLinkProgram: OGLES3Cache:9bb2368631c7baeccd38c272.v3dp (5 variants, 4160 bytes of code)
+    19 glLinkProgram: OGLES3Cache:aa3584956f991c44102c0c48.v3dp (5 variants, 1464 bytes of code)
+    20 glLinkProgram: OGLES3Cache:4c7c02d82f3194b9296d007c.v3dp (5 variants, 1720 bytes of code)
+    21 glLinkProgram: OGLES3Cache:c27afcaa97e215583e38fef5.v3dp (5 variants, 2112 bytes of code)
+    22 glLinkProgram: OGLES3Cache:1c50d9fad38db4f31aa69f47.v3dp (5 variants, 1656 bytes of code)
+    23 glLinkProgram: OGLES3Cache:40f2ce5d962f1ed81abba814.v3dp (5 variants, 1184 bytes of code)
+    24 glLinkProgram: OGLES3Cache:55a1aeedca1d9cf3eecaa3ed.v3dp (5 variants, 1376 bytes of code)
+    25 glLinkProgram: OGLES3Cache:1b0b17de68556c72f7699a9e.v3dp (5 variants, 1424 bytes of code)
+    26 glLinkProgram: OGLES3Cache:302c2b123361c8afa339e989.v3dp (5 variants, 1488 bytes of code)
+    27 glLinkProgram: OGLES3Cache:a8d299ad4e3e7ad8f12d617d.v3dp (5 variants, 1000 bytes of code)
+    28 glCopyTexSubImage2D: copies from the default framebuffer drawn by the GPU (the first: 1024x512)
+    29 periodic: frames to 256: 187244 us a frame, 260 jobs; per job 520 us of CPU work, 75 us render list, 68 us cache, 23 us render wait; 0 textures renamed; 31807488 bytes of GPU memory
+    30 periodic: per frame 1 draws, 296 us in them, 52 us in glBuffer(Sub)Data, 150 us in glTex(Sub)Image2D
+    31 periodic: per frame in draws: 14 us checks, 8 shaders, 118 textures, 29 uniforms, 36 vertex data, 13 record, 10 indices, 66 binning list
+    32 periodic: frames to 512: 19429 us a frame, 256 jobs; per job 390 us of CPU work, 74 us render list, 66 us cache, 2 us render wait; 0 textures renamed; 31807488 bytes of GPU memory
+    33 periodic: per frame 2 draws, 176 us in them, 12 us in glBuffer(Sub)Data, 8 us in glTex(Sub)Image2D
+    34 periodic: per frame in draws: 12 us checks, 7 shaders, 13 textures, 27 uniforms, 30 vertex data, 9 record, 9 indices, 64 binning list
+    35 periodic: frames to 768: 11020 us a frame, 256 jobs; per job 370 us of CPU work, 72 us render list, 67 us cache, 2 us render wait; 0 textures renamed; 31807488 bytes of GPU memory
+    36 periodic: per frame 2 draws, 175 us in them, 12 us in glBuffer(Sub)Data, 5 us in glTex(Sub)Image2D
+    37 periodic: per frame in draws: 12 us checks, 7 shaders, 13 textures, 27 uniforms, 30 vertex data, 13 record, 9 indices, 60 binning list
+    38 periodic: frames to 1024: 8021 us a frame, 256 jobs; per job 389 us of CPU work, 87 us render list, 65 us cache, 4 us render wait; 0 textures renamed; 31807488 bytes of GPU memory
+    39 periodic: per frame 2 draws, 182 us in them, 12 us in glBuffer(Sub)Data, 1 us in glTex(Sub)Image2D
+    40 periodic: per frame in draws: 14 us checks, 7 shaders, 13 textures, 32 uniforms, 30 vertex data, 9 record, 9 indices, 62 binning list
+    41 periodic: frames to 1280: 11279 us a frame, 256 jobs; per job 379 us of CPU work, 74 us render list, 66 us cache, 2 us render wait; 0 textures renamed; 31807488 bytes of GPU memory
+    42 periodic: per frame 2 draws, 182 us in them, 12 us in glBuffer(Sub)Data, 17 us in glTex(Sub)Image2D
+    43 periodic: per frame in draws: 12 us checks, 7 shaders, 13 textures, 29 uniforms, 30 vertex data, 9 record, 12 indices, 64 binning list
+    44 periodic: frames to 1536: 7397 us a frame, 265 jobs; per job 398 us of CPU work, 81 us render list, 64 us cache, 22 us render wait; 0 textures renamed; 31807488 bytes of GPU memory
+    45 periodic: per frame 2 draws, 186 us in them, 12 us in glBuffer(Sub)Data, 0 us in glTex(Sub)Image2D
+    46 periodic: per frame in draws: 14 us checks, 11 shaders, 13 textures, 31 uniforms, 32 vertex data, 10 record, 9 indices, 65 binning list
+    47 periodic: frames to 1792: 7494 us a frame, 256 jobs; per job 390 us of CPU work, 77 us render list, 64 us cache, 2 us render wait; 0 textures renamed; 31807488 bytes of GPU memory
+    48 periodic: per frame 2 draws, 193 us in them, 15 us in glBuffer(Sub)Data, 0 us in glTex(Sub)Image2D
+    49 periodic: per frame in draws: 12 us checks, 7 shaders, 26 textures, 28 uniforms, 36 vertex data, 9 record, 11 indices, 59 binning list
+    50 periodic: frames to 2048: 6099 us a frame, 269 jobs; per job 407 us of CPU work, 75 us render list, 64 us cache, 49 us render wait; 0 textures renamed; 31807488 bytes of GPU memory
+    51 periodic: per frame 2 draws, 181 us in them, 12 us in glBuffer(Sub)Data, 0 us in glTex(Sub)Image2D
+    52 periodic: per frame in draws: 12 us checks, 7 shaders, 14 textures, 29 uniforms, 32 vertex data, 10 record, 9 indices, 68 binning list
+    53 periodic: frames to 2304: 48901 us a frame, 256 jobs; per job 22741 us of CPU work, 82 us render list, 67 us cache, 11131 us render wait; 0 textures renamed; 46230216 bytes of GPU memory
+    54 periodic: per frame 312 draws, 6322 us in them, 415 us in glBuffer(Sub)Data, 3 us in glTex(Sub)Image2D
+    55 periodic: per frame in draws: 530 us checks, 191 shaders, 1404 textures, 726 uniforms, 1928 vertex data, 419 record, 532 indices, 600 binning list
+    56 periodic: frames to 2560: 60305 us a frame, 260 jobs; per job 40081 us of CPU work, 86 us render list, 68 us cache, 19195 us render wait; 0 textures renamed; 48534804 bytes of GPU memory
+    57 periodic: per frame 627 draws, 11483 us in them, 1023 us in glBuffer(Sub)Data, 0 us in glTex(Sub)Image2D
+    58 periodic: per frame in draws: 1031 us checks, 386 shaders, 1525 textures, 1405 uniforms, 4171 vertex data, 826 record, 1042 indices, 1020 binning list
+    59 periodic: frames to 2816: 39470 us a frame, 256 jobs; per job 25252 us of CPU work, 76 us render list, 67 us cache, 10716 us render wait; 0 textures renamed; 54781740 bytes of GPU memory
+    60 periodic: per frame 373 draws, 8407 us in them, 1157 us in glBuffer(Sub)Data, 0 us in glTex(Sub)Image2D
+    61 periodic: per frame in draws: 603 us checks, 232 shaders, 1079 textures, 860 uniforms, 3782 vertex data, 489 record, 601 indices, 803 binning list
+    62 periodic: frames to 3072: 43732 us a frame, 256 jobs; per job 26541 us of CPU work, 78 us render list, 66 us cache, 8043 us render wait; 0 textures renamed; 56730972 bytes of GPU memory
+    63 periodic: per frame 462 draws, 10465 us in them, 1311 us in glBuffer(Sub)Data, 0 us in glTex(Sub)Image2D
+    64 periodic: per frame in draws: 793 us checks, 282 shaders, 1216 textures, 1138 uniforms, 4744 vertex data, 616 record, 771 indices, 962 binning list
+    65 periodic: frames to 3328: 48724 us a frame, 256 jobs; per job 28098 us of CPU work, 77 us render list, 69 us cache, 9956 us render wait; 0 textures renamed; 57760264 bytes of GPU memory
+    66 periodic: per frame 502 draws, 10063 us in them, 1093 us in glBuffer(Sub)Data, 0 us in glTex(Sub)Image2D
+    67 periodic: per frame in draws: 855 us checks, 308 shaders, 1155 textures, 1119 uniforms, 4210 vertex data, 636 record, 809 indices, 981 binning list
+    68 periodic: frames to 3584: 56660 us a frame, 262 jobs; per job 33750 us of CPU work, 72 us render list, 66 us cache, 14474 us render wait; 0 textures renamed; 59161848 bytes of GPU memory
+    69 periodic: per frame 471 draws, 11759 us in them, 1580 us in glBuffer(Sub)Data, 0 us in glTex(Sub)Image2D
+    70 periodic: per frame in draws: 860 us checks, 295 shaders, 1266 textures, 1200 uniforms, 5648 vertex data, 667 record, 861 indices, 1019 binning list
+    71 periodic: frames to 3840: 49819 us a frame, 259 jobs; per job 29520 us of CPU work, 86 us render list, 64 us cache, 11826 us render wait; 0 textures renamed; 58699488 bytes of GPU memory
+    72 periodic: per frame 446 draws, 10247 us in them, 1434 us in glBuffer(Sub)Data, 0 us in glTex(Sub)Image2D
+    73 periodic: per frame in draws: 771 us checks, 269 shaders, 1067 textures, 1076 uniforms, 4813 vertex data, 619 record, 765 indices, 913 binning list
+    74 periodic: frames to 4096: 52883 us a frame, 269 jobs; per job 30847 us of CPU work, 73 us render list, 64 us cache, 15397 us render wait; 0 textures renamed; 60155736 bytes of GPU memory
+    75 periodic: per frame 462 draws, 9961 us in them, 1135 us in glBuffer(Sub)Data, 0 us in glTex(Sub)Image2D
+    76 periodic: per frame in draws: 790 us checks, 280 shaders, 1144 textures, 1052 uniforms, 4406 vertex data, 610 record, 736 indices, 945 binning list
+    77 aglDestroyContext: context 0x09329884: freeing
+    78 device: context freed, 0 bytes of GPU memory still in use
+    79 aglDestroyContext: context 0x09329884 (4354 frames, 0 dropped, 0 binning blocks added)
+    80 timing: 4354 jobs, each on average: 16895 us of CPU work before its flush, 560 us waiting for binning, 7758 us for the render
+    81 timing: and in each flush 77 us building the render list, 66 us for the CPU cache before the GPU, 3 us after
+    82 timing: 4302 swaps, 42831 us from one to the next on average, 1 us of it presenting
+    83 timing: per frame 237 draws, 5259 us in them; in all 2650 ms in glBuffer(Sub)Data, 47 ms in glTex(Sub)Image2D
+    84 timing: per frame in draws: 413 us checks, 150 shaders, 652 textures, 573 uniforms, 2246 vertex data, 323 record, 408 indices, 503 binning list
+    85 timing: per draw 39 uniform stream words, 20 bytes of vertex data, 175 indices
+    86 timing: per 100 draws 100 index scans, 14 state packet updates
+    87 timing: per 100 draws attributes: 1 current values, 0 stream copies reused, 21 stream copies made, 414 static buffers' copies, 1 client arrays

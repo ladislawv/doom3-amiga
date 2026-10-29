@@ -1,0 +1,9 @@
+ogles3 Open 0d564150
+CacheClearE other 0
+CacheClearE 0d575e0a 604
+CacheClearE 00f9d8be 1
+CachePreDMA other 0
+CachePreDMA 094df7c8 30
+CachePostDMA other 0
+CachePostDMA 094df7ea 30
+CachePostDMA 08445824 150

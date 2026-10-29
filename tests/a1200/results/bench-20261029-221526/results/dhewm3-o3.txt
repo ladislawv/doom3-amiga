@@ -1,0 +1,136 @@
+dhewm3 1.5.3pre.1305 amigaos-m68k Oct 29 2026 22:07:12 using SDL v2.33.0
+SDL video driver: amigaos3
+1640 MB System Memory (1577 MB free)
+stack: 9000000 bytes
+no networking on this platform (single player only)
+----- Initializing File System -----
+Loaded pk4 Stuff:doom3/base/pak000.pk4 with checksum 0x28d208f1
+Loaded pk4 Stuff:doom3/base/pak001.pk4 with checksum 0x40244be0
+Loaded pk4 Stuff:doom3/base/pak002.pk4 with checksum 0xc51ecdcd
+Loaded pk4 Stuff:doom3/base/pak003.pk4 with checksum 0xcd79d028
+Loaded pk4 Stuff:doom3/base/pak004.pk4 with checksum 0x765e4f8b
+Loaded pk4 Stuff:doom3/base/pak005.pk4 with checksum 0x8ffc3621
+Loaded pk4 Stuff:doom3/base/pak006.pk4 with checksum 0x95b65ab
+Loaded pk4 Stuff:doom3/base/pak007.pk4 with checksum 0x666bdb3c
+Loaded pk4 Stuff:doom3/base/pak008.pk4 with checksum 0x23ae5993
+Current search path:
+Stuff:amictld/work/bench/save/base
+Stuff:doom3/base
+Stuff:doom3/base/pak008.pk4 (3 files)
+Stuff:doom3/base/pak007.pk4 (38 files)
+Stuff:doom3/base/pak006.pk4 (48 files)
+Stuff:doom3/base/pak005.pk4 (63 files)
+Stuff:doom3/base/pak004.pk4 (5137 files)
+Stuff:doom3/base/pak003.pk4 (4676 files)
+Stuff:doom3/base/pak002.pk4 (6120 files)
+Stuff:doom3/base/pak001.pk4 (8972 files)
+Stuff:doom3/base/pak000.pk4 (2698 files)
+Addon pk4s:
+----- Initializing Decls -----
+Detected
+	1640 MB of System memory
+
+This system qualifies for Ultra quality!
+5206 strings read from strings/english.lang
+Couldn't open journal files
+execing editor.cfg
+execing default.cfg
+couldn't exec dhewm.cfg
+couldn't exec autoexec.cfg
+5206 strings read from strings/english.lang
+Running the game at com_gameHz = 20Hz, frametime 50ms
+----- Initializing OpenAL -----
+Setup OpenAL device and context
+OpenAL subset: SDL audio driver paula, 22050 Hz, 1 channels, 1024 frames a block, format 0x8008, 32 voices
+OpenAL vendor: Doom 3 AmigaOS port
+OpenAL renderer: OpenAL subset on SDL audio
+OpenAL version: 1.1
+OpenAL: EFX extension not found
+OpenAL: found 32 hardware voices
+----- Initializing OpenGL -----
+Initializing OpenGL subsystem
+Will create a fullscreen-window with resolution 1920x1080 (r_mode = -1)
+SDL detected 1 displays: 
+ 0: 640x480 at (0, 0) to (640, 480)
+Will use display 0 because mouse cursor is at (0, 0).
+Requested 8 color bits per chan, 8 alpha 24 depth, 8 stencil
+Got 8 stencil bits, 24 depth bits, color bits: r8 g8 b8 a8
+glDrawRangeElements: found
+Detected keyboard layout as "english"
+OpenGL vendor: ogles3.library
+OpenGL renderer: V3D 4.2.14 (PiStorm), 8 QPUs, 64 KB VPM
+OpenGL version: OpenGL ES 2.0 ogles3.library 1.0
+...using GL_EXT_texture_filter_anisotropic
+...using GL_OES_texture_npot
+ npotAvailable: 1
+...using GL_OES_packed_depth_stencil
+ depthStencilAvailable: 1
+...using GL_EXT_texture_compression_s3tc
+ textureCompressionAvailable: 1
+   maxTextureAnisotropy: 16.000000
+----- R_ReloadGLSLPrograms -----
+Loading main interaction shader
+Loading main interaction shader (Phong) 
+Loading default diffuse shader
+Loading skybox cubemap shader
+Loading reflection cubemap shader
+Loading diffuse cubemap shader
+Loading Zfill shader
+Loading Zfill shader (Clip plane version)
+Loading Fog shader
+Loading BlendLight shader
+Loading Stencil shadow shader
+-------------------------------
+Init Vertex Cache
+using GLSL renderSystem
+----- OpenGL Initialization complete-----
+R_InitFrameBuffer Real[1920, 1080] -> Framebuffer[1920,1080]
+Not using framebuffer
+----- Initializing Game -----
+gamename: baseDOOM-1
+gamedate: Oct 29 2026
+Initializing event system
+...474 event definitions
+Initializing class hierarchy
+...142 classes, 382992 bytes for event callbacks
+Initializing scripts
+Compiled 'script/doom_main.script': 5713 ms
+----- Compile stats -----
+Memory usage:
+     Strings: 79, 9648 bytes
+  Statements: 67973, 1359460 bytes
+   Functions: 2110, 250612 bytes
+   Variables: 147344 bytes
+    Mem used: 2578896 bytes
+ Static data: 2477552 bytes
+   Allocated: 3482192 bytes
+ Thread size: 13210 bytes
+...6 aas types
+----- Initializing Session -----
+Couldn't read doomkey.
+Couldn't read xpkey.
+Detected
+	1640 MB of System memory
+
+This system qualifies for Ultra quality!
+Shutting down sound hardware
+in_grabKeyboard: Will *not* grab the keyboard if mouse is grabbed, so global keyboard-shortcuts (like Alt-Tab) will still work
+execing bench.cfg
+----- Game Map Shutdown -----
+removed 4 degenerate triangles
+stopped playing .
+----- Game Map Shutdown -----
+----- Game Map Shutdown -----
+idRenderWorldLocal::InitFromMap: retaining existing map
+stopped playing .
+2148 frames rendered in 117.6 seconds = 18.3 fps
+----- Game Map Shutdown -----
+----- Game Map Shutdown -----
+Shutting down sound hardware
+OpenAL subset: mixing took 2707 ms in 4344 callbacks, 1.3% of the 200858 ms the device was open; 0 callbacks mixed sound, 0.00 ms each, 0.0% of their 46.4 ms of output
+idRenderSystem::Shutdown()
+Shutting down backend threadShutting down OpenGL subsystem
+----- Game Shutdown -----
+----- Game Map Shutdown -----
+Shutdown event system
+exit code 0

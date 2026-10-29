@@ -1,0 +1,65 @@
+diff --git a/neo/renderer/VertexCache.cpp b/neo/renderer/VertexCache.cpp
+index af7b5b42..769b3ca2 100644
+--- a/neo/renderer/VertexCache.cpp
++++ b/neo/renderer/VertexCache.cpp
+@@ -43,6 +43,23 @@ If you have questions concerning this license or the applicable additional terms
+ 
+ #include "renderer/VertexCache.h"
+ 
++// The blocks' CPU copies (frontEndMemory). On AmigaOS 3 from the port's
++// dlmalloc (src/amiga/d3malloc.c), as operator new: libnix's malloc takes each
++// block from exec, whose Allocate and Deallocate walked the free list for 6%
++// of a timedemo frame (PLAN.md section 15, step 0). Only the main task
++// allocates here, and dlmalloc has no locks.
++#ifdef __amigaos3__
++extern "C" {
++void *dlmalloc( size_t );
++void dlfree( void * );
++}
++#define VC_Alloc( n ) dlmalloc( n )
++#define VC_Free( p ) dlfree( p )
++#else
++#define VC_Alloc( n ) malloc( n )
++#define VC_Free( p ) free( p )
++#endif
++
+ 
+ static const int	FRAME_MEMORY_BYTES = 0x200000;
+ static const int	EXPAND_HEADERS = 1024;
+@@ -116,7 +133,7 @@ void idVertexCache::ActuallyFree(vertCache_t* block) {
+ 
+ 	if(block->frontEndMemory)
+ 	{
+-		free(block->frontEndMemory);
++		VC_Free(block->frontEndMemory);
+ 		block->frontEndMemory = NULL;
+ 	}
+ 
+@@ -330,7 +347,7 @@ vertCache_t* idVertexCache::CreateTempVbo(int bytes, bool indexBuffer)
+ 
+ #if USE_MAP
+ #else
+-	block->frontEndMemory = malloc(bytes + 16 );
++	block->frontEndMemory = VC_Alloc(bytes + 16 );
+ #endif
+ 
+ 	qglGenBuffers(1, &block->vbo);
+@@ -459,14 +476,14 @@ void idVertexCache::Alloc(void* data, int size, vertCache_t** buffer, bool index
+ 	}
+ 	else
+ 	{
+-		free(block->frontEndMemory);
+-		block->frontEndMemory = malloc(size + 16);
++		VC_Free(block->frontEndMemory);
++		block->frontEndMemory = VC_Alloc(size + 16);
+ 		block->size = size;
+ 	}
+ #else
+ 	if( block->frontEndMemory )
+-		free(block->frontEndMemory);
+-	block->frontEndMemory = malloc(size + 16);
++		VC_Free(block->frontEndMemory);
++	block->frontEndMemory = VC_Alloc(size + 16);
+ 	block->size = size;
+ #endif
+ 
