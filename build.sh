@@ -5,16 +5,27 @@
 #   AMIGA_OPT="-O3 ..."      other optimisation flags in place of d3es's Release
 #                            ones (-O2 -fno-math-errno -fno-trapping-math -fomit-frame-pointer)
 #   OUT_NAME=game-o3         build into ~/doom3-build/m68k/<OUT_NAME> (default game)
+#   OGLES=3                  on ogles3.library: SDL from OGLES=3 build_sdl2.sh,
+#                            libogles3.a from OGLES3_SDK (default OUT_NAME game-ogles3)
 # Needs build_sdl2.sh's and build_deps.sh's output. Output:
 # ~/doom3-build/m68k/game/dhewm3 (the base game, with the game code linked in).
 set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
 D3ES_SRC=${D3ES_SRC:-$HOME/d3es}
 TC16=${TC16:-$HOME/amiga-gcc162-install}
+OGLES=${OGLES:-2}
 OGLES2_BUILD=${OGLES2_BUILD:-$HOME/ogles2-build/m68k}
+OGLES3_SDK=${OGLES3_SDK:-$HOME/ogles3-build/release/ogles3/SDK}
 M=${M:-$HOME/doom3-build/m68k}
-OUT=$M/${OUT_NAME:-game}
-SDL=$M/sdl2
+if [ "$OGLES" = 3 ]; then
+    OUT=$M/${OUT_NAME:-game-ogles3}
+    SDL=$M/sdl2-ogles3
+    GLLIB=$OGLES3_SDK/lib/libogles3.a
+else
+    OUT=$M/${OUT_NAME:-game}
+    SDL=$M/sdl2
+    GLLIB=$OGLES2_BUILD/libogles2.a
+fi
 DEPS=$M/deps
 export TC16
 # include directories for every file (cmake/m68k-amigaos.cmake): GLES2/, KHR/
@@ -22,7 +33,8 @@ export TC16
 export AMIGA_INCLUDES="-I$SDL/inc"
 
 [ -d "$D3ES_SRC/.git" ] || { echo "no $D3ES_SRC: run sources.sh first"; exit 1; }
-[ -f "$SDL/libSDL2.a" ] || { echo "no $SDL/libSDL2.a: run build_sdl2.sh first"; exit 1; }
+[ -f "$SDL/libSDL2.a" ] || { echo "no $SDL/libSDL2.a: run build_sdl2.sh first (with OGLES=$OGLES)"; exit 1; }
+[ -f "$GLLIB" ] || { echo "no $GLLIB"; exit 1; }
 [ -f "$DEPS/lib/libz.a" ] && [ -f "$DEPS/lib/libd3amiga.a" ] || { echo "no $DEPS: run build_deps.sh first"; exit 1; }
 [ -f /usr/include/AL/al.h ] || { echo "no OpenAL headers: sudo apt install libopenal-dev"; exit 1; }
 
@@ -63,7 +75,7 @@ cmake -S "$D3ES_SRC/neo" -B "$OUT" -G Ninja \
     -DZLIB_INCLUDE_DIR="$DEPS/include" -DZLIB_LIBRARY="$DEPS/lib/libz.a" \
     -DSDL2_INCLUDE_DIR="$SDL/inc/SDL2" -DSDL2_LIBRARY="$SDL/libSDL2.a" \
     -DOPENAL_INCLUDE_DIR="$M/al-include" \
-    "-DAMIGA_LIBS=$DEPS/lib/libd3amiga.a;$OGLES2_BUILD/libogles2.a;$SDL/pistorm3d-sdk/lib/libminigl.a;-ldebug;-lm" \
+    "-DAMIGA_LIBS=$DEPS/lib/libd3amiga.a;$GLLIB;$SDL/pistorm3d-sdk/lib/libminigl.a;-ldebug;-lm" \
     "-DAMIGA_LDFLAGS=-Wl,-u,___xpg_strerror_r" \
     "-DAMIGA_OPT=${AMIGA_OPT:-}"     ${ALLIB:+"-DAMIGA_OPENAL_LIBRARY=$ALLIB"} \
     >"$OUT.cmake.log" 2>&1 || { tail -40 "$OUT.cmake.log"; exit 1; }

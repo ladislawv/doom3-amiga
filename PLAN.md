@@ -368,6 +368,7 @@ Requests go here only with a measurement behind them; the developer decides whet
    - **The request:** when a window's bitmap is its screen's and nothing can cover it (a borderless backdrop window the size of its screen, as SDL opens for full screen), could ogles2 store straight into the screen bitmap and return at submission, as `OGLES2_CCT_MODEID` does? Every SDL2/SDL3 full-screen program would gain.
    - **The alternative:** the port's copy of the SDL backend could use `OGLES2_CCT_MODEID` itself and take SDL's input from ogles2's window (`OGLES2_CCT_PISTORM_GET_WINDOW`). That is more intricate: two screens, and SDL's event code reading another window.
    - **Done in ogles2 (2026-10-20, uncommitted there):** a window that is all of its private 32-bit screen is rendered into directly; the swap returns at submission (ogles2's §7.2; `ENV:OGLES2/WindowCopy 1` keeps the copy). The SDL backend needs no change. Results under §14, "the swap without the copy".
+3. **(2026-10-28, to ogles3) A GLES2 draw costs 44% more CPU in ogles3.library 1.0-beta1 than in ogles2.library 1.3.1: 34.6 against 24.1 µs.** Measured with probe P on `timeDemo demo1` (1920x1080, 237 draws a frame; §14, "the draw's stages"): the same game, the same work per draw, 16.3 fps against 17.6. Every stage is slower; most of all the shaders (0.55 → 2.2 µs a draw), textures (2.2 → 3.8), checks (4.6 → 6.8) and the binning list (2.0 → 3.1). The GPU's render is faster in ogles3 (2.0 against 3.3 ms a frame), but this game waits for the CPU. ogles3's ES 3 features could save this game CPU (uniform buffers, skinning in the vertex shader) only once a GLES2 draw is back near 1.3.1's cost. Raw data: `tests/a1200/results/bench-20261028-223954/results/ogles2.log` and `ogles3.log`.
 
 ## 14. Status and next steps
 
@@ -1046,7 +1047,40 @@ Requests go here only with a measurement behind them; the developer decides whet
 
 **Done (2026-10-22): release 0.1** (`release/`; `bash release/build_release.sh dist` → `release/dist/Doom3-Amiga-0.1.lha`, 8.5 MB, and its Aminet-style readme). The drawer `Doom3`: the game (`dhewm3` `4b251c06`, the build tested 32 min), the launcher `Doom3`, `Doom3.script`, the three settings files, `libs/` (ogles2 1.3.1's library and `v3dglslc`, from ogles2's committed archive), `shaders/` (the 11 programs, `release/shaders/`), empty `base/` and `demo/` with notes, `licences/`, the guide `ReadMe` (`release/ReadMe`) and icons (`release/icons/`, made on the A1200 by `release/src/mkicons.c`). Changes for it: the script runs in its current directory (no `Stuff:doom3` in it), the launcher switches to its own drawer and passes on options (the icon's Tool Types, at the defaults, or the Shell's arguments), and the script refuses an `ogles2.library` older than 1.3 in `LIBS:` (checked by file: `Version` by name searches `LIBS:` only, which first refused the release's own `libs/`). Tested from the unpacked archive in a new drawer with the full game's data: from a Shell with `QUALITY=medium` and from the icon with `QUALITY=high`, both to the main menu, each quality's file used. The source link in it (`github.com/ladislawv/doom3-amiga`) is public from the release on (the developer).
 
+**Done (2026-10-28): the game builds on ogles3.library** (ogles3 1.0-beta1, `C:\GitHub\ogles3.1` at `94eb81b`: ogles2 with OpenGL ES 3.0 and 3.1, and ES 3.0's features as extensions in GLES2 contexts). The first step to measure what it would bring: the game unchanged, in its GLES2 context, against ogles2 1.3.1.
+- **Why not compute shadows (read from ogles3's `docs/GLES3_PLAN.md`):** `glDispatchCompute` waits for its job (under the GPU lock), and a buffer the GPU wrote is used as vertices, indices or indirect commands only after the CPU has waited for it and swapped it back (its §8: "a full stall and a swap at every use"; indirect draws are read on the CPU). The shadows' CPU cost here is the draws and the per-interaction cull and scissor; building the volumes was about 2.3 ms with all lights (above). `glMultiDrawElementsEXT` is a loop of `glDrawElements`. Candidates instead, each to be measured: uniform buffers for the interaction draws (an ES 3.0 context; a draw passes the block's address), skinning in the vertex shader with the joints in a uniform buffer, occlusion queries.
+- **`OGLES=3 bash build_sdl2.sh`** builds SDL with ogles3's copies of the backend (`sdl2/ogles3/`, `sdl2/PROVENANCE.md`) and the ogles3 release SDK's headers (`OGLES3_SDK`, default `~/ogles3-build/release/ogles3/SDK`), into `~/doom3-build/m68k/sdl2-ogles3`; the default build is the same file as before. **`OGLES=3 bash build.sh`** links `libogles3.a` and builds into `game-ogles3` (`dhewm3` MD5 `8e66e4ba...`).
+- **Packages:** `build_pkg.sh` adds `ogles3.library` and `v3dglslc3` (the release's `Libs/`, `OGLES3_RELEASE`) when an executable opens ogles3.library; `bench_pkg.sh` takes `name=build:args` (`"o3=game-ogles3:..."`), so one bench runs both libraries; `Run-Bench` lists `LIBS:ogles3#?` (one installed there wins over the package's) and sets `ENV:OGLES3/Probe` and `LogFile` (`results/ogles3.log`) with `OGLES2PROBE=1`.
+- **The bench package's map runs are void with the full game's data:** with `base/` in `Stuff:doom3` the game takes it in place of `demo/`, so `demo_mc_underground` is missing and the game stays at its main menu (intro and menu shown; the developer had to start a game from the menu by hand). Two runs measured that (`bench-20261028-221817`, `-222451`; the second shows the same figures for both builds, a front end of 1.7 ms: the menu). No map bench ran between the full game's data's arrival (2026-10-22) and these; the earlier ones had the demo's data only.
+- **`Run-Bench DEMO=demo1`** (with `bench-one`): `timeDemo demo1 usecache quit` in place of the map, with sound through SDL's Paula driver (a silent timedemo crashes, "Next" 6 below), no menu, quits by itself; the fps from the timedemo's own line.
+- **ogles3 against ogles2** (`bench-20261028-223033`: `timeDemo demo1 usecache`, 1920x1080, `low.cfg`, `r_maxLights 12`, Paula; the 0.1 release's game `4b251c06` on ogles2 1.3.1 against `game-ogles3` `8e66e4ba` on ogles3 1.0-beta1 in its GLES2 context, the shaders compiled and cached in the run before): **ogles2 17.6 fps (122.0 s), ogles3 16.3 fps (131.5 s), 8% slower.** The ogles2 figure repeats `timedemo-qualities-noshadows-20261024-154704`'s low (17.5). From the libraries' logs (`T:ogles2.log`, `T:ogles3.log`: both contexts 4,354 frames, the precache pass and the timed one, 237 draws a frame):
+
+  | per frame | ogles2 1.3.1 | ogles3 1.0-beta1 |
+  |---|---|---|
+  | in the draws | 5,198 µs (21.9 µs a draw) | 7,435 µs (31.4 µs a draw) |
+  | CPU work before each flush | 12,740 µs | 14,804 µs |
+  | the GPU's render | 3,565 µs | 2,222 µs |
+  | swap to swap | 47.4 ms | 49.6 ms |
+
+  ogles3's draw costs 43% more CPU; its render is faster, but the GPU is not the limit here. Both contexts get D32F depth at 1920x1080. So ogles3's features would first have to win back 9.5 µs a draw.
+- **The draw's stages** (`bench-20261028-223954`, the same timedemo with `OGLES2PROBE=1`: 17.4 and 16.0 fps, so the run repeats; probe P's whole-context sums, `results/ogles2.log` and `ogles3.log`, divided by the 237 draws a frame), µs a draw:
+
+  | stage | ogles2 1.3.1 | ogles3 1.0-beta1 | |
+  |---|---|---|---|
+  | checks | 4.6 | 6.8 | ×1.46 |
+  | shaders | 0.55 | 2.2 | ×3.9 |
+  | textures | 2.2 | 3.8 | ×1.74 |
+  | uniforms | 3.1 | 3.8 | ×1.20 |
+  | vertex data | 9.1 | 11.8 | ×1.31 |
+  | record | 1.1 | 1.5 | ×1.31 |
+  | indices | 1.4 | 1.7 | ×1.25 |
+  | binning list | 2.0 | 3.1 | ×1.56 |
+  | **in all** | **24.1** | **34.6** | **×1.44** |
+
+  The same work in both (39 uniform stream words, 20 bytes of vertex data and 174 indices a draw), and every stage slower: the most in the shaders (the draw-time variant keys of ogles3's stage A, presumably) and the textures (its sampler variants), but also in stages ES 3 did not change, which points to something general (code size, the JIT's cache, checks for ES 3 state on every draw). In the heaviest 256 frames (627 draws a frame) ogles2 spent 13.1 ms a frame in draws, ogles3 19.3. **Taken to ogles3 as §13 request 3.** Until it is answered, ogles3 is slower for this game, and its ES 3 features (uniform buffers, skinning on the GPU) are not worth starting.
+
 **Next, in order:**
+0. **ogles3's draw cost** (§13, request 3): the developer's call; the bench package measures a newer ogles3 with `"o3=game-ogles3:..."` and `DEMO=demo1`. The bench package's map runs need the demo's data (`DATA=` a directory with `demo/` only) or a full-game map.
 1. ~~Patch 0104 to ogles2's `ports/sdl2`~~: done (its 0005); ogles2's copy change reverted.
 2. ~~The console's freeze while typing~~: the spinlock livelock (patch 0104), not patch 0102; typing works.
 3. **The full game on the A1200:** New Game after a first map works (`play-20261022-062500`), the main menu works (with the copy workaround); a level change at a level's end and a saved game's load still to be played; the load times; the heavier levels.

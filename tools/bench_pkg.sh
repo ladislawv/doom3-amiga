@@ -11,9 +11,12 @@
 # (tests/a1200/build_pc_sample.sh bench). DUMP=1 turns on the OpenAL subset's
 # output dump for every build (D3AL_DUMP; give them +set s_noSound 0).
 # A build's SDL audio driver: "name@driver:args", e.g. "paula@paula:+set s_noSound 0".
+# Another build than game (~/doom3-build/m68k/<build>): "name=build:args", e.g.
+# "o3=game-ogles3:" (OGLES=3 build.sh; the package then holds ogles3.library too);
+# with a driver "name=build@driver:args".
 # Another map: edit .def MAP in the package's Run-Bench (amictl -a takes no "/").
 # ogles2.library and v3dglslc come from ogles2's build (~/ogles2-build), copied
-# to ~/ogles2-build/direct-libs.
+# to ~/ogles2-build/direct-libs; ogles3's from its release (build_pkg.sh).
 set -e
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 cd "$(dirname "$0")/.."
@@ -21,7 +24,13 @@ L=~/ogles2-build/direct-libs
 mkdir -p $L
 cp ~/ogles2-build/m68k/ogles2.library $L/
 cp ~/ogles2-build/v3dglslc/v3dglslc.stripped $L/v3dglslc
-OGLES2_RELEASE=$L bash tests/a1200/build_pkg.sh bench game > /dev/null
+# the builds the variants name, besides game
+B=()
+for v in "$@"; do
+    s=${v%%:*}; s=${s%%@*}
+    case $s in *=*) b=${s#*=}; [ "$b" = game ] || [[ " ${B[*]} " == *" $b "* ]] || B+=("$b") ;; esac
+done
+OGLES2_RELEASE=$L bash tests/a1200/build_pkg.sh bench game "${B[@]}" > /dev/null
 P=~/doom3-build/m68k/pkg/bench
 A='+set com_gameHz 30 +set r_swapInterval 0'
 mv $P/dhewm3-game $P/dhewm3-a
@@ -30,11 +39,21 @@ for v in "$@"; do
     args=${v#*:}
     drv=
     case $n in *@*) drv=${n#*@}; n=${n%%@*} ;; esac
-    [ -f $P/dhewm3-$n ] || cp $P/dhewm3-a $P/dhewm3-$n
+    b=
+    case $n in *=*) b=${n#*=}; n=${n%%=*} ;; esac
+    if [ -n "$b" ] && [ "$b" != game ]; then
+        cp $P/dhewm3-$b $P/dhewm3-$n
+    else
+        [ -f $P/dhewm3-$n ] || cp $P/dhewm3-a $P/dhewm3-$n
+    fi
     printf '%s %s' "$A" "$args" > $P/dhewm3-$n.args
     [ -n "$drv" ] && printf '%s' "$drv" > $P/dhewm3-$n.audio
     # a marker file must not be empty: amictl does not upload empty files
     [ -n "${DUMP:-}" ] && echo dump > $P/dhewm3-$n.dump
+done
+# the builds' own copies out (Run-Bench runs every dhewm3-<name>), unless a variant has its name
+for b in "${B[@]}"; do
+    [ -f $P/dhewm3-$b.args ] || rm -f $P/dhewm3-$b
 done
 [ -n "${CFG:-}" ] && cp "$CFG" $P/bench.cfg
 [ -n "${PCSAMPLE:-}" ] && bash tests/a1200/build_pc_sample.sh bench > /dev/null

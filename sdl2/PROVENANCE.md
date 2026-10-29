@@ -50,3 +50,13 @@
   (`SDL_Delay(1)`) between tries. ogles2's `ports/sdl2` took the same fix as
   its `0005-os3-atomics-no-spin.patch` (2026-10-22, its comments without this
   port's name); when this port takes ogles2's copies again, 0104 goes.
+- `ogles3/patches/0001-gles2-on-ogles2.patch`, `ogles3/patches/0002-os3-fixes-issue5.patch`
+  and `ogles3/src/video/amigaos3/SDL_os3opengles2.[ch]` (2026-10-28) are copies of
+  ogles3's `ports/sdl2` (the private ogles3.1 repository, to be github.com/ladislawv/ogles3)
+  at commit `94eb81b` (ogles3.library 1.0-beta1), unchanged: ogles2's 0001, 0002 and backend
+  with ogles3's names (`proto/ogles3.h`, `OGLES3Open`, `OGLES3_CCT_*`, `OGLES3_CFLAGS`), and
+  OpenGL ES 3.0 and 3.1 contexts when a program asks for them. `OGLES=3 build_sdl2.sh` uses
+  them in place of 0001, 0002 and `src/`; ogles3's 0003 and 0004 are the same files as
+  this port's, its 0005 is this port's 0104 (comments aside), so the rest of `patches/`
+  applies as it is, with the two ogles2 names in 0100's context lines renamed while it is
+  applied.

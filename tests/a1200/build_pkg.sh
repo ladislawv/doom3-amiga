@@ -14,6 +14,7 @@ shift
 BUILDS=("$@")
 M=${M:-$HOME/doom3-build/m68k}
 OGLES2_RELEASE=${OGLES2_RELEASE:-$HOME/ogles2-build/release/ogles2/Libs}
+OGLES3_RELEASE=${OGLES3_RELEASE:-$HOME/ogles3-build/release/ogles3/Libs}	# for OGLES=3 builds
 PKG=$M/pkg/$NAME
 
 [ -d "$HERE/$NAME" ] || { echo "no $HERE/$NAME"; exit 1; }
@@ -34,4 +35,11 @@ fi
 # ogles2's release: the library and its on-target GLSL compiler, which it finds
 # in PROGDIR:libs/ when LIBS: has none
 cp "$OGLES2_RELEASE/ogles2.library" "$OGLES2_RELEASE/v3dglslc" "$PKG/libs/"
+# and ogles3's (ogles3.library, v3dglslc3) when a build opens ogles3.library
+# (OGLES=3 build.sh); the two have their own names, so a package can hold both
+if grep -l -s -a -F ogles3.library "$PKG"/dhewm3* > /dev/null; then
+    [ -f "$OGLES3_RELEASE/ogles3.library" ] && [ -f "$OGLES3_RELEASE/v3dglslc3" ] ||
+        { echo "no ogles3 release in $OGLES3_RELEASE (ogles3.library, v3dglslc3)"; exit 1; }
+    cp "$OGLES3_RELEASE/ogles3.library" "$OGLES3_RELEASE/v3dglslc3" "$PKG/libs/"
+fi
 ls -l "$PKG" "$PKG/libs"

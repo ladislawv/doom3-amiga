@@ -1,0 +1,16 @@
+Directory "LIBS:" on Wednesday 28-Oct-26
+ogles2.library.saved         229924 ----rwed 18-Oct-26 22:54:45
+1 file - 224K bytes - 451 blocks used
+Directory "LIBS:" on Wednesday 28-Oct-26
+ogles3.library               434988 ----rwed Today     20:47:28
+1 file - 424K bytes - 851 blocks used
+
+Directory "LIBS:" on Wednesday 28-Oct-26
+v3dglslc3                  19041020 ----rwed Today     20:47:28
+1 file - 18M bytes - 37191 blocks used
+Directory "libs" on Wednesday 28-Oct-26
+ogles2.library               240312 ----rwed Today     22:39:24
+ogles3.library               434988 ----rwed Today     22:39:24
+v3dglslc                   19007656 ----rwed Today     22:39:39
+v3dglslc3                  19041020 ----rwed Today     22:39:54
+4 files - 36M bytes - 75639 blocks used

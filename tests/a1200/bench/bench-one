@@ -4,7 +4,10 @@
 ; "+set com_gameHz 30"), so one executable can run under two names.
 ; Mouse look is off (sensitivity 0): moving the mouse turns the camera, which changes the
 ; frame rate a lot (the developer moved it during early runs).
-.key EXE/A,MAP/A,WARMUP/A,SECS/A,DATA/A
+; DEMO (not "none"): "timeDemo <DEMO> usecache quit" in place of the map (Run-Bench DEMO=),
+; with sound (SDL's Paula driver unless <EXE>.audio names another): a silent
+; timedemo crashes (PLAN.md section 14, "Next").
+.key EXE/A,MAP/A,WARMUP/A,SECS/A,DATA/A,DEMO/A
 .bra {
 .ket }
 
@@ -46,7 +49,15 @@ If EXISTS pc_sample
   SetEnv d3bench none
   Run >NIL: pc_sample {EXE} results/{EXE}-pc.txt d3bench
 EndIf
-{EXE} +set fs_basepath "{DATA}" +set s_noSound 1 +set image_usePrecompressedTextures 1 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth 640 +set r_customHeight 480 +set com_benchmarkWarmup {WARMUP} +set com_benchmarkSeconds {SECS} +set sensitivity 0 $args +map {MAP} >results/{EXE}.txt
+If "{DEMO}" EQ "none"
+  {EXE} +set fs_basepath "{DATA}" +set s_noSound 1 +set image_usePrecompressedTextures 1 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth 640 +set r_customHeight 480 +set com_benchmarkWarmup {WARMUP} +set com_benchmarkSeconds {SECS} +set sensitivity 0 $args +map {MAP} >results/{EXE}.txt
+Else
+  If NOT EXISTS {EXE}.audio
+    SetEnv SDL_AUDIODRIVER paula
+  EndIf
+  Echo "{EXE}: timeDemo {DEMO}"
+  {EXE} +set fs_basepath "{DATA}" +set s_noSound 0 +set image_usePrecompressedTextures 1 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth 640 +set r_customHeight 480 +set sensitivity 0 $args +timeDemo {DEMO} usecache quit >results/{EXE}.txt
+EndIf
 Echo "exit code $RC" >>results/{EXE}.txt
 UnSetEnv D3AL_DUMP
 UnSetEnv SDL_AUDIODRIVER
@@ -58,3 +69,6 @@ Copy save/dhewm3log.txt results/{EXE}.log QUIET
 Avail FLUSH >NIL:
 Avail >results/{EXE}-avail-after.txt
 Search results/{EXE}.txt "benchmark:" NONUM
+If NOT "{DEMO}" EQ "none"
+  Search results/{EXE}.txt "frames rendered" NONUM
+EndIf
