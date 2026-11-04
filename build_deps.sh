@@ -36,5 +36,6 @@ cp "$Z/zlib.h" "$Z/zconf.h" "$O/include/"
 "$CXX" -std=gnu++17 $FLAGS -Wall -c "$HERE/src/amiga/d3new.cpp" -o "$O/obj/d3amiga/d3new.o"
 "$CC" $FLAGS -Wall -c "$HERE/src/amiga/libnix_shims.c" -o "$O/obj/d3amiga/libnix_shims.o"
 "$CC" $FLAGS -Wall -c "$HERE/src/amiga/cxa_atexit.c" -o "$O/obj/d3amiga/cxa_atexit.o"
+"$CC" $FLAGS -Wall -c "$HERE/src/amiga/strtod_fix.c" -o "$O/obj/d3amiga/strtod_fix.o"
 "$AR" rcs "$O/lib/libd3amiga.a" "$O"/obj/d3amiga/*.o
 ls -l "$O/lib"

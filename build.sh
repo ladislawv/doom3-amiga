@@ -65,7 +65,8 @@ ALLIB=
 # libnix shim from libd3amiga.a ahead of libstdc++, which needs it. No -lamiga:
 # the driver adds amiga.lib after libnix itself, and named earlier its
 # RawDoFmt sprintf (16-bit %d) replaced the C library's (the first A1200 start
-# crashed in it).
+# crashed in it). --wrap for strtod and atof: libnix's return garbage for a
+# text without a number (src/amiga/strtod_fix.c).
 rm -rf "$OUT"
 cmake -S "$D3ES_SRC/neo" -B "$OUT" -G Ninja \
     -DCMAKE_TOOLCHAIN_FILE="$HERE/cmake/m68k-amigaos.cmake" \
@@ -76,7 +77,7 @@ cmake -S "$D3ES_SRC/neo" -B "$OUT" -G Ninja \
     -DSDL2_INCLUDE_DIR="$SDL/inc/SDL2" -DSDL2_LIBRARY="$SDL/libSDL2.a" \
     -DOPENAL_INCLUDE_DIR="$M/al-include" \
     "-DAMIGA_LIBS=$DEPS/lib/libd3amiga.a;$GLLIB;$SDL/pistorm3d-sdk/lib/libminigl.a;-ldebug;-lm" \
-    "-DAMIGA_LDFLAGS=-Wl,-u,___xpg_strerror_r" \
+    "-DAMIGA_LDFLAGS=-Wl,-u,___xpg_strerror_r -Wl,--wrap=strtod -Wl,--wrap=atof" \
     "-DAMIGA_OPT=${AMIGA_OPT:-}"     ${ALLIB:+"-DAMIGA_OPENAL_LIBRARY=$ALLIB"} \
     >"$OUT.cmake.log" 2>&1 || { tail -40 "$OUT.cmake.log"; exit 1; }
 ninja -C "$OUT" -k 0 >"$OUT.build.log" 2>&1 || {
