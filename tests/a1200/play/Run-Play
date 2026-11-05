@@ -73,7 +73,7 @@ SetEnv D3AL_VOICES {VOICES}
 SetEnv D3AL_RATE {RATE}
 
 Echo "Doom 3: {MAP} at {W}x{H}, {QUALITY} settings, {HZ} Hz, sound {AUDIO} ({VOICES} voices, {RATE} Hz); quit from the console (key above Tab) with: quit"
-dhewm3 +set fs_basepath "{DATA}" +set s_noSound $nosound +set image_usePrecompressedTextures 1 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth {W} +set r_customHeight {H} +set com_gameHz {HZ} +set r_swapInterval 0 $quality $args +map {MAP} >results/stdout.txt
+dhewm3 +set fs_basepath "{DATA}" +set s_noSound $nosound +set image_usePrecompressedTextures 1 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth {W} +set r_customHeight {H} +set com_gameHz {HZ} +set com_showFPS 1 +set r_swapInterval 0 $quality $args +map {MAP} >results/stdout.txt
 Echo "exit code $RC" >>results/stdout.txt
 UnSetEnv SDL_AUDIODRIVER
 UnSetEnv D3AL_VOICES

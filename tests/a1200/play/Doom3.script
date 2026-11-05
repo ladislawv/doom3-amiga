@@ -63,7 +63,7 @@ SetEnv D3AL_RATE {RATE}
 
 ; the game's output to T:doom3-out.txt, to read after a problem (the icon's
 ; launcher gives the script NIL:)
-dhewm3 >T:doom3-out.txt +set fs_basepath "$d3dir" +set s_noSound $nosound +set image_usePrecompressedTextures 1 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth {W} +set r_customHeight {H} +set com_gameHz {HZ} +set r_swapInterval 0 +exec {QUALITY}.cfg +set r_maxLights {LIGHTS} $map
+dhewm3 >T:doom3-out.txt +set fs_basepath "$d3dir" +set s_noSound $nosound +set image_usePrecompressedTextures 1 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth {W} +set r_customHeight {H} +set com_gameHz {HZ} +set com_showFPS 1 +set r_swapInterval 0 +exec {QUALITY}.cfg +set r_maxLights {LIGHTS} $map
 
 UnSetEnv SDL_AUDIODRIVER
 UnSetEnv D3AL_VOICES
