@@ -61,7 +61,7 @@ mkdir -p "$R/libs" "$R/shaders" "$R/base" "$R/demo" "$R/licences/ogles2" "$W"
 # the game, its script and settings
 cp "$GAME" "$R/dhewm3"
 cp "$REPO/tests/a1200/play/Doom3.script" "$R/"
-cp "$REPO"/tests/a1200/play/{low,medium,high}.cfg "$R/"
+cp "$REPO"/tests/a1200/play/{low,medium,high,ultra}.cfg "$R/"
 cp "$HERE"/shaders/* "$R/shaders/"
 cp "$HERE/base-ReadMe.txt" "$R/base/ReadMe.txt"
 cp "$HERE/demo-ReadMe.txt" "$R/demo/ReadMe.txt"

@@ -42,7 +42,7 @@ Software
   - Emu68 (tested: 1.1.0-beta.1) with its VideoCore RTG driver.
   - AmigaOS 3.x (tested: 3.2.3) with Picasso96 (or CyberGraphX).
   - A 32-bit RTG screen mode at the size you want to play in. The default
-    is 1920x1080: check that Picasso96Mode (Prefs) has a 1920x1080 mode
+    is 1280x720: check that Picasso96Mode (Prefs) has a 1280x720 mode
     with 32-bit depth (16.7 million colours), or play at another size
     (section 4).
   - Plenty of Fast RAM: tested with the 1.8 GB Emu68 gives a Pi 4.
@@ -105,7 +105,7 @@ takes about a minute and a half.
 From a Shell:
 
     Work:Doom3/Doom3
-    Work:Doom3/Doom3 QUALITY=medium W=1280 H=720
+    Work:Doom3/Doom3 QUALITY=medium W=1920 H=1080
 
 (the options are in section 4). Doom3 is a small program that runs the
 script Doom3.script in its drawer, with the right stack (9 MB) and
@@ -117,32 +117,43 @@ Quit from the game's main menu (Exit), or type "quit" in the console.
 4. OPTIONS
 ----------
 
+The first start sets 1280x720, Low quality, 12 lights, 20 game tics a
+second and the frame rate shown (top right). Everything changed in the
+game's menus (Options > System: screen size, quality, ...) or its
+console is saved in save/base/dhewm.cfg and used at every later start.
+
 Options are given to Doom3 in a Shell (Doom3 KEY=VALUE ...) or as the
 icon's Tool Types: select the Doom3 icon, choose Icons > Information,
-change a value (e.g. QUALITY=low into QUALITY=medium) and save. The icon
-holds the main options at their defaults; the others can be added the
-same way. A Tool Type in parentheses, e.g. (QUALITY=high), is ignored.
+remove the parentheses around one (e.g. (QUALITY=low) into QUALITY=high)
+and save. A Tool Type in parentheses is ignored. W, H, QUALITY, LIGHTS
+and HZ are saved like a menu change, so they are needed only once; as a
+Tool Type they apply again at every start, over what the menus changed.
 
   W=1920 H=1080     The screen size (a 32-bit RTG mode of that size must
                     exist). Smaller is a little faster.
-  QUALITY=low       low, medium or high: the graphics settings (low.cfg,
-                    medium.cfg, high.cfg in the drawer). See section 5.
+  QUALITY=medium    low, medium, high or ultra: the graphics settings
+                    (Doom 3's preset, then low.cfg, medium.cfg, high.cfg
+                    or ultra.cfg in the drawer). See section 5.
   LIGHTS=12         The most lights drawn in a frame: the nearest and
                     largest ones are kept. Fewer is faster; 0 draws them
                     all (slower, but no lights popping in and out).
-  AUDIO=paula       paula (the Amiga's own sound chip, the default) or
-                    ahi (through AHI). See section 6.
-  SOUND=1           0 turns sound off.
-  VOICES=32         The most sounds playing at once.
-  RATE=22050        The mixing rate in Hz (Paula plays at most 22050).
   HZ=20             The game's tics a second (20 is smoother here than
                     Doom 3's own 60, which the Amiga cannot keep up with).
+  RESET             (a Shell only) the first start's settings again; the
+                    saved games stay.
+
+For one start only:
+
+  AUDIO=paula       paula (the Amiga's own sound chip, the default) or
+                    ahi (through AHI). See section 6.
+  SOUND=0           Sound off.
+  VOICES=32         The most sounds playing at once.
+  RATE=22050        The mixing rate in Hz (Paula plays at most 22050).
   MAP=game/mars_city1
                     Starts straight in a level instead of the main menu.
 
-The game's own menus (Options > System) can change the quality too, but
-it takes effect only at the next start, and the QUALITY setting is
-applied again at every start: use QUALITY to choose.
+The frame rate display can be turned off in the console (the key above
+Tab): com_showFPS 0. That is saved too.
 
 
 5. SPEED AND QUALITY
@@ -229,8 +240,6 @@ The Amiga freezes
   - The expansion "Resurrection of Evil" (d3xp) is not supported.
   - Lights limited by LIGHTS can pop in and out as you move.
   - Levels take a minute or two to load.
-  - Changing the quality in the game's menu takes effect only at the next
-    start, and QUALITY is applied at every start.
   - A timedemo with sound off (SOUND=0) crashes; run timedemos with sound.
 
 

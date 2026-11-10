@@ -59,12 +59,23 @@ If {SOUND} EQ 1
 EndIf
 Set quality ""
 If EXISTS {QUALITY}.cfg
-  ; the game finds it in its save directory (first in its search path)
-  ; save/demo for the free demo's data, save/base for the full game's
+  ; Doom 3's preset, then the port's file for it (patch 0033), which the game finds
+  ; in its save directory (first in its search path): save/demo for the free
+  ; demo's data, save/base for the full game's
   MakeDir save save/demo save/base >NIL:
   Copy {QUALITY}.cfg save/demo/ QUIET
   Copy {QUALITY}.cfg save/base/ QUIET
-  Set quality "+exec {QUALITY}.cfg"
+  Set spec 0
+  If "{QUALITY}" EQ "medium"
+    Set spec 1
+  EndIf
+  If "{QUALITY}" EQ "high"
+    Set spec 2
+  EndIf
+  If "{QUALITY}" EQ "ultra"
+    Set spec 3
+  EndIf
+  Set quality "+set com_machineSpec $spec +execMachineSpec"
 EndIf
 
 ; the OpenAL subset's settings (global variables: the game reads them with GetVar)

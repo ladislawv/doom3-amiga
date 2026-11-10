@@ -1,0 +1,119 @@
+diff --git a/neo/framework/Common.cpp b/neo/framework/Common.cpp
+index 2fb4b1ab..7d4c0bcf 100644
+--- a/neo/framework/Common.cpp
++++ b/neo/framework/Common.cpp
+@@ -1458,6 +1458,10 @@ void OSX_GetVideoCard( int& outVendorId, int& outDeviceId );
+ bool OSX_GetCPUIdentification( int& cpuId, bool& oldArchitecture );
+ #endif
+ void Com_ExecMachineSpec_f( const idCmdArgs &args ) {
++#ifdef __amigaos3__
++	// patch 0033: a quality preset keeps the screen mode (the player's own choice)
++	int keepMode = cvarSystem->GetCVarInteger( "r_mode" );
++#endif
+ 	if ( com_machineSpec.GetInteger() == 3 ) {
+ 		cvarSystem->SetCVarInteger( "image_anisotropy", 1, CVAR_ARCHIVE );
+ 		cvarSystem->SetCVarInteger( "image_lodbias", 0, CVAR_ARCHIVE );
+@@ -1561,7 +1565,46 @@ void Com_ExecMachineSpec_f( const idCmdArgs &args ) {
+ 		cvarSystem->SetCVarBool( "r_shadows", true, CVAR_ARCHIVE );
+ 	}
+ #endif
++
++#ifdef __amigaos3__
++	// patch 0033: the screen mode as it was; precompressed (DDS) textures in every
++	// preset (Ultra's TGAs cost the 68k minutes a level); then the port's settings
++	// for the preset (low.cfg, medium.cfg, high.cfg, ultra.cfg: shadows, effects,
++	// sound), which the launcher copies to the save directory
++	cvarSystem->SetCVarInteger( "r_mode", keepMode, CVAR_ARCHIVE );
++	cvarSystem->SetCVarInteger( "image_usePrecompressedTextures", 1, CVAR_ARCHIVE );
++	static const char *specCfg[4] = { "low.cfg", "medium.cfg", "high.cfg", "ultra.cfg" };
++	int spec = idMath::ClampInt( 0, 3, com_machineSpec.GetInteger() );
++	if ( fileSystem->ReadFile( specCfg[spec], NULL, NULL ) > 0 ) {
++		cmdSystem->BufferCommandText( CMD_EXEC_NOW, va( "exec %s\n", specCfg[spec] ) );
++	}
++#endif
++}
++
++#ifdef __amigaos3__
++/*
++=================
++Com_AmigaFirstStart
++
++Patch 0033: the port's settings at the first start (no config.spec yet), in
++place of the detection from the memory (which picks "Ultra" from the 1.9 GB):
++Low quality, 1280x720 full screen, the frame rate shown. All are saved in the
++configuration, so what the player changes later (menu or console) stays.
++=================
++*/
++static void Com_AmigaFirstStart( void ) {
++	common->Printf( "First start: the AmigaOS port's settings (Low, 1280x720, frame rate shown)\n" );
++	cvarSystem->SetCVarInteger( "r_mode", 9, CVAR_ARCHIVE );			// 1280x720
++	cvarSystem->SetCVarBool( "r_fullscreen", true, CVAR_ARCHIVE );
++	cvarSystem->SetCVarInteger( "com_showFPS", 1, CVAR_ARCHIVE );
++	cvarSystem->SetCVarInteger( "r_swapInterval", 0, CVAR_ARCHIVE );
++	cvarSystem->SetCVarInteger( "r_maxLights", 12, CVAR_ARCHIVE );
++	cvarSystem->SetCVarInteger( "com_gameHz", 20, CVAR_ARCHIVE );
++	com_machineSpec.SetInteger( 0 );
++	idCmdArgs args;
++	Com_ExecMachineSpec_f( args );
+ }
++#endif
+ 
+ /*
+ =================
+@@ -2823,6 +2866,12 @@ idCommonLocal::SetMachineSpec
+ =================
+ */
+ void idCommonLocal::SetMachineSpec( void ) {
++#ifdef __amigaos3__
++	// patch 0033: the memory says nothing about a 68k's speed; Low is what it plays
++	Printf( "The AmigaOS port recommends Low quality.\n" );
++	com_machineSpec.SetInteger( 0 );
++	return;
++#endif
+ 	int sysRam = Sys_GetSystemRam();
+ 
+ 	Printf( "Detected\n\t%i MB of System memory\n\n", sysRam );
+@@ -3204,8 +3253,12 @@ void idCommonLocal::InitGame( void ) {
+ 
+ 	idCmdArgs args;
+ 	if ( sysDetect ) {
++#ifdef __amigaos3__
++		Com_AmigaFirstStart();	// patch 0033
++#else
+ 		SetMachineSpec();
+ 		Com_ExecMachineSpec_f( args );
++#endif
+ 	}
+ 
+ 	// initialize the renderSystem data structures, but don't start OpenGL yet
+@@ -3245,6 +3298,12 @@ void idCommonLocal::InitGame( void ) {
+ 
+ 	// if any archived cvars are modified after this, we will trigger a writing of the config file
+ 	cvarSystem->ClearModifiedFlags( CVAR_ARCHIVE );
++#ifdef __amigaos3__
++	// patch 0033: written once at every start (the first frame), so that the first
++	// start's settings and the launcher's options (Doom3.script W=, QUALITY=, ...)
++	// are saved even when nothing is changed in the game
++	cvarSystem->SetModifiedFlags( CVAR_ARCHIVE );
++#endif
+ 
+ 	UpdateGameHz(); // DG: for configurable framerate
+ 
+@@ -3303,6 +3362,9 @@ void idCommonLocal::InitGame( void ) {
+ 	// have to do this twice.. first one sets the correct r_mode for the renderer init
+ 	// this time around the backend is all setup correct.. a bit fugly but do not want
+ 	// to mess with all the gl init at this point.. an old vid card will never qualify for
++	// (patch 0033: not on AmigaOS, whose first start set its settings above; the
++	// 6 speakers and the sound restart are not wanted there either)
++#ifndef __amigaos3__
+ 	if ( sysDetect ) {
+ 		SetMachineSpec();
+ 		Com_ExecMachineSpec_f( args );
+@@ -3310,6 +3372,7 @@ void idCommonLocal::InitGame( void ) {
+ 		cmdSystem->BufferCommandText( CMD_EXEC_NOW, "s_restart\n" );
+ 		cmdSystem->ExecuteCommandBuffer();
+ 	}
++#endif
+ }
+ 
+ /*

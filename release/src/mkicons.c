@@ -2,7 +2,7 @@
  * mkicons: the release's icons, made on the Amiga from the system's default
  * ones (release/build_release.sh keeps the results in release/icons/):
  *   DIR/Doom3.info    the launcher's tool icon; its Tool Types are the
- *                     script's main options at their defaults, to edit
+ *                     script's main options, in parentheses (off)
  *   DIR/ReadMe.info   a project icon that opens the guide in MultiView
  *   DIR.info          the drawer's icon
  *   mkicons DIR
@@ -17,14 +17,17 @@
 
 struct Library *IconBase;
 
-/* the script's defaults (Doom3.script's .def): a user changes a value, nothing more */
+/* the script's options, in parentheses (ignored): the game's saved settings are
+   used (patch 0033); removing the parentheses gives an option at every start,
+   which is then saved too */
 static const char *tooltypes[] = {
-    "W=1920",
-    "H=1080",
-    "QUALITY=low",
-    "LIGHTS=12",
+    "(W=1280)",
+    "(H=720)",
+    "(QUALITY=low)",
+    "(LIGHTS=12)",
+    "(HZ=20)",
     "AUDIO=paula",
-    "SOUND=1",
+    "(SOUND=0)",
     NULL
 };
 

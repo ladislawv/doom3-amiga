@@ -78,8 +78,12 @@ OpenAL subset `src/al`, the libnix additions `src/amiga`); SDL2 changes in `sdl2
   shell's local variables (`Set`), neither `ENV:` (`SetEnv`): use dos.library's `GetVar`.
 - The executables keep only global symbols: a profile's function also holds the static
   functions after it (`pcsample_report.py` prints each symbol's span).
-- The game detects "Ultra" quality from the memory on every fresh package: settings go on the
-  command line or in a `+exec` file (`play/low.cfg`), which run after the detection.
+- A fresh package is a first start (no `save/base/config.spec`): since patch 0033 the Amiga build
+  then sets Low (Doom 3's preset, then `low.cfg` if the save directory has it), 1280x720, the
+  frame rate shown, 12 lights, 20 Hz (before: "Ultra" detected from the memory). Settings on
+  the command line override it. A quality is `+set com_machineSpec N +execMachineSpec` (the
+  preset, then the port's `low/medium/high/ultra.cfg`); those files must not run
+  `execMachineSpec` themselves. The game writes `dhewm.cfg` at every start's first frame.
 - Each run's sound system is restarted once during start-up (the detection does it).
 - Patch 0032 (the data prepared at the first start, PLAN.md §16) is off by default: the game
   loads the original pk4s and never asks. `+set fs_prepare 2 +set fs_usePrepared 1` prepares

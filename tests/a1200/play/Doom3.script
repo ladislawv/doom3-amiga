@@ -3,22 +3,29 @@
 ; program (the icon) runs it in its drawer, wherever that is; from a Shell,
 ; run Doom3 with options (Doom3 QUALITY=high), or CD to the drawer and run
 ; Execute Doom3.script with them.
-;   Another size:          W=1280 H=720 (default 1920x1080)
-;   Other settings:        QUALITY=medium or high (default low: low.cfg)
-;   Lights:                LIGHTS=8 (default 12; 0 for all: slower, no popping)
+; The first start sets 1280x720, Low quality, the frame rate shown, 12 lights,
+; 20 game tics a second (patch 0033). What is changed in the game's menu or
+; console is saved (save/base/dhewm.cfg) and used at every later start; the
+; options below change it from here, and are saved too:
+;   Another size:          W=1920 H=1080
+;   Other settings:        QUALITY=medium, high or ultra (or low)
+;   Lights:                LIGHTS=8 (0 for all: slower, no popping)
+;   Game tics a second:    HZ=30
+;   The first start's settings again: RESET (saved games stay)
+; For this start only:
 ;   Sound:                 AUDIO=ahi (default paula), VOICES=, RATE=, SOUND=0 for none
 ;   Straight into a map:   MAP=game/mars_city1
-; Quit from the game's menu. Settings the game saves go to save/ in this drawer.
-.key W/K,H/K,QUALITY/K,LIGHTS/K,AUDIO/K,VOICES/K,RATE/K,SOUND/K,HZ/K,MAP/K
-.def W 1920
-.def H 1080
-.def QUALITY "low"
-.def LIGHTS 12
+; Quit from the game's menu.
+.key W/K,H/K,QUALITY/K,LIGHTS/K,AUDIO/K,VOICES/K,RATE/K,SOUND/K,HZ/K,MAP/K,RESET/S
+.def W ""
+.def H ""
+.def QUALITY ""
+.def LIGHTS ""
 .def AUDIO "paula"
 .def VOICES 32
 .def RATE 22050
-.def SOUND 1
-.def HZ 20
+.def SOUND ""
+.def HZ ""
 .def MAP ""
 .bra {
 .ket }
@@ -40,17 +47,56 @@ If EXISTS LIBS:ogles2.library
   EndIf
 EndIf
 
-Set nosound 1
-If {SOUND} EQ 1
-  Set nosound 0
-EndIf
-; the settings file, where the game looks first (its save directory: save/base
-; for the full game, save/demo for the demo)
+; the save directory (save/base for the full game, save/demo for the demo):
+; the game's saved settings, and the quality files where the game finds them
 MakeDir save save/base save/demo >NIL:
-Copy {QUALITY}.cfg save/base/ QUIET
-Copy {QUALITY}.cfg save/demo/ QUIET
+If NOT "{RESET}" EQ ""
+  ; config.spec gone makes the next start a first start
+  Delete save/base/dhewm.cfg save/base/config.spec save/demo/dhewm.cfg save/demo/config.spec QUIET >NIL:
+EndIf
+Copy low.cfg medium.cfg high.cfg save/base/ QUIET
+Copy low.cfg medium.cfg high.cfg save/demo/ QUIET
+If EXISTS ultra.cfg
+  Copy ultra.cfg save/base/ QUIET
+  Copy ultra.cfg save/demo/ QUIET
+EndIf
+
+; only the options given: the rest comes from the saved settings
+Set args ""
+If NOT "{W}" EQ ""
+  Set args "$args +set r_mode -1 +set r_customWidth {W}"
+EndIf
+If NOT "{H}" EQ ""
+  Set args "$args +set r_mode -1 +set r_customHeight {H}"
+EndIf
+If NOT "{LIGHTS}" EQ ""
+  Set args "$args +set r_maxLights {LIGHTS}"
+EndIf
+If NOT "{HZ}" EQ ""
+  Set args "$args +set com_gameHz {HZ}"
+EndIf
+If "{SOUND}" EQ "0"
+  Set args "$args +set s_noSound 1"
+EndIf
+; a quality: Doom 3's preset, then the port's file for it (patch 0033)
+Set spec ""
+If "{QUALITY}" EQ "low"
+  Set spec 0
+EndIf
+If "{QUALITY}" EQ "medium"
+  Set spec 1
+EndIf
+If "{QUALITY}" EQ "high"
+  Set spec 2
+EndIf
+If "{QUALITY}" EQ "ultra"
+  Set spec 3
+EndIf
+If NOT "$spec" EQ ""
+  Set args "$args +set com_machineSpec $spec +execMachineSpec"
+EndIf
 ; no map: "startMenu" (patch 0028) opens the main menu (the game opens it by itself only
-; when its command line holds no commands, and +exec is one)
+; when its command line holds no commands)
 Set map "+startMenu"
 If NOT "{MAP}" EQ ""
   Set map "+map {MAP}"
@@ -62,9 +108,13 @@ SetEnv D3AL_VOICES {VOICES}
 SetEnv D3AL_RATE {RATE}
 
 ; the game's output to T:doom3-out.txt, to read after a problem (the icon's
-; launcher gives the script NIL:)
-dhewm3 >T:doom3-out.txt +set fs_basepath "$d3dir" +set s_noSound $nosound +set image_usePrecompressedTextures 1 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth {W} +set r_customHeight {H} +set com_gameHz {HZ} +set com_showFPS 1 +set r_swapInterval 0 +exec {QUALITY}.cfg +set r_maxLights {LIGHTS} $map
+; launcher gives the script NIL:). Full screen and precompressed textures always.
+dhewm3 >T:doom3-out.txt +set fs_basepath "$d3dir" +set r_fullscreen 1 +set image_usePrecompressedTextures 1 $args $map
 
 UnSetEnv SDL_AUDIODRIVER
 UnSetEnv D3AL_VOICES
 UnSetEnv D3AL_RATE
+UnSet args
+UnSet spec
+UnSet map
+UnSet d3dir
