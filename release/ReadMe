@@ -117,16 +117,20 @@ Quit from the game's main menu (Exit), or type "quit" in the console.
 4. OPTIONS
 ----------
 
-The first start sets 1280x720, Low quality, 12 lights, 20 game tics a
-second and the frame rate shown (top right). Everything changed in the
-game's menus (Options > System: screen size, quality, ...) or its
-console is saved in save/base/dhewm.cfg and used at every later start.
+The first start sets 1280x720, Low quality, 12 lights and the frame rate
+shown (top right). Everything changed in the game's menus (Options >
+System: screen size, quality, ...) or its console is saved in
+save/base/dhewm.cfg and used at every later start.
+
+Two things are fixed at every setting: the game's tics a second follow
+the frame rate (between 20 and 60, about 5 above the frames a second),
+and the textures are the precompressed (DDS) ones the game data holds.
 
 Options are given to Doom3 in a Shell (Doom3 KEY=VALUE ...) or as the
 icon's Tool Types: select the Doom3 icon, choose Icons > Information,
 remove the parentheses around one (e.g. (QUALITY=low) into QUALITY=high)
-and save. A Tool Type in parentheses is ignored. W, H, QUALITY, LIGHTS
-and HZ are saved like a menu change, so they are needed only once; as a
+and save. A Tool Type in parentheses is ignored. W, H, QUALITY and
+LIGHTS are saved like a menu change, so they are needed only once; as a
 Tool Type they apply again at every start, over what the menus changed.
 
   W=1920 H=1080     The screen size (a 32-bit RTG mode of that size must
@@ -137,8 +141,6 @@ Tool Type they apply again at every start, over what the menus changed.
   LIGHTS=12         The most lights drawn in a frame: the nearest and
                     largest ones are kept. Fewer is faster; 0 draws them
                     all (slower, but no lights popping in and out).
-  HZ=20             The game's tics a second (20 is smoother here than
-                    Doom 3's own 60, which the Amiga cannot keep up with).
   RESET             (a Shell only) the first start's settings again; the
                     saved games stay.
 

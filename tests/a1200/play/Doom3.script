@@ -3,18 +3,19 @@
 ; program (the icon) runs it in its drawer, wherever that is; from a Shell,
 ; run Doom3 with options (Doom3 QUALITY=high), or CD to the drawer and run
 ; Execute Doom3.script with them.
-; The first start sets 1280x720, Low quality, the frame rate shown, 12 lights,
-; 20 game tics a second (patch 0033). What is changed in the game's menu or
+; The first start sets 1280x720, Low quality, the frame rate shown, 12 lights;
+; the game tics a second following the frame rate (20-60, always: patch 0034),
+; DDS textures at every quality. What is changed in the game's menu or
 ; console is saved (save/base/dhewm.cfg) and used at every later start; the
 ; options below change it from here, and are saved too:
 ;   Another size:          W=1920 H=1080
 ;   Other settings:        QUALITY=medium, high or ultra (or low)
 ;   Lights:                LIGHTS=8 (0 for all: slower, no popping)
-;   Game tics a second:    HZ=30
 ;   The first start's settings again: RESET (saved games stay)
 ; For this start only:
 ;   Sound:                 AUDIO=ahi (default paula), VOICES=, RATE=, SOUND=0 for none
 ;   Straight into a map:   MAP=game/mars_city1
+; HZ= is accepted and ignored (the tick rate follows the frame rate).
 ; Quit from the game's menu.
 .key W/K,H/K,QUALITY/K,LIGHTS/K,AUDIO/K,VOICES/K,RATE/K,SOUND/K,HZ/K,MAP/K,RESET/S
 .def W ""
@@ -25,7 +26,6 @@
 .def VOICES 32
 .def RATE 22050
 .def SOUND ""
-.def HZ ""
 .def MAP ""
 .bra {
 .ket }
@@ -72,9 +72,6 @@ EndIf
 If NOT "{LIGHTS}" EQ ""
   Set args "$args +set r_maxLights {LIGHTS}"
 EndIf
-If NOT "{HZ}" EQ ""
-  Set args "$args +set com_gameHz {HZ}"
-EndIf
 If "{SOUND}" EQ "0"
   Set args "$args +set s_noSound 1"
 EndIf
@@ -108,8 +105,8 @@ SetEnv D3AL_VOICES {VOICES}
 SetEnv D3AL_RATE {RATE}
 
 ; the game's output to T:doom3-out.txt, to read after a problem (the icon's
-; launcher gives the script NIL:). Full screen and precompressed textures always.
-dhewm3 >T:doom3-out.txt +set fs_basepath "$d3dir" +set r_fullscreen 1 +set image_usePrecompressedTextures 1 $args $map
+; launcher gives the script NIL:). Full screen always.
+dhewm3 >T:doom3-out.txt +set fs_basepath "$d3dir" +set r_fullscreen 1 $args $map
 
 UnSetEnv SDL_AUDIODRIVER
 UnSetEnv D3AL_VOICES

@@ -1,6 +1,6 @@
 ; Run-Play - Doom 3 port: play a map on the A1200. No benchmark, mouse look
 ; on; the game runs until the player quits it (console: quit). The port's
-; settings: 20 game tics a second (HZ=), no vsync, precompressed textures, sound
+; settings: the tick rate following the frame rate (patch 0034), no vsync, DDS textures, sound
 ; through AHI (the port's OpenAL subset; SOUND=0 for none).
 ;   CD to this directory, then:   Execute Run-Play
 ;   Another size:                  Execute Run-Play W=320 H=200
@@ -12,11 +12,11 @@
 ;   The mixer's voices and rate:   Execute Run-Play VOICES=16 RATE=11025 (defaults 32
 ;                                  and 22050; fewer and lower are faster, but with 16 the
 ;                                  intro's voice lines were lost)
-;   Another game rate:             Execute Run-Play HZ=30 (game tics a second; default 20)
+;   HZ= is ignored since patch 0034 (the tick rate always follows the frame rate)
 ;   Other game data:               Execute Run-Play DATA=<directory with demo/ or base/>
 ;   More console commands:         one line in dhewm3.args next to it
-;   Settings:                      Execute Run-Play QUALITY=game (the game's own: it
-;                                  detects "Ultra" here, from the memory); the default,
+;   Settings:                      Execute Run-Play QUALITY=game (the game's own: the
+;                                  saved ones, Low at a first start: patch 0033); the default,
 ;                                  low, runs low.cfg (Doom 3's Low preset, and shadows,
 ;                                  post-process effects, decals, blood, muzzle flashes,
 ;                                  projectile lights, ejected shells off); QUALITY=high
@@ -83,8 +83,8 @@ SetEnv SDL_AUDIODRIVER {AUDIO}
 SetEnv D3AL_VOICES {VOICES}
 SetEnv D3AL_RATE {RATE}
 
-Echo "Doom 3: {MAP} at {W}x{H}, {QUALITY} settings, {HZ} Hz, sound {AUDIO} ({VOICES} voices, {RATE} Hz); quit from the console (key above Tab) with: quit"
-dhewm3 +set fs_basepath "{DATA}" +set s_noSound $nosound +set image_usePrecompressedTextures 1 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth {W} +set r_customHeight {H} +set com_gameHz {HZ} +set com_showFPS 1 +set r_swapInterval 0 $quality $args +map {MAP} >results/stdout.txt
+Echo "Doom 3: {MAP} at {W}x{H}, {QUALITY} settings, sound {AUDIO} ({VOICES} voices, {RATE} Hz); quit from the console (key above Tab) with: quit"
+dhewm3 +set fs_basepath "{DATA}" +set s_noSound $nosound +set image_usePrecompressedTextures 1 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth {W} +set r_customHeight {H} +set com_showFPS 1 +set r_swapInterval 0 $quality $args +map {MAP} >results/stdout.txt
 Echo "exit code $RC" >>results/stdout.txt
 UnSetEnv SDL_AUDIODRIVER
 UnSetEnv D3AL_VOICES

@@ -1,0 +1,81 @@
+diff --git a/neo/framework/Common.cpp b/neo/framework/Common.cpp
+index 7d4c0bcf..78bf7242 100644
+--- a/neo/framework/Common.cpp
++++ b/neo/framework/Common.cpp
+@@ -126,6 +126,12 @@ float  com_gameTicScale = 1.0f; // com_gameHzVal/60.0f, multiply stuff assuming
+ #else
+ #define COM_GAMEHZAUTO_DEFAULT "0"
+ #endif
++#ifdef __amigaos3__
++// patch 0034: on AmigaOS the tick rate is always automatic, in this range, and
++// com_gameHz, com_gameHzAuto, com_gameHzMin and com_gameHzMax change nothing
++#define AMIGA_GAMEHZ_MIN 20
++#define AMIGA_GAMEHZ_MAX 60
++#endif
+ idCVar com_gameHzAuto( "com_gameHzAuto", COM_GAMEHZAUTO_DEFAULT, CVAR_BOOL | CVAR_ARCHIVE | CVAR_SYSTEM, "adapt the game's tick rate to the frame rate reached, between com_gameHzMin and com_gameHzMax" );
+ idCVar com_gameHzMin( "com_gameHzMin", "20", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_SYSTEM, "com_gameHzAuto's lowest tick rate", 10, 250 );
+ idCVar com_gameHzMax( "com_gameHzMax", "60", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_SYSTEM, "com_gameHzAuto's highest tick rate", 10, 250 );
+@@ -3459,6 +3465,17 @@ static void Com_SetGameHz( int hz )
+ void idCommonLocal::UpdateGameHz()
+ {
+ 	com_gameHz.ClearModified();
++#ifdef __amigaos3__
++	// patch 0034: the tick rate is always Com_AutoGameHz's; it starts at
++	// AMIGA_GAMEHZ_MIN, and com_gameHz (console, command line, configuration)
++	// changes nothing
++	static bool started = false;
++	if ( !started ) {
++		started = true;
++		Com_SetGameHz( AMIGA_GAMEHZ_MIN );
++	}
++	return;
++#endif
+ 	Com_SetGameHz( com_gameHz.GetInteger() );
+ }
+ 
+@@ -3480,10 +3497,12 @@ void Com_AutoGameHz( void )
+ 	int now, lo, hi, hz;
+ 	float fps;
+ 
++#ifndef __amigaos3__	// patch 0034: always on there
+ 	if ( !com_gameHzAuto.GetBool() ) {
+ 		windowStart = 0;
+ 		return;
+ 	}
++#endif
+ 	now = Sys_Milliseconds();
+ 	if ( !windowStart ) {
+ 		windowStart = lastFrame = now;
+@@ -3507,8 +3526,14 @@ void Com_AutoGameHz( void )
+ 		return;
+ 	}
+ 
++#ifdef __amigaos3__
++	// patch 0034: the developer's range, fixed
++	lo = AMIGA_GAMEHZ_MIN;
++	hi = AMIGA_GAMEHZ_MAX;
++#else
+ 	lo = com_gameHzMin.GetInteger();
+ 	hi = idMath::ClampInt( lo, 250, com_gameHzMax.GetInteger() );
++#endif
+ 	hz = idMath::ClampInt( lo, hi, (int)( fps + 0.5f ) + 5 );
+ 	if ( ( hz > com_gameHzVal ? hz - com_gameHzVal : com_gameHzVal - hz ) >= 2 ||
+ 		 ( hz != com_gameHzVal && ( hz == lo || hz == hi ) ) ) {
+diff --git a/neo/renderer/Image_load.cpp b/neo/renderer/Image_load.cpp
+index 15342717..d058ab1d 100644
+--- a/neo/renderer/Image_load.cpp
++++ b/neo/renderer/Image_load.cpp
+@@ -1112,7 +1112,13 @@ void	idImage::ActuallyLoadImage( bool fromBind ) {
+ 	} else {
+ 		// see if we have a pre-generated image file that is
+ 		// already image processed and compressed
++#ifdef __amigaos3__
++		// patch 0034: the DDS whenever there is one, at every quality and whatever
++		// image_usePrecompressedTextures says (the TGAs cost the 68k minutes a level)
++		if ( true ) {
++#else
+ 		if ( globalImages->image_usePrecompressedTextures.GetBool() ) {
++#endif
+ 			idLoadTimer	ddsTimer( LOAD_IMAGE_DDS );
+ 			if ( CheckPrecompressedImage() ) {
+ 				return;

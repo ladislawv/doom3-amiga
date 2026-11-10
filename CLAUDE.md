@@ -63,8 +63,11 @@ OpenAL subset `src/al`, the libnix additions `src/amiga`); SDL2 changes in `sdl2
   when the developer asks, and then in its own repository's way (its `CLAUDE.md`).
 - When something is done, measured or decided, add it to `PLAN.md` §14 (and the section it
   belongs to); keep the "Next" list current.
-- Benchmarks run at 30 game tics a second (as all before 2026-10-20); play runs at 20. The
-  Pi was overclocked on 2026-10-20 (§14): compare only within one clock.
+- Since patch 0034 the Amiga build's tick rate always follows the frame rate (20-60 Hz) and
+  loads DDS textures at every setting; `com_gameHz*` and `image_usePrecompressedTextures`
+  change nothing there. Benchmarks before it ran at a fixed rate (30 Hz until 2026-10-29,
+  then 20): compare across it with care. The Pi was overclocked on 2026-10-20 (§14):
+  compare only within one clock.
 
 ## Traps that cost time
 

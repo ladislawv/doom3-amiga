@@ -25,7 +25,6 @@ static const char *tooltypes[] = {
     "(H=720)",
     "(QUALITY=low)",
     "(LIGHTS=12)",
-    "(HZ=20)",
     "AUDIO=paula",
     "(SOUND=0)",
     NULL
