@@ -15,8 +15,10 @@
 #   shaders/               release/shaders/ (the game's 11 GLSL programs as
 #                          ogles2 1.3's compiler made them on the A1200; to
 #                          be made again after an ogles2 or compiler update)
-#   icons                  release/icons/ (made on the A1200 by
-#                          release/src/mkicons.c from the system's defaults)
+#   icons                  release/icons/ (colour icons, made on the A1200 by
+#                          release/src/mkicons.c from the system's defaults and
+#                          the art of release/icons/art/make_icons.py:
+#                          "mkicons DIR ART", ART holding its .d3ic files)
 #   ReadMe                 release/ReadMe (@VERSION@, @DATE@, @SOURCE@ filled in)
 set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
