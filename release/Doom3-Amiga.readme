@@ -9,7 +9,8 @@ Distribution: GPLv3 (game code); Doom 3's data not included
 Doom 3 (id Software, 2004) running natively on a 68k Amiga with a PiStorm.
 The game code runs on Emu68, the graphics are drawn by the Raspberry Pi 4's
 VideoCore GPU through ogles2.library (OpenGL ES 2.0 for AmigaOS 3, included).
-Based on dhewm3/d3es, the GPL release of Doom 3's source.
+Based on dhewm3/d3es, the GPL release of Doom 3's source. Ported by R-Typer
+and Ladislawv.
 
 About 17 frames a second in Doom 3's own benchmark at 1920x1080 with the
 Low settings; Medium and High settings, Paula or AHI sound, any RTG screen

@@ -1,4 +1,5 @@
-; Doom3.script - starts Doom 3 from its drawer, the game's data in base/ (the
+; Doom3.script - Doom 3 for AmigaOS 3, by R-Typer and Ladislawv.
+; Starts Doom 3 from its drawer, the game's data in base/ (the
 ; full game) or demo/ (the free demo) next to it, at the main menu. The Doom3
 ; program (the icon) runs it in its drawer, wherever that is; from a Shell,
 ; run Doom3 with options (Doom3 QUALITY=high), or CD to the drawer and run

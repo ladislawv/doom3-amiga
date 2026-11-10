@@ -6,7 +6,7 @@
  * Options go on to the script as KEY=VALUE: from Workbench the icon's Tool
  * Types (one in parentheses is off), from a Shell the arguments
  * (Doom3 QUALITY=high W=1280 H=720).
- * GPLv3, as the rest of the port.
+ * Doom 3 for AmigaOS 3, by R-Typer and Ladislawv. GPLv3, as the rest of the port.
  */
 #include <dos/dos.h>
 #include <dos/dostags.h>

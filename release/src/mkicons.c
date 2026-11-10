@@ -11,7 +11,7 @@
  * make_icons.py), their pictures replace the default ones as colour icons
  * (GlowIcons: icon.library 44, OS 3.5 and later; the default planar image
  * stays for older systems), frameless.
- * GPLv3, as the rest of the port.
+ * Doom 3 for AmigaOS 3, by R-Typer and Ladislawv. GPLv3, as the rest of the port.
  */
 #include <stdio.h>
 #include <string.h>
