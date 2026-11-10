@@ -7,16 +7,15 @@
 #   OGLES=3 bash build_sdl2.sh   the same on ogles3.library (sdl2/ogles3, copies
 #                                of ogles3's ports/sdl2; PLAN.md §14), into
 #                                ~/doom3-build/m68k/sdl2-ogles3
-# Uses, read only: ogles2's headers and import library (OGLES2_REPO,
-# OGLES2_BUILD), or ogles3's release SDK (OGLES3_SDK), and PiStorm3D's SDK for
+# Uses, read only: the shipped ogles2pi3 SDK's headers (OGLES2_SDK, from
+# tools/get_ogles2.sh), or ogles3's release SDK (OGLES3_SDK), and PiStorm3D's SDK for
 # SDL2's MiniGL backend (PISTORM3D_SDK).
 set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
 SDL2_SRC=${SDL2_SRC:-$HOME/d3-sdl2}
 TC16=${TC16:-$HOME/amiga-gcc162-install}
 OGLES=${OGLES:-2}
-OGLES2_REPO=${OGLES2_REPO:-$HERE/../ogles2}	# next to this repository, as tools/a1200.py expects
-OGLES2_BUILD=${OGLES2_BUILD:-$HOME/ogles2-build/m68k}
+OGLES2_SDK=${OGLES2_SDK:-$HOME/ogles2pi3-sdk/ogles2/SDK}	# tools/get_ogles2.sh: ogles2pi3 1.4-beta1
 OGLES3_SDK=${OGLES3_SDK:-$HOME/ogles3-build/release/ogles3/SDK}	# release/build_release.sh in ogles3
 PISTORM3D_SDK=${PISTORM3D_SDK:-$HERE/../pistorm3d/SDK}
 if [ "$OGLES" = 3 ]; then O=${O:-$HOME/doom3-build/m68k/sdl2-ogles3}; else O=${O:-$HOME/doom3-build/m68k/sdl2}; fi
@@ -25,8 +24,8 @@ export PATH="$TC16/bin:$PATH"	# the Makefile calls m68k-amigaos-gcc and vasmm68k
 [ -d "$SDL2_SRC/.git" ] || { echo "no $SDL2_SRC: run sources.sh first"; exit 1; }
 [ -x "$TC16/bin/m68k-amigaos-gcc" ] || { echo "no GCC 16.2 in $TC16"; exit 1; }
 case $OGLES in
-2) [ -f "$OGLES2_BUILD/libogles2.a" ] && [ -f "$OGLES2_BUILD/gen/include/proto/ogles2.h" ] ||
-       { echo "no ogles2 build in $OGLES2_BUILD (libogles2.a, gen/include)"; exit 1; } ;;
+2) [ -f "$OGLES2_SDK/lib/libogles2.a" ] && [ -f "$OGLES2_SDK/include/proto/ogles2.h" ] ||
+       { echo "no ogles2 SDK in $OGLES2_SDK: bash tools/get_ogles2.sh"; exit 1; } ;;
 3) [ -f "$OGLES3_SDK/lib/libogles3.a" ] && [ -f "$OGLES3_SDK/include/proto/ogles3.h" ] ||
        { echo "no ogles3 SDK in $OGLES3_SDK (lib/libogles3.a, include/proto/ogles3.h)"; exit 1; } ;;
 *) echo "OGLES is 2 or 3"; exit 1 ;;
@@ -60,7 +59,7 @@ mkdir -p "$O/inc"
 if [ "$OGLES" = 3 ]; then
     cp -r "$OGLES3_SDK"/include/. "$O/inc/"
 else
-    cp -r "$OGLES2_REPO"/include/. "$OGLES2_BUILD"/gen/include/. "$O/inc/"
+    cp -r "$OGLES2_SDK"/include/. "$O/inc/"
 fi
 cp -r "$PISTORM3D_SDK" "$O/pistorm3d-sdk"	# whole: its headers include ../../../backend/...
 MGLINC=$O/pistorm3d-sdk/minigl-shared-library/include

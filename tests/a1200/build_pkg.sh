@@ -13,7 +13,7 @@ NAME=${1:?package name (a directory in tests/a1200)}
 shift
 BUILDS=("$@")
 M=${M:-$HOME/doom3-build/m68k}
-OGLES2_RELEASE=${OGLES2_RELEASE:-$HOME/ogles2-build/release/ogles2/Libs}
+OGLES2_RELEASE=${OGLES2_RELEASE:-$HOME/ogles2pi3-sdk/ogles2/Libs}	# the shipped ogles2pi3 1.4-beta1 (tools/get_ogles2.sh)
 OGLES3_RELEASE=${OGLES3_RELEASE:-$HOME/ogles3-build/release/ogles3/Libs}	# for OGLES=3 builds
 PKG=$M/pkg/$NAME
 

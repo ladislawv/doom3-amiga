@@ -13,10 +13,13 @@ Ubuntu 24.04 in WSL on Windows; this repository on the Windows side (`C:\- CPP\d
 clones and builds in WSL's home:
 - `~/d3es` (the game, reset and patched by every build), `~/d3-sdl2` (SDL2_68k),
   `~/doom3-build` (output), `~/doom3-data/demo/demo00.pk4` (the free demo's data, §4).
-- Needs ogles2's toolchain and build: GCC 16.2 for m68k in `~/amiga-gcc162-install`, and
-  `~/ogles2-build` (ogles2.library, `v3dglslc`, `libogles2.a`, its headers) from the ogles2
-  repository (its `dev/host-setup` and `CONTRIBUTING.md`).
-- Order: `sources.sh` (clones, pinned), `build_deps.sh` (zlib, the allocator, libnix shims),
+- Needs GCC 16.2 for m68k in `~/amiga-gcc162-install` (ogles2's toolchain: its
+  `dev/host-setup`), and **the one ogles2 the project uses: the shipped ogles2pi3 1.4-beta1**
+  (the Pi 4 and the Pi 3; `github.com/ladislawv/ogles2pi3` next to this repository).
+  `tools/get_ogles2.sh` unpacks its committed SDK archive into `~/ogles2pi3-sdk` (library,
+  `v3dglslc`, headers, `libogles2.a`); SDL, the game, every test package and benchmark and
+  the release take it from there or from its user archive. No ogles2 dev build, no ogles3.
+- Order: `tools/get_ogles2.sh`, `sources.sh` (clones, pinned), `build_deps.sh` (zlib, the allocator, libnix shims),
   `build_sdl2.sh`, `build_al.sh` (the OpenAL subset; after `build_deps.sh`, which clears its
   folder), then `build.sh` (A1200) and `build_host.sh` (x86-64 Linux, for reference) —
   or `tools/build_all.sh` for the last two.

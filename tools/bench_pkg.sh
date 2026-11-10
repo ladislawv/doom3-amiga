@@ -19,21 +19,13 @@
 # "o3=game-ogles3:" (OGLES=3 build.sh; the package then holds ogles3.library too);
 # with a driver "name=build@driver:args".
 # Another map: edit .def MAP in the package's Run-Bench (amictl -a takes no "/").
-# ogles2.library and v3dglslc come from ogles2's build (~/ogles2-build), copied
-# to ~/ogles2-build/direct-libs, or from OGLES2_LIBS=<dir> (a release's Libs/);
-# ogles3's from its release (build_pkg.sh, OGLES3_RELEASE=<dir>).
+# ogles2.library and v3dglslc: the shipped ogles2pi3 1.4-beta1 (tools/get_ogles2.sh,
+# the only ogles2 the project uses), or another from OGLES2_LIBS=<dir> for a
+# comparison; ogles3's from its release (build_pkg.sh, OGLES3_RELEASE=<dir>).
 set -e
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 cd "$(dirname "$0")/.."
-L=~/ogles2-build/direct-libs
-if [ -n "${OGLES2_LIBS:-}" ]; then
-    # another ogles2: a directory with ogles2.library and v3dglslc (e.g. a release's Libs/)
-    L=$OGLES2_LIBS
-else
-    mkdir -p $L
-    cp ~/ogles2-build/m68k/ogles2.library $L/
-    cp ~/ogles2-build/v3dglslc/v3dglslc.stripped $L/v3dglslc
-fi
+L=${OGLES2_LIBS:-$HOME/ogles2pi3-sdk/ogles2/Libs}
 # the builds the variants name, besides game
 B=()
 for v in "$@"; do

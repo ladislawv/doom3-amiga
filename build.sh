@@ -14,7 +14,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 D3ES_SRC=${D3ES_SRC:-$HOME/d3es}
 TC16=${TC16:-$HOME/amiga-gcc162-install}
 OGLES=${OGLES:-2}
-OGLES2_BUILD=${OGLES2_BUILD:-$HOME/ogles2-build/m68k}
+OGLES2_SDK=${OGLES2_SDK:-$HOME/ogles2pi3-sdk/ogles2/SDK}	# tools/get_ogles2.sh: ogles2pi3 1.4-beta1
 OGLES3_SDK=${OGLES3_SDK:-$HOME/ogles3-build/release/ogles3/SDK}
 M=${M:-$HOME/doom3-build/m68k}
 if [ "$OGLES" = 3 ]; then
@@ -24,7 +24,7 @@ if [ "$OGLES" = 3 ]; then
 else
     OUT=$M/${OUT_NAME:-game}
     SDL=$M/sdl2
-    GLLIB=$OGLES2_BUILD/libogles2.a
+    GLLIB=$OGLES2_SDK/lib/libogles2.a
 fi
 DEPS=$M/deps
 export TC16

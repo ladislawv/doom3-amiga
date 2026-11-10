@@ -6,7 +6,7 @@
 set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
 TC16=${TC16:-$HOME/amiga-gcc162-install}
-OGLES2_BUILD=${OGLES2_BUILD:-$HOME/ogles2-build/m68k}
+OGLES2_SDK=${OGLES2_SDK:-$HOME/ogles2pi3-sdk/ogles2/SDK}	# tools/get_ogles2.sh
 SDL=${SDL:-$HOME/doom3-build/m68k/sdl2}
 PKG=${PKG:-$HOME/doom3-build/m68k/pkg/cxx-probe}
 
@@ -29,12 +29,12 @@ for v in $VARIANTS; do
         "$HERE/cxx-probe/src/cxx_probe.cpp" -o "$PKG/${v%%:*}" \
         ${v#*:} \
         -Wl,-u,___xpg_strerror_r -L"$DEPS/lib" -ld3amiga \
-        -L"$SDL" -lSDL2 -L"$OGLES2_BUILD" -logles2 -L"$SDL/pistorm3d-sdk/lib" -lminigl -ldebug -lm
+        -L"$SDL" -lSDL2 -L"$OGLES2_SDK/lib" -logles2 -L"$SDL/pistorm3d-sdk/lib" -lminigl -ldebug -lm
 done
 cp "$HERE/cxx-probe/Run-Probe" "$PKG/"
 # ogles2.library in libs/, which OGLES2Open finds when LIBS: has none (an
 # installed one in LIBS: wins; Run-Probe records which).
 mkdir -p "$PKG/libs"
-cp "$OGLES2_BUILD/ogles2.library" "$PKG/libs/"
+cp "$OGLES2_SDK/../Libs/ogles2.library" "$PKG/libs/"
 
 ls -l "$PKG"

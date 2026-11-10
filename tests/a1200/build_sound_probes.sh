@@ -17,7 +17,7 @@
 set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
 TC16=${TC16:-$HOME/amiga-gcc162-install}
-OGLES2_BUILD=${OGLES2_BUILD:-$HOME/ogles2-build/m68k}
+OGLES2_SDK=${OGLES2_SDK:-$HOME/ogles2pi3-sdk/ogles2/SDK}	# tools/get_ogles2.sh
 M=${M:-$HOME/doom3-build/m68k}
 SDL=$M/sdl2
 CC="$TC16/bin/m68k-amigaos-gcc"
@@ -26,7 +26,7 @@ FLAGS="-O2 -mcpu=68020 -m68881 -noixemul -Wall -Wno-pointer-sign"
 P=$M/pkg/tone
 rm -rf $P; mkdir -p $P
 "$CC" $FLAGS -I"$SDL/inc/SDL2" -I"$SDL/inc" "$HERE/sound-probes/tone.c" -o $P/tone \
-    -Wl,-u,___xpg_strerror_r -L"$M/deps/lib" -ld3amiga -L"$SDL" -lSDL2 -L"$OGLES2_BUILD" -logles2 \
+    -Wl,-u,___xpg_strerror_r -L"$M/deps/lib" -ld3amiga -L"$SDL" -lSDL2 -L"$OGLES2_SDK/lib" -logles2 \
     -L"$SDL/pistorm3d-sdk/lib" -lminigl -ldebug -lm
 cat > $P/Run-Tone <<'EOF'
 .key DRV/K
