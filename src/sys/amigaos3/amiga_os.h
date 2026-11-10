@@ -25,6 +25,9 @@ int amiga_exists(const char *path, int dir);
 int amiga_mkdir(const char *path);
 /* calls `found` for each entry of `dir`; -1 if it cannot be read, else the count */
 int amiga_list_dir(const char *dir, void (*found)(const char *name, int isdir, void *user), void *user);
+/* 1 when a 32-bit (4 bytes a pixel) RTG screen mode of exactly w x h exists (as
+   SDL's OS3_Find32BitMode picks one), 0 when not, -1 without cybergraphics.library */
+int amiga_rtg_mode_exists(int w, int h);
 /* free room on the volume holding `path`, in MB; -1 if unknown */
 long amiga_free_mb(const char *path);
 /* the modification date of a file in seconds since 1970; 0 if unknown */

@@ -11,6 +11,10 @@
 #include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/intuition.h>
+#include <proto/graphics.h>
+#include <graphics/displayinfo.h>
+#include <proto/cybergraphics.h>
+#include <cybergraphx/cybergraphics.h>
 #include <string.h>
 
 #include "amiga_os.h"
@@ -69,6 +73,27 @@ int amiga_mkdir(const char *path)
         return 1;
     }
     return amiga_exists(path, 1);
+}
+
+int amiga_rtg_mode_exists(int w, int h)
+{
+    /* a local base: SDL owns the global CyberGfxBase; the inline calls take this one */
+    struct Library *CyberGfxBase = OpenLibrary((CONST_STRPTR)CYBERGFXNAME, 40);
+    ULONG id = INVALID_ID;
+    int found = 0;
+    if (!CyberGfxBase)
+        return -1;
+    while ((id = NextDisplayInfo(id)) != INVALID_ID) {
+        if (!IsCyberModeID(id) || GetCyberIDAttr(CYBRIDATTR_BPPIX, id) != 4)
+            continue;
+        if ((int)GetCyberIDAttr(CYBRIDATTR_WIDTH, id) == w &&
+            (int)GetCyberIDAttr(CYBRIDATTR_HEIGHT, id) == h) {
+            found = 1;
+            break;
+        }
+    }
+    CloseLibrary(CyberGfxBase);
+    return found;
 }
 
 long amiga_free_mb(const char *path)

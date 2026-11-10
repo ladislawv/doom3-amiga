@@ -226,6 +226,11 @@ ID_TIME_T Sys_FileTimeStamp( FILE *fp ) {
 	return 0;
 }
 
+// patch 0035: the menu lists only the screen sizes the RTG system can open
+int Sys_ScreenModeAvailable( int width, int height ) {
+	return amiga_rtg_mode_exists( width, height );
+}
+
 int Sys_GetDriveFreeSpace( const char *path ) {
 	// MB; the first start's data preparation (patch 0032) and the save code ask
 	long mb = amiga_free_mb( path );

@@ -1,0 +1,78 @@
+diff --git a/neo/renderer/RenderSystem_init.cpp b/neo/renderer/RenderSystem_init.cpp
+index ee1e7e07..0a5d38be 100644
+--- a/neo/renderer/RenderSystem_init.cpp
++++ b/neo/renderer/RenderSystem_init.cpp
+@@ -393,6 +393,53 @@ static void initSortedVidModes()
+ 	qsort(sortedVidModes, s_numVidModes, sizeof(vidModePtr), vidModeCmp);
+ }
+ 
++/*
++==================
++R_MenuModeShown
++
++Whether the menu offers sortedVidModes[i]: modes 0-2 never (as before). Patch
++0035, AmigaOS: only the sizes the RTG system has a 32-bit screen mode for
++(Sys_ScreenModeAvailable, src/sys/amigaos3); asked once per mode. When
++cybergraphics.library cannot tell, or no size of the list exists, all are shown.
++==================
++*/
++#ifdef __amigaos3__
++int Sys_ScreenModeAvailable( int width, int height );
++#endif
++
++static bool R_MenuModeShown( int i )
++{
++	if ( sortedVidModes[i].modeIndex < 3 || sortedVidModes[i].vidMode == NULL ) {
++		return false;
++	}
++#ifdef __amigaos3__
++	static signed char available[s_numVidModes];	// 0 not asked, 1 yes, -1 no
++	static int anyAvailable = -1;					// -1 not asked yet
++	if ( anyAvailable < 0 ) {
++		idStr shown;
++		anyAvailable = 0;
++		for ( int j = 0; j < s_numVidModes; j++ ) {
++			const vidmode_t *vm = sortedVidModes[j].vidMode;
++			int r = ( vm && sortedVidModes[j].modeIndex >= 3 ) ? Sys_ScreenModeAvailable( vm->width, vm->height ) : 0;
++			if ( r < 0 ) {		// no cybergraphics.library: no way to tell
++				anyAvailable = 0;
++				break;
++			}
++			available[j] = r ? 1 : -1;
++			if ( r ) {
++				anyAvailable = 1;
++				shown += va( " %dx%d", vm->width, vm->height );
++			}
++		}
++		common->Printf( "Screen sizes in the menu (32-bit RTG modes):%s\n", anyAvailable ? shown.c_str() : " all (none found)" );
++	}
++	if ( anyAvailable && available[i] < 0 ) {
++		return false;
++	}
++#endif
++	return true;
++}
++
+ // DG: the following two functions are part of a horrible hack in ChoiceWindow.cpp
+ //     to overwrite the default resolution list in the system options menu
+ 
+@@ -404,7 +451,8 @@ idStr R_GetVidModeListString(bool addCustom)
+ 	for(int i=0; i<s_numVidModes; ++i)
+ 	{
+ 		// for some reason, modes 0-2 are not used. maybe too small for GUI?
+-		if(sortedVidModes[i].modeIndex >= 3 && sortedVidModes[i].vidMode != NULL)
++		// (patch 0035: and on AmigaOS only the screen sizes that exist)
++		if( R_MenuModeShown( i ) )
+ 		{
+ 			idStr modeStr;
+ 			sprintf(modeStr, ";%dx%d", sortedVidModes[i].vidMode->width, sortedVidModes[i].vidMode->height);
+@@ -421,7 +469,8 @@ idStr R_GetVidModeValsString(bool addCustom)
+ 	for(int i=0; i<s_numVidModes; ++i)
+ 	{
+ 		// for some reason, modes 0-2 are not used. maybe too small for GUI?
+-		if(sortedVidModes[i].modeIndex >= 3 && sortedVidModes[i].vidMode != NULL)
++		// (patch 0035: the same choice as R_GetVidModeListString's)
++		if( R_MenuModeShown( i ) )
+ 		{
+ 			ret += ";";
+ 			ret += sortedVidModes[i].modeIndex;
