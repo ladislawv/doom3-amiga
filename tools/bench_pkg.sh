@@ -20,14 +20,20 @@
 # with a driver "name=build@driver:args".
 # Another map: edit .def MAP in the package's Run-Bench (amictl -a takes no "/").
 # ogles2.library and v3dglslc come from ogles2's build (~/ogles2-build), copied
-# to ~/ogles2-build/direct-libs; ogles3's from its release (build_pkg.sh).
+# to ~/ogles2-build/direct-libs, or from OGLES2_LIBS=<dir> (a release's Libs/);
+# ogles3's from its release (build_pkg.sh, OGLES3_RELEASE=<dir>).
 set -e
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 cd "$(dirname "$0")/.."
 L=~/ogles2-build/direct-libs
-mkdir -p $L
-cp ~/ogles2-build/m68k/ogles2.library $L/
-cp ~/ogles2-build/v3dglslc/v3dglslc.stripped $L/v3dglslc
+if [ -n "${OGLES2_LIBS:-}" ]; then
+    # another ogles2: a directory with ogles2.library and v3dglslc (e.g. a release's Libs/)
+    L=$OGLES2_LIBS
+else
+    mkdir -p $L
+    cp ~/ogles2-build/m68k/ogles2.library $L/
+    cp ~/ogles2-build/v3dglslc/v3dglslc.stripped $L/v3dglslc
+fi
 # the builds the variants name, besides game
 B=()
 for v in "$@"; do
