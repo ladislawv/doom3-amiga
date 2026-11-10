@@ -37,13 +37,14 @@ Set d3dir `CD`
 Stack 9000000
 Avail FLUSH >NIL:
 
-; ogles2.library 1.3 or newer: one in LIBS: is found before the one in libs/
+; ogles2.library 1.4 or newer (the Pi 3 needs 1.4): one in LIBS: is found
+; before the one in libs/
 ; (the file's version string; Version by library name would search LIBS:
 ; only, not this drawer's libs/)
 If EXISTS LIBS:ogles2.library
-  Version >NIL: LIBS:ogles2.library 1 3
+  Version >NIL: LIBS:ogles2.library 1 4
   If WARN
-    RequestChoice >NIL: "Doom 3" "Doom 3 needs ogles2.library 1.3 or newer.*NAn older one in LIBS: is found first:*Ncopy the one in Doom 3's libs/ drawer to LIBS:." "OK"
+    RequestChoice >NIL: "Doom 3" "Doom 3 needs ogles2.library 1.4 or newer.*NAn older one in LIBS: is found first:*Ncopy the one in Doom 3's libs/ drawer to LIBS:." "OK"
     Quit 20
   EndIf
 EndIf

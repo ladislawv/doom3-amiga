@@ -1,20 +1,28 @@
-Short:        Doom 3 for AmigaOS 3 on PiStorm (Pi 4, ogles2)
+Short:        Doom 3 for AmigaOS 3 on PiStorm (Pi 4/3, ogles2)
 Author:       R-Typer, Ladislawv
 Type:         game/shoot
 Version:      @VERSION@
 Architecture: m68k-amigaos >= 3.0
-Requires:     PiStorm with Raspberry Pi 4, Emu68, RTG, Doom 3 1.3.1 data
+Requires:     PiStorm with Raspberry Pi 4 (or 3), Emu68, RTG, Doom 3 1.3.1 data
 Distribution: GPLv3 (game code); Doom 3's data not included
 
 Doom 3 (id Software, 2004) running natively on a 68k Amiga with a PiStorm.
-The game code runs on Emu68, the graphics are drawn by the Raspberry Pi 4's
-VideoCore GPU through ogles2.library (OpenGL ES 2.0 for AmigaOS 3, included).
+The game code runs on Emu68, the graphics are drawn by the Raspberry Pi's
+VideoCore GPU through ogles2.library 1.4 (OpenGL ES 2.0 for AmigaOS 3, for
+the Pi 4 and the Pi 3, included). Tested on a Pi 4; not yet tried on a Pi 3.
 Based on dhewm3/d3es, the GPL release of Doom 3's source. Ported by R-Typer
 and Ladislawv.
 
 About 17 frames a second in Doom 3's own benchmark at 1920x1080 with the
-Low settings; Medium and High settings, Paula or AHI sound, any RTG screen
-size.
+Low settings; Low, Medium, High and Ultra settings, Paula or AHI sound, any
+32-bit RTG screen size. Starts at 1280x720 with the frame rate shown; the
+settings changed in the game's menus are kept.
+
+New in 1.0-beta1: the settings saved and used at every start, 1280x720 by
+default, the game's speed following the frame rate, the precompressed
+textures at every quality, only the screen sizes your system has in the
+menu, the in-game screens taking clicks, colour icons, ogles2.library 1.4
+with the Raspberry Pi 3.
 
 You need your own copy of Doom 3: the nine pak00?.pk4 files of version
 1.3.1 (GOG.com, Steam, or a boxed copy with the 1.3.1 patch). The BFG

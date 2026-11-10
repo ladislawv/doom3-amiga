@@ -2,7 +2,8 @@
 # Builds the release: the drawer ~/doom3-build/release/Doom3 (with its icon
 # Doom3.info beside it), the archive Doom3-Amiga-<version>.lha and its
 # Aminet-style readme. Run in WSL after build.sh (the game) and with ogles2's
-# repository next to this one (its committed 1.3.1 user archive gives
+# Pi 3 repository (ogles2pi3) next to this one (its committed 1.4-beta1 user
+# archive, for the Pi 4 and the Pi 3, gives
 # ogles2.library, v3dglslc and their licences):
 #   bash release/build_release.sh        (into ~/doom3-build/release)
 #   bash release/build_release.sh dist   (and copies the archive and readme
@@ -13,7 +14,8 @@
 #   Doom3.script, *.cfg    tests/a1200/play/
 #   libs/, licences/ogles2 ogles2's release/dist/ogles2-<OGLES2>.lha
 #   shaders/               release/shaders/ (the game's 11 GLSL programs as
-#                          ogles2 1.3's compiler made them on the A1200; to
+#                          ogles2 1.4-beta1's compiler made them on the A1200,
+#                          the Pi 4's; the Pi 3 compiles its own at first use; to
 #                          be made again after an ogles2 or compiler update)
 #   icons                  release/icons/ (colour icons, made on the A1200 by
 #                          release/src/mkicons.c from the system's defaults and
@@ -29,8 +31,8 @@ SOURCE=${SOURCE:-https://github.com/ladislawv/doom3-amiga}
 TC16=${TC16:-$HOME/amiga-gcc162-install}
 M=${M:-$HOME/doom3-build/m68k}
 OUT=${OUT:-$HOME/doom3-build/release}
-OGLES2=${OGLES2:-1.3.1}
-OGLES2_DIST=${OGLES2_DIST:-$REPO/../ogles2/release/dist}
+OGLES2=${OGLES2:-1.4-beta1}
+OGLES2_DIST=${OGLES2_DIST:-$REPO/../ogles2pi3/release/dist}
 LHA=${LHA:-$HOME/tools/bin/lha}
 D3ES_SRC=${D3ES_SRC:-$HOME/d3es}
 SDL2_SRC=${SDL2_SRC:-$HOME/d3-sdl2}

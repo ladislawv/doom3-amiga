@@ -7,7 +7,8 @@
 
 Doom 3 (id Software, 2004) running natively on a 68k Amiga with a PiStorm:
 the game code runs on Emu68, and the graphics are drawn by the Raspberry
-Pi 4's VideoCore GPU through ogles2.library (OpenGL ES 2.0 for AmigaOS 3).
+Pi's VideoCore GPU (Pi 4 or Pi 3) through ogles2.library (OpenGL ES 2.0
+for AmigaOS 3).
 The port is based on dhewm3/d3es, the GPL release of Doom 3's source.
 
 The game's data is NOT included: you need your own copy of Doom 3 (the
@@ -29,6 +30,7 @@ CONTENTS
  10. What is in the drawer
  11. Licences and source code
  12. Credits
+ 13. History
 
 
 1. WHAT YOU NEED
@@ -36,7 +38,8 @@ CONTENTS
 
 Hardware
   - An Amiga with a PiStorm and a Raspberry Pi 4 (or CM4). Tested on an
-    A1200 with a Pi 4.
+    A1200 with a Pi 4. A Raspberry Pi 3B or 3B+ should work too, but
+    Doom 3 has not been tried on one yet: see section 5.
   - The Pi's HDMI output for the picture (the game draws on an RTG screen).
 
 Software
@@ -49,7 +52,7 @@ Software
   - Plenty of Fast RAM: tested with the 1.8 GB Emu68 gives a Pi 4.
   - About 1.6 GB free on a partition for the game's data, and 30 MB for
     this drawer.
-  - ogles2.library 1.3 is included (libs/). If an older ogles2.library is
+  - ogles2.library 1.4 is included (libs/). If an older ogles2.library is
     installed in LIBS:, the game asks you to update it.
 
 Game data (not included)
@@ -127,6 +130,9 @@ Two things are fixed at every setting: the game's tics a second follow
 the frame rate (between 20 and 60, about 5 above the frames a second),
 and the textures are the precompressed (DDS) ones the game data holds.
 
+The screen sizes in Options > System are the ones your RTG system has a
+32-bit mode for (Picasso96Mode); add a mode there to see it in the list.
+
 Options are given to Doom3 in a Shell (Doom3 KEY=VALUE ...) or as the
 icon's Tool Types: select the Doom3 icon, choose Icons > Information,
 remove the parentheses around one (e.g. (QUALITY=low) into QUALITY=high)
@@ -177,9 +183,18 @@ but not smooth game. Measured on an A1200 with a Pi 4 (its ARM at
            decals, muzzle flashes, shell casings). The fastest.
   medium   Full-size textures and shadows, effects still off.
   high     Full textures, shadows and all the effects.
+  ultra    Doom 3's Ultra preset with all the effects, but no shadows.
 
 The processor (Emu68 running the game's 68k code) is the limit more than
 the GPU, so smaller screen sizes help less than you might expect.
+
+On a Raspberry Pi 3 (not tried with Doom 3 yet) expect much less: its
+Emu68 and GPU are slower (Quake III runs at about a third of its Pi 4
+speed), its GPU unpacks the compressed textures into 4 to 8 times the
+memory, and the Pi has 1 GB in all. Start with QUALITY=low and a small
+screen (W=640 H=480). The first start compiles the game's shaders for the
+Pi 3 (the drawer holds the Pi 4's): a short wait the first time each is
+needed, then they are kept in OGLES2Cache: (or T: until a reboot).
 
 
 6. SOUND
@@ -217,10 +232,10 @@ Nothing happens when I double-click the icon
     is not assigned (Assign LIBS: should list SYS:Libs). Reboot.
   - No game data: the pak00?.pk4 files are not in Doom3/base/.
 
-A requester says Doom 3 needs ogles2.library 1.3 or newer
+A requester says Doom 3 needs ogles2.library 1.4 or newer
   An older ogles2.library in LIBS: is found before the one in Doom3/libs/.
   Copy Doom3/libs/ogles2.library to LIBS: (and Doom3/libs/v3dglslc too),
-  or install ogles2 1.3.1 from its own release.
+  or install ogles2 1.4 from its own release.
 
 The screen stays black or the game stops at once
   The screen mode is missing: add a 32-bit mode of that size in
@@ -250,15 +265,17 @@ The Amiga freezes
 -------------------------
 
   Doom3              Starts the game (the icon); runs Doom3.script
-  Doom3.script       The settings: screen, quality, sound; then the game
+  Doom3.script       Passes the options on (section 4); then the game
   dhewm3             The game itself
-  low.cfg, medium.cfg, high.cfg
-                     The three quality settings
-  libs/              ogles2.library 1.3 and its shader compiler v3dglslc
+  low.cfg, medium.cfg, high.cfg, ultra.cfg
+                     The port's part of the four quality settings
+  libs/              ogles2.library 1.4 (Pi 4 and Pi 3) and its shader
+                     compiler v3dglslc
   shaders/           The game's shaders, compiled ahead of time
   base/              Doom 3's data goes here (pak000.pk4 - pak008.pk4)
   demo/              Or the free demo's data (demo00.pk4)
-  save/              Made at the first start: settings and saved games
+  save/              Made at the first start: settings (base/dhewm.cfg)
+                     and saved games
   licences/          The licences of the parts
   ReadMe             This text
 
@@ -287,3 +304,25 @@ The Amiga freezes
   - SDL2_68k by Steffen "MagicSN" Haeuser.
   - Emu68 by Michal Schulz; PiStorm by Claude Schwarz and contributors.
   - ogles2.library, and this port, by R-Typer and Ladislawv
+
+
+13. HISTORY
+-----------
+
+1.0-beta1 (@DATE@)
+  - The first start sets 1280x720, Low quality and the frame rate shown;
+    what you change in the menus or the console is kept from then on.
+    The launcher's options are saved too; RESET starts afresh.
+  - Quality from the menu keeps the screen size, and runs the port's
+    settings for it (low, medium, high and the new ultra).
+  - The game's tics a second always follow the frame rate.
+  - The precompressed textures at every quality (Ultra loaded the much
+    slower uncompressed ones).
+  - Only the screen sizes your RTG system has are offered in the menu.
+  - Clicks on the screens in the game (the elevator panels in Mars City)
+    work: a text without a number now reads as 0.
+  - New colour icons.
+  - ogles2.library 1.4 beta 1: the Raspberry Pi 3 as well as the Pi 4.
+
+0.1 (2026-10-22)
+  - The first release.
