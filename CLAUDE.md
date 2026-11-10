@@ -81,3 +81,6 @@ OpenAL subset `src/al`, the libnix additions `src/amiga`); SDL2 changes in `sdl2
 - The game detects "Ultra" quality from the memory on every fresh package: settings go on the
   command line or in a `+exec` file (`play/low.cfg`), which run after the detection.
 - Each run's sound system is restarted once during start-up (the detection does it).
+- Patch 0032 (the data prepared at the first start, PLAN.md §16) is off by default: the game
+  loads the original pk4s and never asks. `+set fs_prepare 2 +set fs_usePrepared 1` prepares
+  and loads `<game folder>/prepared/` (the A1200's `Stuff:doom3/base/prepared` has one).

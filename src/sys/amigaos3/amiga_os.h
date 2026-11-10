@@ -25,6 +25,8 @@ int amiga_exists(const char *path, int dir);
 int amiga_mkdir(const char *path);
 /* calls `found` for each entry of `dir`; -1 if it cannot be read, else the count */
 int amiga_list_dir(const char *dir, void (*found)(const char *name, int isdir, void *user), void *user);
+/* free room on the volume holding `path`, in MB; -1 if unknown */
+long amiga_free_mb(const char *path);
 /* the modification date of a file in seconds since 1970; 0 if unknown */
 long amiga_file_time(const char *path);
 /* a requester with the message (for fatal errors when no console may be visible) */

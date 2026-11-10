@@ -1,0 +1,1572 @@
+diff --git a/neo/CMakeLists.txt b/neo/CMakeLists.txt
+index 20dbd446..d38a4114 100644
+--- a/neo/CMakeLists.txt
++++ b/neo/CMakeLists.txt
+@@ -621,6 +621,7 @@ set(src_framework
+ 	framework/DeclPDA.cpp
+ 	framework/DeclSkin.cpp
+ 	framework/DeclTable.cpp
++	framework/DataPrepare.cpp
+ 	framework/EditField.cpp
+ 	framework/EventLoop.cpp
+ 	framework/File.cpp
+diff --git a/neo/framework/Common.cpp b/neo/framework/Common.cpp
+index 5837ccfa..2fb4b1ab 100644
+--- a/neo/framework/Common.cpp
++++ b/neo/framework/Common.cpp
+@@ -54,6 +54,7 @@ If you have questions concerning this license or the applicable additional terms
+ 
+ #include "GameCallbacks_local.h"
+ #include "Session_local.h" // DG: For FT_IsDemo/isDemo() hack
++#include "framework/DataPrepare.h"	// patch 0032
+ 
+ #define	MAX_PRINT_MSG_SIZE	4096
+ #define MAX_WARNING_LIST	256
+@@ -3271,6 +3272,12 @@ void idCommonLocal::InitGame( void ) {
+ 		// init OpenGL, which will open a window and connect sound and input hardware
+ 		PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04348" ) );
+ 		InitRenderSystem();
++
++		// patch 0032: the game data prepared once (framework/DataPrepare.cpp); a
++		// completed preparation is loaded from here on
++		if ( DataPrepare_Run() ) {
++			fileSystem->Restart();
++		}
+ 	}
+ #endif
+ 
+diff --git a/neo/framework/DataPrepare.cpp b/neo/framework/DataPrepare.cpp
+new file mode 100644
+index 00000000..a170b246
+--- /dev/null
++++ b/neo/framework/DataPrepare.cpp
+@@ -0,0 +1,1211 @@
++/*
++Patch 0032: the game data prepared once, at the first start (PLAN.md §16).
++
++At a level load the 68k inflates every file it reads from the pk4s and decodes
++every OGG sound below s_decompressionLimit. Both give the same result every
++time, so the first start does them once: each pk4 of a game folder is
++rewritten into <folder>/prepared/ under the same name, with
++- what a load reads stored (no compression);
++- each OGG that idSoundSample::Load would decode at a load (below
++  fs_prepareSoundLimit seconds) decoded by the same code and written as a
++  16-bit PCM WAV under the same name (idWaveFile::Open prefers an .ogg, so the
++  .ogg is left out);
++- what a load does not read (a TGA whose plain image has a DDS, the
++  extensions in fs_prepareKeep) and what is stored already copied as it is,
++  compressed bytes and all.
++prepared/prepared.txt names the originals each prepared pk4 was made from
++(size and date). When every original of the folder has its prepared pk4, the
++file system loads those instead (DataPrepare_PakFolder, FileSystem.cpp).
++GPLv3, as the rest of the game.
++*/
++
++#include "sys/platform.h"
++#include "idlib/Dict.h"
++#include "framework/Common.h"
++#include "framework/CVarSystem.h"
++#include "framework/FileSystem.h"
++#include "framework/KeyInput.h"
++#include "framework/DeclManager.h"
++#include "framework/Unzip.h"
++#include "renderer/Material.h"
++#include "renderer/RenderSystem.h"
++#include "sys/sys_public.h"
++
++#include "framework/DataPrepare.h"
++
++#include <zlib.h>
++#include <stdio.h>
++#include <time.h>
++
++// snd_decoder.cpp
++void	Sound_PrepareBegin( void );
++void	Sound_PrepareEnd( void );
++int		Sound_PrepareOgg( const char *name, const byte *ogg, int oggSize, int limitSeconds, short **pcm, int *channels, int *rate );
++
++// raised whenever the prepared files change: older preparations are made again
++#define PREPARE_VERSION		1
++#define PREPARE_FOLDER		"prepared"
++#define PREPARE_MANIFEST	"prepared.txt"
++// a prepared pk4 is split before it reaches this (dos.library's Seek is 32-bit signed)
++#define PREPARE_SPLIT		1900000000u
++#define PREPARE_MAX_ENTRIES	65000
++#define MAX_ZIPPED_FILE_NAME	2048		// as FileSystem.cpp
++
++// the A1200's rates, for the estimate before the work starts and the progress
++// bar's weights (the full game's preparation, PLAN.md §14, 2026-11-10: 12:36)
++static const double RATE_INFLATE	= 5.85e6;	// bytes out a second, inflated and written
++static const double RATE_COPY		= 5.4e6;	// bytes a second, read and written as they are
++static const double RATE_DECODE		= 3.55e6;	// PCM bytes a second from stb_vorbis
++static const double OGG_TO_PCM		= 10.5;		// PCM bytes per OGG byte (the full game: 10.3 below 60 s)
++
++// off by default (the developer, 2026-11-10: mars_city1 95 to 82 s is not worth it);
++// "+set fs_prepare 2 +set fs_usePrepared 1" prepares and loads it
++idCVar fs_prepare( "fs_prepare", "0", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTEGER,
++	"prepare the game data once at the start: 0 never, 1 ask, 2 without asking", 0, 2 );
++idCVar fs_usePrepared( "fs_usePrepared", "0", CVAR_SYSTEM | CVAR_BOOL,
++	"load a game folder's prepared pk4s (prepared/) when they are complete" );
++idCVar fs_prepareSoundLimit( "fs_prepareSoundLimit", "60", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTEGER,
++	"OGG sounds shorter than this many seconds are prepared as PCM (as s_decompressionLimit)", 0, 600 );
++idCVar fs_prepareKeep( "fs_prepareKeep", "roq demo", CVAR_SYSTEM | CVAR_ARCHIVE,
++	"extensions a prepared pk4 keeps compressed (read rarely or not compressible)" );
++
++/*
++==============================================================================
++
++	Small helpers
++
++==============================================================================
++*/
++
++static idStrList	prepGameFolders;
++
++static idStr Prep_Join( const char *folder, const char *name ) {
++	idStr s = folder;
++	if ( s.Length() && s[s.Length() - 1] != '/' && s[s.Length() - 1] != ':' ) {
++		s += "/";
++	}
++	s += name;
++	return s;
++}
++
++static bool Prep_FileInfo( const char *path, int &size, long &mtime ) {
++	FILE *f = fopen( path, "rb" );
++	if ( !f ) {
++		return false;
++	}
++	fseek( f, 0, SEEK_END );
++	size = (int)ftell( f );
++	mtime = (long)Sys_FileTimeStamp( f );
++	fclose( f );
++	return true;
++}
++
++static bool Prep_Exists( const char *path ) {
++	FILE *f = fopen( path, "rb" );
++	if ( f ) {
++		fclose( f );
++		return true;
++	}
++	return false;
++}
++
++// rename that replaces (AmigaDOS's Rename does not)
++static bool Prep_Rename( const char *from, const char *to ) {
++	remove( to );
++	return rename( from, to ) == 0;
++}
++
++static idStr Prep_Settings( void ) {
++	idStr keep = fs_prepareKeep.GetString();
++	keep.Replace( " ", "," );
++	return va( "limit=%d keep=%s", fs_prepareSoundLimit.GetInteger(), keep.c_str() );
++}
++
++static idStr Prep_Time( int seconds ) {
++	if ( seconds < 0 ) {
++		seconds = 0;
++	}
++	if ( seconds >= 3600 ) {
++		return va( "%d:%02d:%02d", seconds / 3600, ( seconds / 60 ) % 60, seconds % 60 );
++	}
++	return va( "%d:%02d", seconds / 60, seconds % 60 );
++}
++
++/*
++==============================================================================
++
++	The manifest
++
++prepared.txt:
++	doom3-prepared <version>
++	settings limit=<s> keep=<ext,ext>
++	pak <original> <size> <date> <prepared> [<prepared part 2> ...]
++	...
++A pak line is written when its prepared pk4 is complete.
++
++==============================================================================
++*/
++
++struct prepDone_t {
++	idStr		original;
++	int			size;
++	long		mtime;
++	idStrList	outputs;
++};
++
++struct prepManifest_t {
++	int			version;
++	idStr		settings;
++	idList<prepDone_t>	done;
++
++	const prepDone_t *Find( const char *original, int size, long mtime ) const {
++		for ( int i = 0; i < done.Num(); i++ ) {
++			if ( !done[i].original.Icmp( original ) && done[i].size == size && done[i].mtime == mtime ) {
++				return &done[i];
++			}
++		}
++		return NULL;
++	}
++};
++
++static bool Prep_ReadManifest( const char *folder, prepManifest_t &m ) {
++	m.version = 0;
++	m.settings.Clear();
++	m.done.Clear();
++	FILE *f = fopen( Prep_Join( Prep_Join( folder, PREPARE_FOLDER ), PREPARE_MANIFEST ), "r" );
++	if ( !f ) {
++		return false;
++	}
++	char line[1024];
++	while ( fgets( line, sizeof( line ), f ) ) {
++		idStr l = line;
++		l.StripTrailingWhitespace();
++		idStrList tok;
++		int start = 0;
++		for ( int i = 0; i <= l.Length(); i++ ) {
++			if ( i == l.Length() || l[i] == ' ' ) {
++				if ( i > start ) {
++					tok.Append( l.Mid( start, i - start ) );
++				}
++				start = i + 1;
++			}
++		}
++		if ( tok.Num() == 2 && tok[0] == "doom3-prepared" ) {
++			m.version = atoi( tok[1] );
++		} else if ( tok.Num() >= 1 && tok[0] == "settings" ) {
++			m.settings = l.Right( l.Length() - 9 );
++		} else if ( tok.Num() >= 5 && tok[0] == "pak" ) {
++			prepDone_t d;
++			d.original = tok[1];
++			d.size = atoi( tok[2] );
++			d.mtime = atol( tok[3] );
++			for ( int i = 4; i < tok.Num(); i++ ) {
++				d.outputs.Append( tok[i] );
++			}
++			m.done.Append( d );
++		}
++	}
++	fclose( f );
++	return m.version != 0;
++}
++
++static bool Prep_WriteManifest( const char *folder, const prepManifest_t &m ) {
++	idStr dir = Prep_Join( folder, PREPARE_FOLDER );
++	idStr path = Prep_Join( dir, PREPARE_MANIFEST );
++	idStr tmp = path + ".tmp";
++	FILE *f = fopen( tmp, "w" );
++	if ( !f ) {
++		return false;
++	}
++	fprintf( f, "doom3-prepared %d\n", m.version );
++	fprintf( f, "settings %s\n", m.settings.c_str() );
++	for ( int i = 0; i < m.done.Num(); i++ ) {
++		const prepDone_t &d = m.done[i];
++		fprintf( f, "pak %s %d %ld", d.original.c_str(), d.size, d.mtime );
++		for ( int j = 0; j < d.outputs.Num(); j++ ) {
++			fprintf( f, " %s", d.outputs[j].c_str() );
++		}
++		fprintf( f, "\n" );
++	}
++	bool ok = ( fclose( f ) == 0 );
++	return ok && Prep_Rename( tmp, path );
++}
++
++/*
++==============================================================================
++
++	Which folder the file system loads
++
++==============================================================================
++*/
++
++void DataPrepare_NoteGameFolder( const char *osFolder ) {
++	for ( int i = 0; i < prepGameFolders.Num(); i++ ) {
++		if ( !prepGameFolders[i].Icmp( osFolder ) ) {
++			return;
++		}
++	}
++	prepGameFolders.Append( osFolder );
++}
++
++// the originals of a folder, sorted as the file system loads them
++static void Prep_ListOriginals( const char *folder, idStrList &list ) {
++	list.Clear();
++	Sys_ListFiles( folder, ".pk4", list );
++	list.Sort();
++}
++
++// true when every original of the folder has a complete prepared pk4
++static bool Prep_Complete( const char *folder, const prepManifest_t &m ) {
++	if ( m.version != PREPARE_VERSION ) {
++		return false;
++	}
++	idStrList originals;
++	Prep_ListOriginals( folder, originals );
++	if ( originals.Num() == 0 || originals.Num() != m.done.Num() ) {
++		return false;
++	}
++	idStr dir = Prep_Join( folder, PREPARE_FOLDER );
++	for ( int i = 0; i < originals.Num(); i++ ) {
++		int size;
++		long mtime;
++		if ( !Prep_FileInfo( Prep_Join( folder, originals[i] ), size, mtime ) ) {
++			return false;
++		}
++		const prepDone_t *d = m.Find( originals[i], size, mtime );
++		if ( !d ) {
++			return false;
++		}
++		for ( int j = 0; j < d->outputs.Num(); j++ ) {
++			if ( !Prep_Exists( Prep_Join( dir, d->outputs[j] ) ) ) {
++				return false;
++			}
++		}
++	}
++	return true;
++}
++
++idStr DataPrepare_PakFolder( const char *osFolder ) {
++	if ( !fs_usePrepared.GetBool() ) {
++		return "";
++	}
++	prepManifest_t m;
++	if ( !Prep_ReadManifest( osFolder, m ) || !Prep_Complete( osFolder, m ) ) {
++		return "";
++	}
++	return Prep_Join( osFolder, PREPARE_FOLDER );
++}
++
++/*
++==============================================================================
++
++	A pk4 written with stored entries
++
++Local headers carry the sizes and CRC (no data descriptors), so that minizip's
++check of a local header against the central directory holds.
++
++==============================================================================
++*/
++
++class idPrepZipWriter {
++public:
++				idPrepZipWriter() : f( NULL ), offset( 0 ), bufUsed( 0 ), failed( false ) {}
++				~idPrepZipWriter() { Abort(); }
++
++	bool		Open( const char *path );
++	// the entry's header; its data follows with Write, exactly csize bytes
++	void		Begin( const char *name, int method, int flag, unsigned int dosDate, unsigned int crc, unsigned int csize, unsigned int usize );
++	void		Write( const void *data, int len );
++	bool		Close();		// writes the central directory; false on any write error
++	void		Abort();		// closes without the directory (the file is to be removed)
++
++	unsigned int	Offset() const { return offset; }
++	int			Entries() const { return central.Num(); }
++	bool		Failed() const { return failed; }
++
++private:
++	struct entry_t {
++		idStr			name;
++		unsigned short	method, flag;
++		unsigned int	dosDate, crc, csize, usize, offset;
++	};
++	FILE *			f;
++	unsigned int	offset;
++	idList<entry_t>	central;
++	byte			buf[256 * 1024];
++	int				bufUsed;
++	bool			failed;
++
++	void		Flush();
++	void		Put16( unsigned int v ) { byte b[2] = { (byte)v, (byte)( v >> 8 ) }; Write( b, 2 ); }
++	void		Put32( unsigned int v ) { byte b[4] = { (byte)v, (byte)( v >> 8 ), (byte)( v >> 16 ), (byte)( v >> 24 ) }; Write( b, 4 ); }
++};
++
++bool idPrepZipWriter::Open( const char *path ) {
++	f = fopen( path, "wb" );
++	offset = 0;
++	bufUsed = 0;
++	failed = ( f == NULL );
++	central.Clear();
++	return f != NULL;
++}
++
++void idPrepZipWriter::Flush() {
++	if ( bufUsed && f && !failed ) {
++		if ( fwrite( buf, 1, bufUsed, f ) != (size_t)bufUsed ) {
++			failed = true;
++		}
++	}
++	bufUsed = 0;
++}
++
++void idPrepZipWriter::Write( const void *data, int len ) {
++	const byte *p = (const byte *)data;
++	offset += len;
++	if ( bufUsed + len > (int)sizeof( buf ) ) {
++		Flush();
++		if ( len >= (int)sizeof( buf ) ) {
++			if ( f && !failed && fwrite( p, 1, len, f ) != (size_t)len ) {
++				failed = true;
++			}
++			return;
++		}
++	}
++	memcpy( buf + bufUsed, p, len );
++	bufUsed += len;
++}
++
++void idPrepZipWriter::Begin( const char *name, int method, int flag, unsigned int dosDate, unsigned int crc, unsigned int csize, unsigned int usize ) {
++	entry_t &e = central.Alloc();
++	e.name = name;
++	e.method = method;
++	e.flag = flag & ~8;		// sizes in the local header, no data descriptor
++	e.dosDate = dosDate;
++	e.crc = crc;
++	e.csize = csize;
++	e.usize = usize;
++	e.offset = offset;
++	Put32( 0x04034b50 );
++	Put16( method ? 20 : 10 );
++	Put16( e.flag );
++	Put16( method );
++	Put16( dosDate & 0xffff );
++	Put16( dosDate >> 16 );
++	Put32( crc );
++	Put32( csize );
++	Put32( usize );
++	Put16( e.name.Length() );
++	Put16( 0 );
++	Write( e.name.c_str(), e.name.Length() );
++}
++
++bool idPrepZipWriter::Close() {
++	if ( !f ) {
++		return false;
++	}
++	unsigned int dirStart = offset;
++	for ( int i = 0; i < central.Num(); i++ ) {
++		const entry_t &e = central[i];
++		Put32( 0x02014b50 );
++		Put16( 20 );
++		Put16( e.method ? 20 : 10 );
++		Put16( e.flag );
++		Put16( e.method );
++		Put16( e.dosDate & 0xffff );
++		Put16( e.dosDate >> 16 );
++		Put32( e.crc );
++		Put32( e.csize );
++		Put32( e.usize );
++		Put16( e.name.Length() );
++		Put16( 0 );		// extra
++		Put16( 0 );		// comment
++		Put16( 0 );		// disk
++		Put16( 0 );		// internal attributes
++		Put32( 0 );		// external attributes
++		Put32( e.offset );
++		Write( e.name.c_str(), e.name.Length() );
++	}
++	unsigned int dirSize = offset - dirStart;
++	Put32( 0x06054b50 );
++	Put16( 0 );
++	Put16( 0 );
++	Put16( central.Num() );
++	Put16( central.Num() );
++	Put32( dirSize );
++	Put32( dirStart );
++	Put16( 0 );
++	Flush();
++	if ( fclose( f ) != 0 ) {
++		failed = true;
++	}
++	f = NULL;
++	central.Clear();
++	return !failed;
++}
++
++void idPrepZipWriter::Abort() {
++	if ( f ) {
++		fclose( f );
++		f = NULL;
++	}
++	central.Clear();
++	bufUsed = 0;
++}
++
++/*
++==============================================================================
++
++	What is to be done
++
++==============================================================================
++*/
++
++enum prepKind_t {
++	PREP_COPY,		// as it is (compressed or stored already)
++	PREP_STORE,		// inflated and stored
++	PREP_SOUND		// an OGG: decoded to a WAV when a load would decode it
++};
++
++struct prepPak_t {
++	idStr		name;		// "pak000.pk4"
++	idStr		path;
++	int			size;
++	long		mtime;
++	bool		todo;
++	double		work;		// estimated seconds on the A1200
++	double		outBytes;	// estimated size of its prepared pk4
++	int			files;
++	int			sounds;
++};
++
++struct prepFolder_t {
++	idStr		path;
++	idList<prepPak_t>	paks;
++	prepManifest_t		manifest;
++	bool		mounted;	// its prepared pk4s are loaded now
++	idDict		lastPak;	// lower-case name -> index of the last pk4 holding it
++};
++
++struct prepProgress_t {
++	double		totalWork, doneWork;
++	int			totalFiles, doneFiles;
++	int			totalSounds, doneSounds;
++	double		totalOut;
++	double		written;
++	unsigned int	start, lastDraw;
++	bool		stop;
++	bool		screen;
++	idStr		folderName;
++	idStr		pakLine;
++	idStr		fileName;
++	// what the time went into (for PLAN.md's measurements)
++	double		msInflate, msCopy, msDecode;
++	double		bytesInflated, bytesCopied, pcmBytes;
++	int			soundsConverted, soundsKept;
++};
++
++static prepProgress_t prep;
++
++static idStr Prep_Lower( const char *name ) {
++	idStr s = name;
++	s.ToLower();
++	s.BackSlashesToSlashes();
++	return s;
++}
++
++static bool Prep_KeepExtension( const idStr &lowerName ) {
++	idStr ext;
++	lowerName.ExtractFileExtension( ext );
++	if ( !ext.Length() ) {
++		return false;
++	}
++	idStr keep = fs_prepareKeep.GetString();
++	keep.ToLower();
++	keep.Replace( ",", " " );
++	keep = " " + keep + " ";
++	return keep.Find( " " + ext + " " ) >= 0;
++}
++
++static prepKind_t Prep_Kind( const prepFolder_t &folder, int pakIndex, const idStr &lowerName, const unz_file_info64 &info ) {
++	if ( info.uncompressed_size == 0 ) {
++		return PREP_COPY;
++	}
++	idStr base = lowerName;
++	base.StripFileExtension();
++	if ( lowerName.Right( 4 ) == ".ogg" ) {
++		// idWaveFile::Open plays an .ogg before a .wav of the same name; a WAV made
++		// from this one would lose to a real .wav in this or a later pk4
++		if ( folder.lastPak.GetInt( base + ".wav", "-1" ) >= pakIndex ) {
++			return PREP_COPY;
++		}
++		return PREP_SOUND;
++	}
++	if ( lowerName.Right( 4 ) == ".tga" && folder.lastPak.FindKey( "dds/" + base + ".dds" ) ) {
++		return PREP_COPY;	// a load reads the DDS (image_usePrecompressedTextures 1)
++	}
++	if ( info.compression_method == 0 || Prep_KeepExtension( lowerName ) ) {
++		return PREP_COPY;
++	}
++	return PREP_STORE;
++}
++
++// the names in all the folder's pk4s, and the estimate for those to do
++static bool Prep_Scan( prepFolder_t &folder ) {
++	char name[MAX_ZIPPED_FILE_NAME];
++	unz_file_info64 info;
++
++	for ( int pass = 0; pass < 2; pass++ ) {
++		for ( int p = 0; p < folder.paks.Num(); p++ ) {
++			prepPak_t &pak = folder.paks[p];
++			if ( pass == 1 && !pak.todo ) {
++				continue;
++			}
++			unzFile uf = unzOpen( pak.path );
++			if ( !uf ) {
++				common->Warning( "Preparing: cannot open %s", pak.path.c_str() );
++				return false;
++			}
++			pak.work = pak.outBytes = 0;
++			pak.files = pak.sounds = 0;
++			int err = unzGoToFirstFile( uf );
++			while ( err == UNZ_OK ) {
++				if ( unzGetCurrentFileInfo64( uf, &info, name, sizeof( name ), NULL, 0, NULL, 0 ) != UNZ_OK ) {
++					break;
++				}
++				idStr lower = Prep_Lower( name );
++				if ( pass == 0 ) {
++					folder.lastPak.SetInt( lower, p );
++				} else {
++					switch ( Prep_Kind( folder, p, lower, info ) ) {
++						case PREP_COPY:
++							pak.work += info.compressed_size / RATE_COPY;
++							pak.outBytes += info.compressed_size;
++							break;
++						case PREP_STORE:
++							pak.work += info.uncompressed_size / RATE_INFLATE;
++							pak.outBytes += info.uncompressed_size;
++							break;
++						case PREP_SOUND:
++							pak.work += info.uncompressed_size * OGG_TO_PCM / RATE_DECODE;
++							pak.outBytes += info.uncompressed_size * OGG_TO_PCM;
++							pak.sounds++;
++							break;
++					}
++					pak.outBytes += 30 + 46 + 2 * strlen( name );
++					pak.files++;
++				}
++				err = unzGoToNextFile( uf );
++			}
++			unzClose( uf );
++		}
++	}
++	return true;
++}
++
++/*
++==============================================================================
++
++	The screen
++
++==============================================================================
++*/
++
++static int Prep_PollKey( void ) {
++	int key = 0;
++	Sys_GenerateEvents();
++	while ( 1 ) {
++		sysEvent_t ev = Sys_GetEvent();
++		if ( ev.evType == SE_NONE ) {
++			break;
++		}
++		if ( ev.evPtr ) {
++			Mem_Free( ev.evPtr );
++		}
++		if ( ev.evType == SE_KEY && ev.evValue2 && !key ) {
++			key = ev.evValue;
++		}
++	}
++	return key;
++}
++
++static void Prep_Draw( const idStrList &lines, float frac ) {
++	if ( !prep.screen ) {
++		return;
++	}
++	const idMaterial *white = declManager->FindMaterial( "_white" );
++	const idMaterial *font = declManager->FindMaterial( "textures/bigchars" );
++	const idVec4 text( 0.0f, 0.81f, 0.94f, 1.0f );		// PrintLoadingMessage's colour
++
++	renderSystem->BeginFrame( renderSystem->GetScreenWidth(), renderSystem->GetScreenHeight() );
++	renderSystem->SetColor4( 1, 1, 1, 1 );
++	renderSystem->DrawStretchPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 1, 1, declManager->FindMaterial( "splashScreen" ) );
++	renderSystem->SetColor4( 0.02f, 0.03f, 0.05f, 1 );
++	renderSystem->DrawStretchPic( 32, 96, 576, 336, 0, 0, 1, 1, white );
++	for ( int i = 0; i < lines.Num(); i++ ) {
++		idStr l = lines[i];
++		if ( l.Length() > 68 ) {
++			l = "..." + l.Right( 65 );
++		}
++		renderSystem->DrawSmallStringExt( 48, 108 + i * 18, l.c_str(), text, true, font );
++	}
++	if ( frac >= 0.0f ) {
++		const float x = 48, y = 396, w = 544, h = 18;
++		renderSystem->SetColor4( text.x, text.y, text.z, 1 );
++		renderSystem->DrawStretchPic( x - 2, y - 2, w + 4, 2, 0, 0, 1, 1, white );
++		renderSystem->DrawStretchPic( x - 2, y + h, w + 4, 2, 0, 0, 1, 1, white );
++		renderSystem->DrawStretchPic( x - 2, y, 2, h, 0, 0, 1, 1, white );
++		renderSystem->DrawStretchPic( x + w, y, 2, h, 0, 0, 1, 1, white );
++		renderSystem->DrawStretchPic( x, y, w * idMath::ClampFloat( 0.0f, 1.0f, frac ), h, 0, 0, 1, 1, white );
++	}
++	renderSystem->SetColor4( 1, 1, 1, 1 );
++	renderSystem->EndFrame( NULL, NULL );
++}
++
++// redraws the progress (at most four times a second) and looks for Esc
++static void Prep_Tick( bool force ) {
++	unsigned int now = Sys_Milliseconds();
++	if ( !force && now - prep.lastDraw < 250 ) {
++		return;
++	}
++	prep.lastDraw = now;
++	if ( Prep_PollKey() == K_ESCAPE ) {
++		prep.stop = true;
++	}
++
++	float frac = prep.totalWork > 0 ? (float)( prep.doneWork / prep.totalWork ) : 0.0f;
++	int elapsed = ( now - prep.start ) / 1000;
++	idStr left = "estimating";
++	if ( elapsed >= 10 && prep.doneWork > 0 ) {
++		left = "about " + Prep_Time( (int)( elapsed * ( prep.totalWork - prep.doneWork ) / prep.doneWork ) ) + " left";
++	}
++
++	idStrList lines;
++	lines.Append( "Preparing the game data (once)" );
++	lines.Append( "" );
++	lines.Append( prep.folderName );
++	lines.Append( prep.pakLine );
++	lines.Append( prep.fileName );
++	lines.Append( "" );
++	lines.Append( va( "Files   %d of %d", prep.doneFiles, prep.totalFiles ) );
++	lines.Append( va( "Sounds  %d of %d decoded", prep.doneSounds, prep.totalSounds ) );
++	lines.Append( va( "Written %d of about %d MB", (int)( prep.written / 1048576.0 ), (int)( prep.totalOut / 1048576.0 ) ) );
++	lines.Append( va( "Time    %s, %s", Prep_Time( elapsed ).c_str(), left.c_str() ) );
++	lines.Append( "" );
++	if ( prep.stop ) {
++		lines.Append( "Stopping after this file..." );
++	} else {
++		lines.Append( "ESC stops; the next start goes on from there." );
++	}
++	Prep_Draw( lines, frac );
++}
++
++// the question before anything is written: 1 prepare, 0 not now, -1 never
++static int Prep_Ask( const idList<prepFolder_t> &folders, double work, double outBytes ) {
++	idStrList lines;
++	int pakCount = 0;
++	idStr where;
++	for ( int i = 0; i < folders.Num(); i++ ) {
++		for ( int j = 0; j < folders[i].paks.Num(); j++ ) {
++			pakCount += folders[i].paks[j].todo;
++		}
++		if ( where.Length() ) {
++			where += ", ";
++		}
++		where += folders[i].path;
++	}
++	int needMB = (int)( outBytes * 1.02 / 1048576.0 ) + 16;
++	int freeMB = Sys_GetDriveFreeSpace( folders[0].path );
++	bool room = freeMB >= needMB;
++
++	lines.Append( "Prepare the game data?" );
++	lines.Append( "" );
++	lines.Append( "The game can prepare its data once, so that every map" );
++	lines.Append( "loads faster: files unpacked and sounds decoded now," );
++	lines.Append( "not at every load. The original files stay as they are." );
++	lines.Append( "" );
++	lines.Append( va( "Folder  %s (%d pk4s)", where.c_str(), pakCount ) );
++	lines.Append( va( "Time    about %s (h:mm:ss)", Prep_Time( (int)work ).c_str() ) );
++	lines.Append( va( "Room    about %.1f GB needed, %.1f GB free", needMB / 1024.0, freeMB / 1024.0 ) );
++	lines.Append( "" );
++	if ( room ) {
++		lines.Append( "ENTER  prepare now" );
++	} else {
++		lines.Append( va( "Not enough room: about %.1f GB more needed.", ( needMB - freeMB ) / 1024.0 ) );
++	}
++	lines.Append( "ESC    not now (asked again at the next start)" );
++	lines.Append( "N      never (fs_prepare 1 asks again)" );
++
++	common->Printf( "Preparing the game data: %d pk4s in %s, about %s, %d MB needed, %d MB free\n",
++		pakCount, where.c_str(), Prep_Time( (int)work ).c_str(), needMB, freeMB );
++
++	if ( fs_prepare.GetInteger() == 2 ) {
++		if ( !room ) {
++			common->Warning( "Preparing the game data: not enough room" );
++			return 0;
++		}
++		return 1;
++	}
++	if ( !prep.screen ) {
++		return 0;	// nobody to ask
++	}
++	while ( 1 ) {
++		Prep_Draw( lines, -1.0f );
++		int key = Prep_PollKey();
++		if ( room && ( key == K_ENTER || key == K_KP_ENTER ) ) {
++			return 1;
++		}
++		if ( key == K_ESCAPE ) {
++			return 0;
++		}
++		if ( key == 'n' || key == 'N' ) {
++			return -1;
++		}
++		Sys_Sleep( 50 );
++	}
++}
++
++/*
++==============================================================================
++
++	Preparing one pk4
++
++==============================================================================
++*/
++
++static idStr Prep_PartName( const char *original, int part ) {
++	if ( part == 0 ) {
++		return original;
++	}
++	idStr base = original;
++	base.StripFileExtension();
++	return va( "%s_%c.pk4", base.c_str(), 'a' + part );
++}
++
++static void Prep_WriteWav( idPrepZipWriter &zip, const idStr &wavName, unsigned int dosDate, const short *pcm, int samples, int channels, int rate ) {
++	int dataBytes = samples * 2;
++	int total = 44 + dataBytes;
++	byte *file = (byte *)Mem_Alloc( total );
++	byte *p = file;
++#define PUT32(v) { unsigned int _v = (v); p[0] = _v; p[1] = _v >> 8; p[2] = _v >> 16; p[3] = _v >> 24; p += 4; }
++#define PUT16(v) { unsigned int _v = (v); p[0] = _v; p[1] = _v >> 8; p += 2; }
++	memcpy( p, "RIFF", 4 ); p += 4;
++	PUT32( 36 + dataBytes );
++	memcpy( p, "WAVEfmt ", 8 ); p += 8;
++	PUT32( 16 );
++	PUT16( 1 );						// PCM
++	PUT16( channels );
++	PUT32( rate );
++	PUT32( rate * channels * 2 );
++	PUT16( channels * 2 );
++	PUT16( 16 );
++	memcpy( p, "data", 4 ); p += 4;
++	PUT32( dataBytes );
++	for ( int i = 0; i < samples; i++ ) {
++		PUT16( (unsigned short)pcm[i] );	// little-endian, as RIFF has it
++	}
++#undef PUT32
++#undef PUT16
++	unsigned int crc = crc32( 0L, file, total );
++	zip.Begin( wavName, 0, 0, dosDate, crc, total, total );
++	zip.Write( file, total );
++	Mem_Free( file );
++	prep.written += total;
++}
++
++// copies the current entry's bytes (raw: as stored in the pk4); false on a read error
++static bool Prep_CopyEntry( unzFile uf, idPrepZipWriter &zip, bool raw, unsigned int bytes, unsigned int expectCrc, byte *buf, int bufSize ) {
++	int method, level;
++	if ( ( raw ? unzOpenCurrentFile2( uf, &method, &level, 1 ) : unzOpenCurrentFile( uf ) ) != UNZ_OK ) {
++		return false;
++	}
++	unsigned int crc = crc32( 0L, Z_NULL, 0 );
++	unsigned int left = bytes;
++	while ( left > 0 ) {
++		int n = unzReadCurrentFile( uf, buf, left < (unsigned int)bufSize ? left : bufSize );
++		if ( n <= 0 ) {
++			unzCloseCurrentFile( uf );
++			return false;
++		}
++		if ( !raw ) {
++			crc = crc32( crc, buf, n );
++		}
++		zip.Write( buf, n );
++		left -= n;
++		prep.written += n;
++		Prep_Tick( false );
++	}
++	int err = unzCloseCurrentFile( uf );
++	if ( !raw && ( crc != expectCrc || err != UNZ_OK ) ) {
++		return false;
++	}
++	return true;
++}
++
++static bool Prep_Pak( prepFolder_t &folder, int pakIndex, idStrList &outputs ) {
++	prepPak_t &pak = folder.paks[pakIndex];
++	idStr dir = Prep_Join( folder.path, PREPARE_FOLDER );
++	char name[MAX_ZIPPED_FILE_NAME];
++	unz_file_info64 info;
++	const int bufSize = 1 << 20;
++	byte *buf = (byte *)Mem_Alloc( bufSize );
++	idPrepZipWriter *zip = new idPrepZipWriter;
++	idStrList temps;
++	bool ok = true;
++	double pakWorkStart = prep.doneWork;
++
++	outputs.Clear();
++	unzFile uf = unzOpen( pak.path );
++	if ( !uf ) {
++		common->Warning( "Preparing: cannot open %s", pak.path.c_str() );
++		ok = false;
++	}
++	if ( ok ) {
++		outputs.Append( Prep_PartName( pak.name, 0 ) );
++		temps.Append( Prep_Join( dir, outputs[0] ) + ".tmp" );
++		if ( !zip->Open( temps[0] ) ) {
++			common->Warning( "Preparing: cannot write %s", temps[0].c_str() );
++			ok = false;
++		}
++	}
++
++	int err = ok ? unzGoToFirstFile( uf ) : UNZ_END_OF_LIST_OF_FILE;
++	while ( ok && err == UNZ_OK ) {
++		if ( prep.stop ) {
++			ok = false;
++			break;
++		}
++		if ( unzGetCurrentFileInfo64( uf, &info, name, sizeof( name ), NULL, 0, NULL, 0 ) != UNZ_OK ) {
++			ok = false;
++			break;
++		}
++		idStr lower = Prep_Lower( name );
++		prepKind_t kind = Prep_Kind( folder, pakIndex, lower, info );
++		unsigned int csize = (unsigned int)info.compressed_size;
++		unsigned int usize = (unsigned int)info.uncompressed_size;
++		double work = kind == PREP_COPY ? csize / RATE_COPY :
++					  kind == PREP_STORE ? usize / RATE_INFLATE : usize * OGG_TO_PCM / RATE_DECODE;
++		double estimate = kind == PREP_COPY ? csize : kind == PREP_STORE ? usize : usize * OGG_TO_PCM;
++
++		// a new part before this pk4 passes 2 GB (or the entry count of a plain zip)
++		if ( zip->Entries() > 0 && ( (double)zip->Offset() + estimate + 1048576.0 > PREPARE_SPLIT || zip->Entries() >= PREPARE_MAX_ENTRIES ) ) {
++			if ( !zip->Close() ) {
++				ok = false;
++				break;
++			}
++			outputs.Append( Prep_PartName( pak.name, outputs.Num() ) );
++			temps.Append( Prep_Join( dir, outputs[outputs.Num() - 1] ) + ".tmp" );
++			if ( !zip->Open( temps[temps.Num() - 1] ) ) {
++				ok = false;
++				break;
++			}
++		}
++
++		prep.fileName = name;
++		Prep_Tick( false );
++		unsigned int t0 = Sys_Milliseconds();
++
++		if ( kind == PREP_COPY ) {
++			zip->Begin( name, info.compression_method, info.flag, info.dosDate, info.crc, csize, usize );
++			ok = Prep_CopyEntry( uf, *zip, true, csize, info.crc, buf, bufSize );
++			prep.msCopy += Sys_Milliseconds() - t0;
++			prep.bytesCopied += csize;
++		} else if ( kind == PREP_STORE ) {
++			zip->Begin( name, 0, 0, info.dosDate, info.crc, usize, usize );
++			ok = Prep_CopyEntry( uf, *zip, false, usize, info.crc, buf, bufSize );
++			prep.msInflate += Sys_Milliseconds() - t0;
++			prep.bytesInflated += usize;
++		} else {
++			// the whole OGG, inflated
++			byte *ogg = (byte *)Mem_Alloc( usize );
++			int got = 0;
++			if ( unzOpenCurrentFile( uf ) == UNZ_OK ) {
++				while ( got < (int)usize ) {
++					int n = unzReadCurrentFile( uf, ogg + got, usize - got );
++					if ( n <= 0 ) {
++						break;
++					}
++					got += n;
++				}
++				if ( unzCloseCurrentFile( uf ) != UNZ_OK ) {
++					got = -1;
++				}
++			}
++			if ( got != (int)usize ) {
++				Mem_Free( ogg );
++				ok = false;
++				break;
++			}
++			prep.msInflate += Sys_Milliseconds() - t0;
++			unsigned int t1 = Sys_Milliseconds();
++			short *pcm;
++			int channels, rate;
++			int samples = Sound_PrepareOgg( name, ogg, usize, fs_prepareSoundLimit.GetInteger(), &pcm, &channels, &rate );
++			if ( samples > 0 ) {
++				idStr wavName = name;
++				wavName = wavName.Left( wavName.Length() - 4 ) + ".wav";
++				Prep_WriteWav( *zip, wavName, info.dosDate, pcm, samples, channels, rate );
++				Mem_Free( pcm );
++				prep.soundsConverted++;
++				prep.pcmBytes += samples * 2;
++			} else {
++				// stays OGG (longer than the limit, or one a load would not decode either)
++				zip->Begin( name, 0, 0, info.dosDate, info.crc, usize, usize );
++				zip->Write( ogg, usize );
++				prep.written += usize;
++				prep.soundsKept++;
++			}
++			Mem_Free( ogg );
++			prep.msDecode += Sys_Milliseconds() - t1;
++			prep.doneSounds++;
++		}
++		if ( !ok || zip->Failed() ) {
++			common->Warning( "Preparing: %s in %s failed", name, pak.path.c_str() );
++			ok = false;
++			break;
++		}
++		prep.doneFiles++;
++		prep.doneWork += work;
++		err = unzGoToNextFile( uf );
++	}
++
++	if ( ok && !zip->Close() ) {
++		common->Warning( "Preparing: writing %s failed (disk full?)", temps[temps.Num() - 1].c_str() );
++		ok = false;
++	}
++	zip->Abort();
++	delete zip;
++	if ( uf ) {
++		unzClose( uf );
++	}
++	Mem_Free( buf );
++
++	if ( ok ) {
++		// the earlier preparation's files of this pk4 go, the new ones take their names
++		const prepDone_t *old = NULL;
++		for ( int i = 0; i < folder.manifest.done.Num(); i++ ) {
++			if ( !folder.manifest.done[i].original.Icmp( pak.name ) ) {
++				old = &folder.manifest.done[i];
++			}
++		}
++		if ( old ) {
++			for ( int i = 0; i < old->outputs.Num(); i++ ) {
++				remove( Prep_Join( dir, old->outputs[i] ) );
++			}
++		}
++		for ( int i = 0; i < temps.Num(); i++ ) {
++			if ( !Prep_Rename( temps[i], Prep_Join( dir, outputs[i] ) ) ) {
++				common->Warning( "Preparing: cannot rename %s", temps[i].c_str() );
++				ok = false;
++			}
++		}
++	}
++	if ( !ok ) {
++		for ( int i = 0; i < temps.Num(); i++ ) {
++			remove( temps[i] );
++		}
++		// the progress of a pk4 not finished does not count
++		prep.doneWork = pakWorkStart;
++	}
++	return ok;
++}
++
++/*
++==============================================================================
++
++	DataPrepare_Run
++
++==============================================================================
++*/
++
++bool DataPrepare_Run( void ) {
++	if ( fs_prepare.GetInteger() == 0 || prepGameFolders.Num() == 0 ) {
++		return false;
++	}
++
++	// what is to be done: the originals without a current prepared pk4
++	idList<prepFolder_t> folders;
++	idStr settings = Prep_Settings();
++	bool completedNow = false;
++	for ( int i = 0; i < prepGameFolders.Num(); i++ ) {
++		prepFolder_t &f = folders.Alloc();
++		f.path = prepGameFolders[i];
++		Prep_ReadManifest( f.path, f.manifest );
++		if ( f.manifest.version != PREPARE_VERSION || f.manifest.settings != settings ) {
++			f.manifest.done.Clear();
++		}
++		f.mounted = DataPrepare_PakFolder( f.path ).Length() > 0;
++		idStr dir = Prep_Join( f.path, PREPARE_FOLDER );
++		idStrList originals;
++		Prep_ListOriginals( f.path, originals );
++		bool any = false;
++		for ( int j = 0; j < originals.Num(); j++ ) {
++			prepPak_t &pak = f.paks.Alloc();
++			pak.name = originals[j];
++			pak.path = Prep_Join( f.path, originals[j] );
++			pak.size = 0;
++			pak.mtime = 0;
++			Prep_FileInfo( pak.path, pak.size, pak.mtime );
++			const prepDone_t *d = f.manifest.Find( pak.name, pak.size, pak.mtime );
++			pak.todo = ( d == NULL );
++			for ( int k = 0; d && k < d->outputs.Num(); k++ ) {
++				pak.todo |= !Prep_Exists( Prep_Join( dir, d->outputs[k] ) );
++			}
++			pak.work = pak.outBytes = 0;
++			pak.files = pak.sounds = 0;
++			any |= pak.todo;
++		}
++		// lines (and files) of originals that went away
++		bool dropped = false;
++		for ( int d = f.manifest.done.Num() - 1; d >= 0; d-- ) {
++			bool found = false;
++			for ( int j = 0; j < f.paks.Num(); j++ ) {
++				found |= !f.paks[j].name.Icmp( f.manifest.done[d].original );
++			}
++			if ( !found && !f.mounted ) {
++				for ( int k = 0; k < f.manifest.done[d].outputs.Num(); k++ ) {
++					remove( Prep_Join( dir, f.manifest.done[d].outputs[k] ) );
++				}
++				f.manifest.done.RemoveIndex( d );
++				dropped = true;
++			}
++		}
++		if ( !any ) {
++			if ( dropped ) {
++				Prep_WriteManifest( f.path, f.manifest );
++				completedNow |= Prep_Complete( f.path, f.manifest );
++			}
++			folders.RemoveIndex( folders.Num() - 1 );
++		}
++	}
++	if ( folders.Num() == 0 ) {
++		return completedNow;
++	}
++
++	prep = prepProgress_t();
++	prep.screen = renderSystem->IsOpenGLRunning();
++	prep.fileName = "Reading the pk4s' directories...";
++	{
++		idStrList lines;
++		lines.Append( "Checking the game data..." );
++		Prep_Draw( lines, -1.0f );
++	}
++
++	double work = 0, outBytes = 0;
++	for ( int i = 0; i < folders.Num(); i++ ) {
++		if ( !Prep_Scan( folders[i] ) ) {
++			return false;
++		}
++		for ( int j = 0; j < folders[i].paks.Num(); j++ ) {
++			const prepPak_t &pak = folders[i].paks[j];
++			if ( pak.todo ) {
++				work += pak.work;
++				outBytes += pak.outBytes;
++				prep.totalFiles += pak.files;
++				prep.totalSounds += pak.sounds;
++			}
++		}
++	}
++
++	int answer = Prep_Ask( folders, work, outBytes );
++	if ( answer == -1 ) {
++		fs_prepare.SetInteger( 0 );
++		common->Printf( "Preparing the game data: never (fs_prepare 0)\n" );
++		return false;
++	}
++	if ( answer == 0 ) {
++		common->Printf( "Preparing the game data: not now\n" );
++		return false;
++	}
++
++	// a prepared pk4 that is loaded now cannot be replaced (AmigaDOS keeps it locked)
++	bool closed = false;
++	for ( int i = 0; i < folders.Num(); i++ ) {
++		if ( folders[i].mounted && !closed ) {
++			fileSystem->Shutdown( true );
++			closed = true;
++		}
++	}
++
++	prep.totalWork = work;
++	prep.totalOut = outBytes;
++	prep.start = Sys_Milliseconds();
++	prep.lastDraw = 0;
++	Sound_PrepareBegin();
++
++	bool completed = closed || completedNow;
++	int pakNumber = 0, pakTotal = 0;
++	for ( int i = 0; i < folders.Num(); i++ ) {
++		for ( int j = 0; j < folders[i].paks.Num(); j++ ) {
++			pakTotal += folders[i].paks[j].todo;
++		}
++	}
++	for ( int i = 0; i < folders.Num() && !prep.stop; i++ ) {
++		prepFolder_t &f = folders[i];
++		Sys_Mkdir( Prep_Join( f.path, PREPARE_FOLDER ) );
++		f.manifest.version = PREPARE_VERSION;
++		f.manifest.settings = settings;
++		// lines of originals that went away (kept above while their files were loaded)
++		for ( int d = f.manifest.done.Num() - 1; d >= 0; d-- ) {
++			bool found = false;
++			for ( int j = 0; j < f.paks.Num(); j++ ) {
++				found |= !f.paks[j].name.Icmp( f.manifest.done[d].original );
++			}
++			if ( !found ) {
++				for ( int k = 0; k < f.manifest.done[d].outputs.Num(); k++ ) {
++					remove( Prep_Join( Prep_Join( f.path, PREPARE_FOLDER ), f.manifest.done[d].outputs[k] ) );
++				}
++				f.manifest.done.RemoveIndex( d );
++			}
++		}
++		prep.folderName = va( "Folder %s", f.path.c_str() );
++		for ( int j = 0; j < f.paks.Num() && !prep.stop; j++ ) {
++			prepPak_t &pak = f.paks[j];
++			if ( !pak.todo ) {
++				continue;
++			}
++			pakNumber++;
++			prep.pakLine = va( "pk4 %d of %d: %s", pakNumber, pakTotal, pak.name.c_str() );
++			unsigned int t0 = Sys_Milliseconds();
++			common->Printf( "Preparing %s\n", pak.path.c_str() );
++			idStrList outputs;
++			if ( !Prep_Pak( f, j, outputs ) ) {
++				if ( !prep.stop ) {
++					common->Warning( "Preparing %s failed; the original pk4s stay in use", pak.path.c_str() );
++				}
++				prep.stop = true;
++				break;
++			}
++			// done: its line in the manifest
++			for ( int d = f.manifest.done.Num() - 1; d >= 0; d-- ) {
++				if ( !f.manifest.done[d].original.Icmp( pak.name ) ) {
++					f.manifest.done.RemoveIndex( d );
++				}
++			}
++			prepDone_t &done = f.manifest.done.Alloc();
++			done.original = pak.name;
++			done.size = pak.size;
++			done.mtime = pak.mtime;
++			done.outputs = outputs;
++			if ( !Prep_WriteManifest( f.path, f.manifest ) ) {
++				common->Warning( "Preparing: cannot write %s", PREPARE_MANIFEST );
++				prep.stop = true;
++				break;
++			}
++			common->Printf( "Prepared %s in %.1f s (%d part%s)\n", pak.name.c_str(), ( Sys_Milliseconds() - t0 ) / 1000.0, outputs.Num(), outputs.Num() > 1 ? "s" : "" );
++		}
++		if ( Prep_Complete( f.path, f.manifest ) ) {
++			completed = true;
++		}
++	}
++	Sound_PrepareEnd();
++	Prep_Tick( true );
++
++	int elapsed = Sys_Milliseconds() - prep.start;
++	common->Printf( "Preparing the game data: %s in %s (estimate %s)\n", prep.stop ? "stopped" : "done",
++		Prep_Time( elapsed / 1000 ).c_str(), Prep_Time( (int)work ).c_str() );
++	common->Printf( "  inflated and stored %.1f MB in %.1f s; copied %.1f MB in %.1f s\n",
++		prep.bytesInflated / 1048576.0, prep.msInflate / 1000.0, prep.bytesCopied / 1048576.0, prep.msCopy / 1000.0 );
++	common->Printf( "  sounds: %d decoded (%.1f MB PCM), %d kept OGG, %.1f s; written %.1f MB\n",
++		prep.soundsConverted, prep.pcmBytes / 1048576.0, prep.soundsKept, prep.msDecode / 1000.0, prep.written / 1048576.0 );
++	return completed;
++}
+diff --git a/neo/framework/DataPrepare.h b/neo/framework/DataPrepare.h
+new file mode 100644
+index 00000000..e45ad84a
+--- /dev/null
++++ b/neo/framework/DataPrepare.h
+@@ -0,0 +1,25 @@
++/*
++Patch 0032: the game data prepared once, at the first start (PLAN.md §16).
++
++The game's pk4s are rewritten once into <game folder>/prepared/: what a level
++load reads stored (not deflated), the OGG sounds that a load decodes as PCM
++WAV files, the rest copied as it is. Later starts load those pk4s instead of
++the originals, so a load converts nothing. GPLv3, as the rest of the game.
++*/
++#ifndef __DATAPREPARE_H__
++#define __DATAPREPARE_H__
++
++// a game folder (OS path) whose own pk4s the file system found
++void	DataPrepare_NoteGameFolder( const char *osFolder );
++
++// the folder whose pk4s are to be loaded for the game folder osFolder: its
++// prepared/ folder when that holds a complete preparation of the current
++// originals (and fs_usePrepared is 1), else an empty string
++idStr	DataPrepare_PakFolder( const char *osFolder );
++
++// the first start's preparation: asks (fs_prepare 1) or not (2), then works
++// with a progress screen. True when a folder's preparation was completed now,
++// so that the file system must restart to load it.
++bool	DataPrepare_Run( void );
++
++#endif
+diff --git a/neo/framework/FileSystem.cpp b/neo/framework/FileSystem.cpp
+index ccbd22bb..639e66cd 100644
+--- a/neo/framework/FileSystem.cpp
++++ b/neo/framework/FileSystem.cpp
+@@ -48,6 +48,7 @@ If you have questions concerning this license or the applicable additional terms
+ #include "framework/DeclManager.h"
+ 
+ #include "framework/FileSystem.h"
++#include "framework/DataPrepare.h"	// patch 0032
+ 
+ /*
+ =============================================================================
+@@ -2119,12 +2120,25 @@ void idFileSystemLocal::AddGameDirectory( const char *path, const char *dir ) {
+ 
+ 	ListOSFiles( pakfile, ".pk4", pakfiles );
+ 
++	// patch 0032: a complete preparation (prepared/) is loaded instead of the originals
++	idStr pakFolder = pakfile.c_str();
++	if ( pakfiles.Num() ) {
++		DataPrepare_NoteGameFolder( pakFolder );
++		idStr prepared = DataPrepare_PakFolder( pakFolder );
++		if ( prepared.Length() ) {
++			pakFolder = prepared;
++			pakfiles.Clear();
++			ListOSFiles( pakFolder, ".pk4", pakfiles );
++			common->Printf( "Loading the prepared pk4s of %s\n", pakfile.c_str() );
++		}
++	}
++
+ 	// sort them so that later alphabetic matches override
+ 	// earlier ones. This makes pak1.pk4 override pak0.pk4
+ 	pakfiles.Sort();
+ 
+ 	for ( i = 0; i < pakfiles.Num(); i++ ) {
+-		pakfile = BuildOSPath( path, dir, pakfiles[i] );
++		pakfile = pakFolder + "/" + pakfiles[i];	// patch 0032 (was BuildOSPath( path, dir, pakfiles[i] ))
+ 		pak = LoadZipFile( pakfile );
+ 		if ( !pak ) {
+ 			continue;
+@@ -2670,6 +2684,7 @@ void idFileSystemLocal::Init( void ) {
+ 	common->StartupVariable( "fs_copyfiles", false );
+ 	common->StartupVariable( "fs_restrict", false );
+ 	common->StartupVariable( "fs_searchAddons", false );
++	common->StartupVariable( "fs_usePrepared", false );	// patch 0032
+ 
+ 	idStr path;
+ 	if (fs_basepath.GetString()[0] == '\0' && Sys_GetPath(PATH_BASE, path))
+diff --git a/neo/sound/snd_cache.cpp b/neo/sound/snd_cache.cpp
+index 7ae5943c..84ef6a86 100644
+--- a/neo/sound/snd_cache.cpp
++++ b/neo/sound/snd_cache.cpp
+@@ -513,41 +513,9 @@ void idSoundSample::Load( void ) {
+ 				if ( alGetError() != AL_NO_ERROR )
+ 					common->Error( "idSoundCache: error generating OpenAL hardware buffer" );
+ 				if ( alIsBuffer( openalBuffer ) ) {
+-					idSampleDecoder *decoder = idSampleDecoder::Alloc();
+ 					float *destData = (float *)soundCacheAllocator.Alloc( ( LengthIn44kHzSamples() + 1 ) * sizeof( float ) );
+ 
+-					// Decoder *always* outputs 44 kHz data
+-					decoder->Decode( this, 0, LengthIn44kHzSamples(), destData );
+-
+-					// Downsample back to original frequency (save memory)
+-					if ( objectInfo.nSamplesPerSec == 11025 ) {
+-						for ( int i = 0; i < objectSize; i++ ) {
+-							if ( destData[i*4] < -32768.0f )
+-								((short *)destData)[i] = -32768;
+-							else if ( destData[i*4] > 32767.0f )
+-								((short *)destData)[i] = 32767;
+-							else
+-								((short *)destData)[i] = idMath::FtoiFast( destData[i*4] );
+-						}
+-					} else if ( objectInfo.nSamplesPerSec == 22050 ) {
+-						for ( int i = 0; i < objectSize; i++ ) {
+-							if ( destData[i*2] < -32768.0f )
+-								((short *)destData)[i] = -32768;
+-							else if ( destData[i*2] > 32767.0f )
+-								((short *)destData)[i] = 32767;
+-							else
+-								((short *)destData)[i] = idMath::FtoiFast( destData[i*2] );
+-						}
+-					} else {
+-						for ( int i = 0; i < objectSize; i++ ) {
+-							if ( destData[i] < -32768.0f )
+-								((short *)destData)[i] = -32768;
+-							else if ( destData[i] > 32767.0f )
+-								((short *)destData)[i] = 32767;
+-							else
+-								((short *)destData)[i] = idMath::FtoiFast( destData[i] );
+-						}
+-					}
++					DecodeOggToShorts( destData );
+ 
+ 					alGetError();
+ 					alBufferData( openalBuffer, objectInfo.nChannels==1?AL_FORMAT_MONO16:AL_FORMAT_STEREO16, destData, objectSize * sizeof( short ), objectInfo.nSamplesPerSec );
+@@ -559,7 +527,6 @@ void idSoundSample::Load( void ) {
+ 					}
+ 
+ 					soundCacheAllocator.Free( (byte *)destData );
+-					idSampleDecoder::Free( decoder );
+ 				}
+ 			}
+ 		}
+@@ -568,6 +535,56 @@ void idSoundSample::Load( void ) {
+ 	fh.Close();
+ }
+ 
++/*
++===================
++idSoundSample::DecodeOggToShorts
++
++Patch 0032: Load's decoding of an OGG sample (nonCacheData holding the file) to
++16-bit samples at its own rate, objectSize of them at the start of destData
++(room for LengthIn44kHzSamples() + 1 floats). Shared with the first start's
++data preparation (framework/DataPrepare.cpp), so that what it writes is what
++Load would have made.
++===================
++*/
++void idSoundSample::DecodeOggToShorts( float *destData ) {
++	idSampleDecoder *decoder = idSampleDecoder::Alloc();
++
++	// Decoder *always* outputs 44 kHz data
++	decoder->Decode( this, 0, LengthIn44kHzSamples(), destData );
++
++	// Downsample back to original frequency (save memory)
++	if ( objectInfo.nSamplesPerSec == 11025 ) {
++		for ( int i = 0; i < objectSize; i++ ) {
++			if ( destData[i*4] < -32768.0f )
++				((short *)destData)[i] = -32768;
++			else if ( destData[i*4] > 32767.0f )
++				((short *)destData)[i] = 32767;
++			else
++				((short *)destData)[i] = idMath::FtoiFast( destData[i*4] );
++		}
++	} else if ( objectInfo.nSamplesPerSec == 22050 ) {
++		for ( int i = 0; i < objectSize; i++ ) {
++			if ( destData[i*2] < -32768.0f )
++				((short *)destData)[i] = -32768;
++			else if ( destData[i*2] > 32767.0f )
++				((short *)destData)[i] = 32767;
++			else
++				((short *)destData)[i] = idMath::FtoiFast( destData[i*2] );
++		}
++	} else {
++		for ( int i = 0; i < objectSize; i++ ) {
++			if ( destData[i] < -32768.0f )
++				((short *)destData)[i] = -32768;
++			else if ( destData[i] > 32767.0f )
++				((short *)destData)[i] = 32767;
++			else
++				((short *)destData)[i] = idMath::FtoiFast( destData[i] );
++		}
++	}
++
++	idSampleDecoder::Free( decoder );
++}
++
+ /*
+ ===================
+ idSoundSample::PurgeSoundSample
+diff --git a/neo/sound/snd_decoder.cpp b/neo/sound/snd_decoder.cpp
+index 4c044752..a8689dc0 100644
+--- a/neo/sound/snd_decoder.cpp
++++ b/neo/sound/snd_decoder.cpp
+@@ -637,3 +637,85 @@ int idSampleDecoderLocal::DecodeOGG( idSoundSample *sample, int sampleOffset44k,
+ 
+ 	return ( readSamples << shift );
+ }
++
++/*
++====================
++Patch 0032: the first start's data preparation (framework/DataPrepare.cpp).
++
++Sound_PrepareOgg decodes an OGG file held in memory exactly as
++idSoundSample::Load does at a level load (with s_realTimeDecoding 1, the
++default): the same checks, the same limit test (objectSize < rate * limit,
++objectSize counting every channel), the same decoder and cut to the file's own
++rate (idSoundSample::DecodeOggToShorts).
++Returns the number of 16-bit samples (all channels, native byte order) in
++*pcm (Mem_Alloc'd, the caller frees it), 0 when Load would not decode it at
++load (longer than the limit, or a format Load refuses: it stays OGG), -1 when
++it cannot be read.
++====================
++*/
++static idSoundSample *	prepareSample = NULL;
++static bool				prepareDecoderInit = false;
++
++void Sound_PrepareBegin( void ) {
++	// the sound system initialises the decoder only with a working device
++	if ( soundSystemLocal.soundCache == NULL ) {
++		idSampleDecoder::Init();
++		prepareDecoderInit = true;
++	}
++	if ( prepareSample == NULL ) {
++		prepareSample = new idSoundSample;	// kept: its destructor would call OpenAL
++	}
++}
++
++void Sound_PrepareEnd( void ) {
++	if ( prepareDecoderInit ) {
++		idSampleDecoder::Shutdown();
++		prepareDecoderInit = false;
++	}
++}
++
++int Sound_PrepareOgg( const char *name, const byte *ogg, int oggSize, int limitSeconds, short **pcm, int *channels, int *rate ) {
++	*pcm = NULL;
++
++	int stbverr = 0;
++	stb_vorbis *ov = stb_vorbis_open_memory( ogg, oggSize, &stbverr, NULL );
++	if ( ov == NULL ) {
++		common->Warning( "Preparing '%s': stb_vorbis failed: %s\n", name, my_stbv_strerror( stbverr ) );
++		return -1;
++	}
++	stb_vorbis_info stbvi = stb_vorbis_get_info( ov );
++	int numSamples = stb_vorbis_stream_length_in_samples( ov );
++	stb_vorbis_close( ov );
++
++	// idSoundSample::Load's checks (idWaveFile::OpenOGG gives 16 bits)
++	if ( numSamples <= 0 || ( stbvi.channels != 1 && stbvi.channels != 2 ) ) {
++		return 0;
++	}
++	if ( stbvi.sample_rate != 44100 && stbvi.sample_rate != 22050 && stbvi.sample_rate != 11025 ) {
++		return 0;
++	}
++	int objectSize = numSamples * stbvi.channels;
++	if ( !( objectSize < (int)stbvi.sample_rate * limitSeconds ) ) {
++		return 0;
++	}
++
++	idSoundSample *s = prepareSample;
++	memset( &s->objectInfo, 0, sizeof( s->objectInfo ) );
++	s->name = name;
++	s->objectInfo.wFormatTag = WAVE_FORMAT_TAG_OGG;
++	s->objectInfo.nChannels = stbvi.channels;
++	s->objectInfo.nSamplesPerSec = stbvi.sample_rate;
++	s->objectInfo.wBitsPerSample = 16;
++	s->objectSize = objectSize;
++	s->objectMemSize = oggSize;
++	s->nonCacheData = (byte *)ogg;
++
++	float *dest = (float *)Mem_Alloc( ( s->LengthIn44kHzSamples() + 1 ) * sizeof( float ) );
++	s->DecodeOggToShorts( dest );
++	s->nonCacheData = NULL;
++
++	*pcm = (short *)dest;
++	*channels = stbvi.channels;
++	*rate = stbvi.sample_rate;
++	return objectSize;
++}
+diff --git a/neo/sound/snd_local.h b/neo/sound/snd_local.h
+index fc30befc..8f1f7db4 100644
+--- a/neo/sound/snd_local.h
++++ b/neo/sound/snd_local.h
+@@ -849,6 +849,7 @@ public:
+ 	ID_TIME_T					GetNewTimeStamp( void ) const;
+ 	void					MakeDefault();				// turns it into a beep
+ 	void					Load();						// loads the current sound based on name
++	void					DecodeOggToShorts( float *destData );	// patch 0032: Load's OGG decode
+ 	void					Reload( bool force );		// reloads if timestamp has changed, or always if force
+ 	void					PurgeSoundSample();			// frees all data
+ 	void					CheckForDownSample();		// down sample if required
+diff --git a/neo/sys/posix/posix_main.cpp b/neo/sys/posix/posix_main.cpp
+index da7aa7b8..619cc901 100644
+--- a/neo/sys/posix/posix_main.cpp
++++ b/neo/sys/posix/posix_main.cpp
+@@ -28,6 +28,7 @@ If you have questions concerning this license or the applicable additional terms
+ 
+ #include <sys/types.h>
+ #include <sys/stat.h>
++#include <sys/statvfs.h>
+ #include <errno.h>
+ #include <dirent.h>
+ #include <unistd.h>
+@@ -409,7 +410,12 @@ return in MegaBytes
+ ===========
+ */
+ int Sys_GetDriveFreeSpace( const char *path ) {
+-	common->DPrintf( "TODO: Sys_GetDriveFreeSpace\n" );
++	// patch 0032: the first start's data preparation asks
++	struct statvfs st;
++	if ( statvfs( path, &st ) == 0 ) {
++		unsigned long long mb = ( (unsigned long long)st.f_bavail * st.f_frsize ) >> 20;
++		return mb > 0x7fffffff ? 0x7fffffff : (int)mb;
++	}
+ 	return 1000 * 1024;
+ }
+ 

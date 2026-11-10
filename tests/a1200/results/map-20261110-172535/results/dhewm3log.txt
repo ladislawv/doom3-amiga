@@ -1,0 +1,347 @@
+dhewm3 1.5.3pre.1305 amigaos-m68k Nov 10 2026 17:00:36 using SDL v2.33.0
+SDL video driver: amigaos3
+1624 MB System Memory (1557 MB free)
+stack: 9000000 bytes
+no networking on this platform (single player only)
+[1]----- Initializing File System -----
+[32]Loading the prepared pk4s of Stuff:doom3/base
+[208]Loaded pk4 Stuff:doom3/base/prepared/pak000.pk4 with checksum 0x375320b5
+[672]Loaded pk4 Stuff:doom3/base/prepared/pak001.pk4 with checksum 0x40244be0
+[1030]Loaded pk4 Stuff:doom3/base/prepared/pak002.pk4 with checksum 0xc51ecdcd
+[1316]Loaded pk4 Stuff:doom3/base/prepared/pak003.pk4 with checksum 0x9eb1bd6d
+[1590]Loaded pk4 Stuff:doom3/base/prepared/pak004.pk4 with checksum 0x765e4f8b
+[1648]Loaded pk4 Stuff:doom3/base/prepared/pak005.pk4 with checksum 0x771c69ed
+[1702]Loaded pk4 Stuff:doom3/base/prepared/pak006.pk4 with checksum 0x95b65ab
+[1756]Loaded pk4 Stuff:doom3/base/prepared/pak007.pk4 with checksum 0x666bdb3c
+[1801]Loaded pk4 Stuff:doom3/base/prepared/pak008.pk4 with checksum 0x23ae5993
+[1806]Current search path:
+[1808]Stuff:amictld/work/map/save/base
+[1811]Stuff:doom3/base
+[1812]Stuff:doom3/base/prepared/pak008.pk4 (3 files)
+[1816]Stuff:doom3/base/prepared/pak007.pk4 (38 files)
+[1819]Stuff:doom3/base/prepared/pak006.pk4 (48 files)
+[1823]Stuff:doom3/base/prepared/pak005.pk4 (63 files)
+[1826]Stuff:doom3/base/prepared/pak004.pk4 (5137 files)
+[1830]Stuff:doom3/base/prepared/pak003.pk4 (4676 files)
+[1833]Stuff:doom3/base/prepared/pak002.pk4 (6120 files)
+[1837]Stuff:doom3/base/prepared/pak001.pk4 (8972 files)
+[1841]Stuff:doom3/base/prepared/pak000.pk4 (2698 files)
+[1844]Addon pk4s:
+[1850]----- Initializing Decls -----
+[4078]Detected
+	1624 MB of System memory
+
+[4081]This system qualifies for Ultra quality!
+[4232]5206 strings read from strings/english.lang
+[4243]Couldn't open journal files
+[4254]execing editor.cfg
+[4263]execing default.cfg
+[4270]couldn't exec dhewm.cfg
+[4273]couldn't exec autoexec.cfg
+[4415]5206 strings read from strings/english.lang
+[4419]Running the game at com_gameHz = 30Hz, frametime 33ms
+[4424]----- Initializing OpenAL -----
+[4431]Setup OpenAL device and context
+[4495]OpenAL vendor: Doom 3 AmigaOS port
+[4498]OpenAL renderer: OpenAL subset on SDL audio
+[4505]OpenAL version: 1.1
+[4509]OpenAL: EFX extension not found
+[4515]OpenAL: found 32 hardware voices
+[4518]----- Initializing OpenGL -----
+[4520]Initializing OpenGL subsystem
+[4523]Will create a fullscreen-window with resolution 640x480 (r_mode = -1)
+[4528]SDL detected 1 displays: 
+[4530] 0: 640x480 at (0, 0) to (640, 480)
+[4533]Will use display 0 because mouse cursor is at (0, 0).
+[5227]Requested 8 color bits per chan, 8 alpha 24 depth, 8 stencil
+[5231]Got 8 stencil bits, 24 depth bits, color bits: r8 g8 b8 a8
+[5236]glDrawRangeElements: found
+[5238]Detected keyboard layout as "english"
+[5242]OpenGL vendor: ogles2.library
+[5244]OpenGL renderer: V3D 4.2.14 (PiStorm), 8 QPUs, 64 KB VPM
+[5249]OpenGL version: OpenGL ES 2.0 ogles2.library 1.3
+[5253]...using GL_EXT_texture_filter_anisotropic
+[5256]...using GL_OES_texture_npot
+[5258] npotAvailable: 1
+[5260]...using GL_OES_packed_depth_stencil
+[5267] depthStencilAvailable: 1
+[5269]...using GL_EXT_texture_compression_s3tc
+[5272] textureCompressionAvailable: 1
+[5274]   maxTextureAnisotropy: 16.000000
+[5278]----- R_ReloadGLSLPrograms -----
+[5281]Loading main interaction shader
+[5308]Loading main interaction shader (Phong) 
+[5318]Loading default diffuse shader
+[5327]Loading skybox cubemap shader
+[5335]Loading reflection cubemap shader
+[5344]Loading diffuse cubemap shader
+[5352]Loading Zfill shader
+[5359]Loading Zfill shader (Clip plane version)
+[5369]Loading Fog shader
+[5376]Loading BlendLight shader
+[5386]Loading Stencil shadow shader
+[5396]-------------------------------
+[5399]Init Vertex Cache
+[5411]using GLSL renderSystem
+[5413]----- OpenGL Initialization complete-----
+[5429]R_InitFrameBuffer Real[640, 480] -> Framebuffer[640,480]
+[5434]Not using framebuffer
+[6033]----- Initializing Game -----
+[6036]gamename: baseDOOM-1
+[6038]gamedate: Nov 10 2026
+[8851]Initializing event system
+[8854]...474 event definitions
+[8857]Initializing class hierarchy
+[8861]...142 classes, 382992 bytes for event callbacks
+[8866]Initializing scripts
+[14354]Compiled 'script/doom_main.script': 5480 ms
+[14360]----- Compile stats -----
+[14363]Memory usage:
+[14364]     Strings: 79, 9648 bytes
+[14367]  Statements: 67973, 1359460 bytes
+[14369]   Functions: 2110, 250612 bytes
+[14372]   Variables: 147344 bytes
+[14375]    Mem used: 2578896 bytes
+[14377] Static data: 2477552 bytes
+[14380]   Allocated: 3482192 bytes
+[14382] Thread size: 13210 bytes
+[14386]...6 aas types
+[14388]----- Initializing Session -----
+[16377]Couldn't read doomkey.
+[16380]Couldn't read xpkey.
+[16382]Detected
+	1624 MB of System memory
+
+[16385]This system qualifies for Ultra quality!
+[16500]Shutting down sound hardware
+[16508]in_grabKeyboard: Will *not* grab the keyboard if mouse is grabbed, so global keyboard-shortcuts (like Alt-Tab) will still work
+[17380]----- Game Map Shutdown -----
+[18704]reloading guis/mainmenu.gui.
+[18744]reloading guis/restart.gui.
+[18754]reloading guis/gameover.gui.
+[18791]reloading guis/msg.gui.
+[18802]reloading guis/takeNotes.gui.
+[18830]reloading guis/intro.gui.
+[18848]----- Map Initialization -----
+[18853]Map: game/mars_city1
+[22467]----- Game Map Init -----
+[26065]collision data:
+[26079]   421 models
+[26081] 30823 vertices (722 KB)
+[26083] 54551 edges (1917 KB)
+[26085] 22257 polygons (1564 KB)
+[26087]  4068 brushes (556 KB)
+[26089] 12449 nodes (340 KB)
+[26092] 43444 polygon refs (339 KB)
+[26094] 14219 brush refs (111 KB)
+[26103] 18352 internal edges
+[26105]  1461 sharp edges
+[26108]     0 contained polygons removed
+[26111]     0 polygons merged
+[26113]  5551 KB total memory used
+[26117]1790 msec to load collision data.
+[26125]map bounds are (19640.0, 22168.0, 29496.0)
+[26130]max clip sector is (1227.5, 1385.5, 1843.5)
+[26144]    2 KB passage memory used to build PVS
+[26148]   13 msec to calculate PVS
+[26151]   56 areas
+[26152]  110 portals
+[26153]    9 areas visible on average
+[26156]  448 bytes PVS data
+[26159][Load AAS]
+[26160]loading maps/game/mars_city1.aas48
+[26649]done.
+[26671][Load AAS]
+[26674]loading maps/game/mars_city1.aas96
+[26682][Load AAS]
+[26683]loading maps/game/mars_city1.aas_guardian
+[26687][Load AAS]
+[26688]loading maps/game/mars_city1.aas_mancubus
+[26693][Load AAS]
+[26694]loading maps/game/mars_city1.aas_sabaoth
+[26698][Load AAS]
+[26699]loading maps/game/mars_city1.aas_cyberdemon
+[26747]Entering doom_main()
+[26749]Exiting doom_main()
+[26757]Spawning entities
+[27106]loaded collision model models/mapobjects/com/platguistand/mc_platguistand.lwo
+[28826]WARNING: marscity_cinematic_sarge_1 has no AAS file
+[29355]WARNING: marscity_cinematic_sarge2_1 has no AAS file
+[30346]loaded collision model models/mapobjects/filler/burgerboxopen.lwo
+[35228]loaded collision model models/mapobjects/lab/diamondbox/diamondbox_sm.lwo
+[35620]loaded collision model models/mapobjects/com/modconsole1.lwo
+[40178]loaded collision model models/mapobjects/filler/burgereat.lwo
+[40211]loaded collision model models/mapobjects/filler/burgerboxclose.lwo
+[42979]loaded collision model models/mapobjects/filler/mkeyboard.lwo
+[43053]loaded collision model models/mapobjects/lights/florescent_bulbflare.ASE
+[43865]loaded collision model models/mapobjects/base/misc/emerlight.ase
+[44195]loaded collision model models/mapobjects/monitors/controlmonitor.lwo
+[45848]loaded collision model models/mapobjects/doors/mcitydoor2l.lwo
+[45875]loaded collision model models/mapobjects/doors/mcitydoor2r.lwo
+[45934]loaded collision model models/mapobjects/doors/mcdoor2frame.lwo
+[47763]loaded collision model models/mapobjects/tables/conf_table/conf_table.lwo
+[47966]loaded collision model models/mapobjects/filler/cola1.lwo
+[48100]loaded collision model models/mapobjects/filler/foamcup.lwo
+[48187]loaded collision model models/mapobjects/signs/marquee/marquee.lwo
+[48415]loaded collision model models/mapobjects/doors/mcitydoorframe.lwo
+[48847]loaded collision model models/mapobjects/doors/mcitydoorframegui.lwo
+[48910]loaded collision model models/items/keycard/keycard3.lwo
+[48973]loaded collision model models/mapobjects/doors/mcitydoor.lwo
+[49199]loaded collision model models/mapobjects/cpu/pullhandle.lwo
+[49303]loaded collision model models/mapobjects/doors/delelev/delelevlf.lwo
+[49403]loaded collision model models/mapobjects/guiobjects/techdrpanel1/techdrpanel1.lwo
+[49441]loaded collision model models/mapobjects/doors/delelev/delelevrt.lwo
+[49479]loaded collision model models/mapobjects/filler/ktable.lwo
+[49665]loaded collision model models/mapobjects/cpu/heater.lwo
+[49696]loaded collision model models/mapobjects/cpu/heater2.lwo
+[49770]loaded collision model models/mapobjects/cpu/comrack2.lwo
+[49934]loaded collision model models/mapobjects/lab/sink2/sink2.lwo
+[49987]loaded collision model models/mapobjects/filler/sodamachine.lwo
+[50018]loaded collision model models/mapobjects/filler/binder1.ase
+[50063]loaded collision model models/mapobjects/lab/bubbler2/bubbler2.lwo
+[50083]loaded collision model models/mapobjects/filler/tbox7.ase
+[50110]loaded collision model models/mapobjects/filler/binder3.ase
+[50455]loaded collision model models/mapobjects/chairs/modchair/modtable.lwo
+[50487]loaded collision model models/mapobjects/chairs/modchair/modseat.lwo
+[50521]loaded collision model models/mapobjects/chairs/modchair/modarm.lwo
+[50574]removed 2 degenerate triangles
+[50582]loaded collision model models/mapobjects/lab/newfridge/newfridge.lwo
+[50672]loaded collision model models/mapobjects/filler/paper1.ase
+[50687]loaded collision model models/mapobjects/filler/tbox6.ase
+[50713]loaded collision model models/mapobjects/filler/tbox_open.ase
+[50778]loaded collision model models/mapobjects/filler/toolchest.lwo
+[50995]loaded collision model models/mapobjects/doors/deldoor1/deldoor1frm.lwo
+[51073]loaded collision model models/mapobjects/doors/deldoor1/deldoor1.lwo
+[51114]loaded collision model models/mapobjects/com/modconsole2.lwo
+[51153]loaded collision model models/mapobjects/com/modconsole5.lwo
+[51205]loaded collision model models/mapobjects/cpu/cpumaze1.lwo
+[51252]loaded collision model models/mapobjects/doors/deldoor1/deldoor1win.lwo
+[51510]loaded collision model models/mapobjects/com/modconsole4.lwo
+[51738]loaded collision model models/mapobjects/lab/gizmo2/gizmo2.lwo
+[51959]loaded collision model models/mapobjects/lab/autable/autable.lwo
+[51999]loaded collision model models/mapobjects/lab/roboarm1/roboarm1.lwo
+[52028]loaded collision model models/mapobjects/utility/tecknob2/tecknob2.lwo
+[52273]loaded collision model models/mapobjects/cpu/comrack.lwo
+[52451]loaded collision model models/mapobjects/tables/gendesk/gendesk2.lwo
+[52470]loaded collision model models/mapobjects/filler/tbox2.ase
+[52511]loaded collision model models/mapobjects/cpu/serverplate.lwo
+[52612]loaded collision model models/mapobjects/filler/snackmachine.lwo
+[52677]loaded collision model models/mapobjects/filler/tbox1.ase
+[52694]loaded collision model models/mapobjects/washroom/clamp.ase
+[52743]loaded collision model models/mapobjects/washroom/urinal2.ase
+[52764]loaded collision model models/mapobjects/washroom/dryer.ase
+[52814]loaded collision model models/mapobjects/washroom/bsink.ase
+[52835]loaded collision model models/mapobjects/washroom/soap.ase
+[52892]loaded collision model models/mapobjects/washroom/toilet.ase
+[52925]loaded collision model models/mapobjects/washroom/tp.ase
+[53385]loaded collision model models/mapobjects/arcade_machine/arcade_machine.lwo
+[53569]loaded collision model models/mapobjects/mcity/deskcomp/deskcomp.lwo
+[53716]loaded collision model models/mapobjects/skmachines/skoverhang.lwo
+[54077]loaded collision model models/mapobjects/shipping_crates/shipping_crates.lwo
+[58622]loaded collision model models/mapobjects/skmachines/skcube.lwo
+[58723]loaded collision model models/mapobjects/doors/accesshatch/accesshatch.lwo
+[58756]loaded collision model models/mapobjects/doors/accesshatch/accesshatchdoor.lwo
+[59012]loaded collision model models/mapobjects/elevators/elevator.lwo
+[59289]loaded collision model models/mapobjects/swinglights/swinglight1b.lwo
+[59306]loaded collision model models/mapobjects/swinglights/swinglight_long_wbulbs_bulb_broken.ase
+[59403]loaded collision model models/mapobjects/filler/keyboard1.ase
+[59834]loaded collision model models/mapobjects/storagecab/gunrack/gunrackcomp.lwo
+[59937]loaded collision model models/mapobjects/chairs/modchair/modcorner.lwo
+[60220]loaded collision model models/mapobjects/shutter/shutter_small.lwo
+[62319]loaded collision model models/mapobjects/mcity/outside/mc_outside.lwo
+[62367]loaded collision model models/mapobjects/turrets/ceilingturret1b.lwo
+[62492]loaded collision model models/mapobjects/mcity/outside/mc_outside2.lwo
+[62657]loaded collision model models/mapobjects/kiosk/infokiosk2.lwo
+[65254]loaded collision model models/mapobjects/lab/loadingplatform/loadingplatform.lwo
+[65409]loaded collision model models/mapobjects/deltakiosk/deltakiosk.lwo
+[66136]WARNING: marscity_cinematic_player_sarge has no AAS file
+[66520]loaded collision model models/mapobjects/hangar/hangar1b.lwo
+[66697]loaded collision model models/mapobjects/doors/jumbodoor/jumbodoorfrm.lwo
+[66973]loaded collision model models/mapobjects/hangar/hangar1tower.lwo
+[67033]loaded collision model models/mapobjects/hangar/rails3.lwo
+[67070]loaded collision model models/mapobjects/hangar/rails2.lwo
+[67154]loaded collision model models/mapobjects/hangar/rails1.lwo
+[67208]loaded collision model models/mapobjects/hangar/rails4.lwo
+[67371]loaded collision model models/mapobjects/hangar/rails5.lwo
+[67432]loaded collision model models/mapobjects/hangar/pillar1.lwo
+[67475]loaded collision model models/mapobjects/hangar/rails6.lwo
+[67622]loaded collision model models/mapobjects/hangar/marquee.lwo
+[67685]loaded collision model models/mapobjects/hangar/hangarlamp1.lwo
+[67725]loaded collision model models/mapobjects/mcity/bioscanner/bioscannereye.lwo
+[67767]loaded collision model models/mapobjects/tables/gendesk/gendesk1.lwo
+[68389]loaded collision model models/mapobjects/hangar/hangar2tower.lwo
+[69133]loaded collision model models/mapobjects/monitors/hangingmonitor.lwo
+[70066]loaded collision model models/mapobjects/signs/ceilingsign/ceilingsign.lwo
+[71585]loaded collision model models/mapobjects/elevators/elevator_door.lwo
+[71889]loaded collision model models/mapobjects/com/platguistand/platguistand.lwo
+[72126]loaded collision model models/mapobjects/guiobjects/flatmonitor/flatmonitor.lwo
+[72222]loaded collision model models/mapobjects/mcity/bioscanner/bioscanbeam.lwo
+[72519]loaded collision model models/mapobjects/mcity/bioscanner/bioscanner.lwo
+[72653]loaded collision model models/mapobjects/doors/mcitydoor_glass.lwo
+[72891]loaded collision model models/mapobjects/lab/fridge1/fridge1_delta2b.lwo
+[74079]WARNING: Couldn't load sound 'guisounds.wav' using default
+[74346]loaded collision model models/mapobjects/turrets/ceilingturret1a.lwo
+[74816]...1969 entities spawned, 0 inhibited
+
+[74821]==== Processing events ====
+[75116]SpawnPlayer: 0
+[83426]loaded collision model models/weapons/shell1/mshell_lo.lwo
+[83437]loaded collision model models/weapons/shell1/sshell_bigger.lwo
+[83493]load so far: 2 images in 9 msec (DDS 1 in 8, files 0 in 0, uploads 1 in 0), 489 models in 14991 msec (with their images), 687 sounds in 13921 msec, 2946 pk4 file opens in 3160 msec
+[83514]----- idRenderModelManagerLocal::EndLevelLoad -----
+[83520]    0 models purged from previous level, [83523] 1022 models kept.
+[83525]----- idImageManager::EndLevelLoad -----
+[83530]   14 purged from previous
+[83532]  148 kept from previous
+[99826] 2074 new loaded
+[99830]all images loaded in   0.0 seconds
+[99835] 16342 msec: renderSystem->EndLevelLoad
+[99838]load so far: 2076 images in 16272 msec (DDS 2066 in 14823, files 27 in 427, uploads 2066 in 347), 489 models in 14991 msec (with their images), 687 sounds in 13921 msec, 5070 pk4 file opens in 5080 msec
+[99852]----- idSoundCache::EndLevelLoad -----
+[99857]79545k referenced
+[99859] 1313k purged
+[99860]    25 msec: soundSystem->EndLevelLoad
+[99863]load so far: 2076 images in 16272 msec (DDS 2066 in 14823, files 27 in 427, uploads 2066 in 347), 489 models in 14991 msec (with their images), 687 sounds in 13921 msec, 5070 pk4 file opens in 5080 msec
+[99877]    17 msec: declManager->EndLevelLoad
+[99881]load so far: 2076 images in 16272 msec (DDS 2066 in 14823, files 27 in 427, uploads 2066 in 347), 489 models in 14991 msec (with their images), 687 sounds in 13921 msec, 5070 pk4 file opens in 5080 msec
+[99901]    24 msec: uiManager->EndLevelLoad
+[99905]load so far: 2076 images in 16272 msec (DDS 2066 in 14823, files 27 in 427, uploads 2066 in 347), 489 models in 14991 msec (with their images), 687 sounds in 13921 msec, 5070 pk4 file opens in 5080 msec
+[100855]   954 msec: 10 game frames to settle
+[100859]load so far: 2079 images in 16272 msec (DDS 2066 in 14823, files 27 in 427, uploads 2066 in 347), 489 models in 14991 msec (with their images), 690 sounds in 14019 msec, 5076 pk4 file opens in 5086 msec
+[100874] 82026 msec to load game/mars_city1
+[100877]load in all: 2079 images in 16272 msec (DDS 2066 in 14823, files 27 in 427, uploads 2066 in 347), 489 models in 14991 msec (with their images), 690 sounds in 14019 msec, 5076 pk4 file opens in 5086 msec
+[100937]idRenderWorld::GenerateAllInteractions, msec = 47, staticAllocCount = 0.
+[100953]interactionTable size: 2822240 bytes
+[100956]29915 interaction take 3350480 bytes
+[100960]----- Warnings -----
+[100963]during game/mars_city1...
+[100965]WARNING: Couldn't load sound 'guisounds.wav' using default
+[100969]1 warnings
+[100984]benchmark: 0 seconds of warm-up, then counting frames for 10 seconds
+[101639]Running the game at com_gameHz = 35Hz, frametime 28ms
+[102175]Running the game at com_gameHz = 39Hz, frametime 25ms
+[102686]Running the game at com_gameHz = 44Hz, frametime 22ms
+[103188]Running the game at com_gameHz = 49Hz, frametime 20ms
+[103702]Running the game at com_gameHz = 54Hz, frametime 18ms
+[104214]Running the game at com_gameHz = 52Hz, frametime 19ms
+[104896]Wrote screenshots/shot00001.tga
+[105241]Running the game at com_gameHz = 36Hz, frametime 27ms
+[105764]Running the game at com_gameHz = 41Hz, frametime 24ms
+[106276]Running the game at com_gameHz = 46Hz, frametime 21ms
+[106776]Running the game at com_gameHz = 51Hz, frametime 19ms
+[107293]Running the game at com_gameHz = 53Hz, frametime 18ms
+[110868]Running the game at com_gameHz = 47Hz, frametime 21ms
+[111004]benchmark: 429 frames rendered in 10.0 seconds = 42.8 fps
+[111008]benchmark: per frame 4.8 ms game, 6.4 ms renderer front end, 8.1 ms back end; 47.1 game tics a second
+[111015]benchmark: back end per frame: 0.1 ms view set-up, 0.8 depth fill, 3.5 interactions, 1.3 shader passes, 0.0 fog, 0.0 post, 2.3 swap
+[111024]benchmark: front end per frame: 0.0 ms view set-up, 0.3 visible lights and entities, 0.3 light surfaces, 5.7 model surfaces, 0.0 subviews, 0.1 the rest; inside them 0.8 dynamic models, 1.3 interactions created, 0.0 light triangles later
+[111048]benchmark: front end's model surfaces per frame: 0.1 ms entity scissors, 2.0 ambient draw surfaces (with the dynamic models), 3.4 active interactions (with those created)
+[111060]benchmark: front end's interactions per frame: 94 visited, 91 of them culled or scissored by the view frustum (0.7 ms), 31 light surfaces and 24 shadow surfaces linked; 21 ambient draw surfaces
+[111075]benchmark: 1257 clock reads per frame (Sys_MillisecondsPrecise)
+[111117]----- Game Map Shutdown -----
+[112652]Shutting down sound hardware
+[112906]idRenderSystem::Shutdown()
+[112909]Shutting down backend thread[113087]Shutting down OpenGL subsystem
+[114040]----- Game Shutdown -----
+[114044]----- Game Map Shutdown -----
+[114051]Shutdown event system

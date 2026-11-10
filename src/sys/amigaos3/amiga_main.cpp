@@ -227,7 +227,9 @@ ID_TIME_T Sys_FileTimeStamp( FILE *fp ) {
 }
 
 int Sys_GetDriveFreeSpace( const char *path ) {
-	return 1000 * 1024;	// MB; only the CD-key and download code asks
+	// MB; the first start's data preparation (patch 0032) and the save code ask
+	long mb = amiga_free_mb( path );
+	return mb < 0 ? 1000 * 1024 : ( mb > 0x7fffffffL ? 0x7fffffff : (int)mb );
 }
 
 // ---------------------------------------------------------------------------

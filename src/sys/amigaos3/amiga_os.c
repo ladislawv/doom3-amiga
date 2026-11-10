@@ -71,6 +71,24 @@ int amiga_mkdir(const char *path)
     return amiga_exists(path, 1);
 }
 
+long amiga_free_mb(const char *path)
+{
+    BPTR lock = Lock((CONST_STRPTR)path, ACCESS_READ);
+    struct InfoData *info;
+    long mb = -1;
+    if (!lock)
+        return -1;
+    info = (struct InfoData *)AllocVec(sizeof(struct InfoData), MEMF_PUBLIC | MEMF_CLEAR);
+    if (info && Info(lock, info)) {
+        unsigned long long blocks = (unsigned long long)(info->id_NumBlocks - info->id_NumBlocksUsed);
+        mb = (long)((blocks * (unsigned long long)info->id_BytesPerBlock) >> 20);
+    }
+    if (info)
+        FreeVec(info);
+    UnLock(lock);
+    return mb;
+}
+
 int amiga_list_dir(const char *dir, void (*found)(const char *, int, void *), void *user)
 {
     BPTR lock = Lock((CONST_STRPTR)dir, ACCESS_READ);
