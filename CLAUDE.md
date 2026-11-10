@@ -16,7 +16,9 @@ clones and builds in WSL's home:
 - Needs GCC 16.2 for m68k in `~/amiga-gcc162-install` (ogles2's toolchain: its
   `dev/host-setup`), and **the one ogles2 the project uses: the shipped ogles2pi3 1.4-beta1**
   (the Pi 4 and the Pi 3; `github.com/ladislawv/ogles2pi3` next to this repository).
-  `tools/get_ogles2.sh` unpacks its committed SDK archive into `~/ogles2pi3-sdk` (library,
+  `tools/get_ogles2.sh` takes its published archives from the tag `v1.4-beta1` in that
+  repository (not its checked-out branch, which may hold older ones) and unpacks the SDK
+  into `~/ogles2pi3-sdk` (library,
   `v3dglslc`, headers, `libogles2.a`); SDL, the game, every test package and benchmark and
   the release take it from there or from its user archive. No ogles2 dev build, no ogles3.
 - Order: `tools/get_ogles2.sh`, `sources.sh` (clones, pinned), `build_deps.sh` (zlib, the allocator, libnix shims),
