@@ -21,7 +21,7 @@
 #                          release/src/mkicons.c from the system's defaults and
 #                          the art of release/icons/art/make_icons.py:
 #                          "mkicons DIR ART", ART holding its .d3ic files)
-#   ReadMe                 release/ReadMe (@VERSION@, @DATE@, @SOURCE@ filled in)
+#   ReadMe                 ReadMe at the repository root (@VERSION@, @DATE@, @SOURCE@ filled in)
 set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
 REPO=$(cd "$HERE/.." && pwd)
@@ -86,7 +86,7 @@ cp "$W/zlib-1.3.1/LICENSE" "$R/licences/zlib.txt"
 
 # the texts
 fill() { sed -e "s|@VERSION@|$VERSION|g" -e "s|@DATE@|$DATE|g" -e "s|@SOURCE@|$SOURCE|g" "$1"; }
-fill "$HERE/ReadMe" > "$R/ReadMe"
+fill "$REPO/ReadMe" > "$R/ReadMe"
 fill "$HERE/Doom3-Amiga.readme" > "$OUT/Doom3-Amiga-$VERSION.readme"
 
 # the icons

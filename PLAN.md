@@ -62,6 +62,7 @@
 
 - **Windows: `C:\- CPP\doom3`** (this folder) holds everything that is not a clone or a build:
   - `PLAN.md`, and `CLAUDE.md` (the short handbook: build order, the patch workflow, testing, rules, traps);
+  - `ReadMe` (the player's guide, shipped in the release with its `@VERSION@`, `@DATE@` and `@SOURCE@` filled in by `release/build_release.sh`);
   - `sources.sh`, `build_deps.sh`, `build_sdl2.sh`, `build_al.sh`, `build.sh`, `build_host.sh`, `run_host.sh`, `bench_host.sh`;
   - `patches/` (changes to d3es, made against the WSL clone, LF line ends; `tools/patch/reopen.sh`, `export.sh`, `checkrest.sh`);
   - `src/` (new files: the AmigaOS 3 system layer `src/sys`, the OpenAL subset `src/al`, the libnix additions `src/amiga`);
@@ -1167,6 +1168,8 @@ Requests go here only with a measurement behind them; the developer decides whet
 **Done (2026-11-13): shadows off at every quality (the developer's request).** `medium.cfg` and `high.cfg` now set `r_shadows 0` as `low.cfg` and `ultra.cfg` did; `r_shadows 1` in the console turns them on (saved). The ReadMe says so (the 15 fps of High at 1920x1080 were measured with shadows). Also measured today (`bench-20261113-145108`, `-150237`, `-150515`): Mars City's start, standing, 1280x720 Low, Paula, the automatic tick rate: 27.0 fps with ogles2 1.4-beta1 and with beta2 alike (game 4.5 ms, front end 6.8, back end 22.0 of which 14.5 at the swap, 32 tics a second); with the PC sampler (25.5 fps) ogles2.library 46% of the samples, the game 46% (front end 12%, back end 8%, animation and skinning 6%, GUIs 3%). The developer's 10-15 fps from the icon earlier could not be explained afterwards (the run's logs and settings had been overwritten); from the icon with the settings saved by `W=1280 H=720 QUALITY=low` it is as fast. The release archive made again (SHA-256 `3f2979ca...`).
 
 **Done (2026-11-13): release 1.0-beta2 published** (`release/VERSION`; `Doom3-Amiga-1.0-beta2.lha`, SHA-256 `6d0e9602...`, the game `bcd4b9b8` and ogles2.library 1.4-beta2 `cd24b093` as tested on the A1200 today; tag `v1.0-beta2`, a GitHub pre-release beside 1.0-beta1's). The ReadMe's history and the Aminet readme split into 1.0-beta1 and 1.0-beta2.
+
+**Done (2026-11-13): the ReadMe at the repository's root** (the developer's request). `release/ReadMe` moved to `ReadMe`, unchanged; `release/build_release.sh` fills it from there.
 
 **Next, in order:**
 0. ~~libnix's empty-string `strtod`~~ (§14, 2026-11-04): fixed; the developer clicked the `mars_city1` elevator panel with the fixed build and its doors opened. The diagnostic patch (`guiState`) is not committed: it was numbered 0029 before 0029-0031 arrived and would need renumbering.
