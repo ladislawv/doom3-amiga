@@ -52,8 +52,9 @@ Software
   - Plenty of Fast RAM: tested with the 1.8 GB Emu68 gives a Pi 4.
   - About 1.6 GB free on a partition for the game's data, and 30 MB for
     this drawer.
-  - ogles2.library 1.4 is included (libs/). If an older ogles2.library is
-    installed in LIBS:, the game asks you to update it.
+  - ogles2.library 1.4 beta 2 is included (libs/). The game uses this one,
+    whatever version is installed in LIBS: (unless another program has an
+    ogles2.library open at the moment the game starts).
 
 Game data (not included)
   The nine files from the "base" folder of Doom 3 1.3.1:
@@ -173,17 +174,23 @@ but not smooth game. Measured on an A1200 with a Pi 4 (its ARM at
 2.2 GHz):
 
   Doom 3's own benchmark (timedemo demo1, a busy scene):
-    1920x1080, QUALITY=low, LIGHTS=12      16.9 frames a second
+    1920x1080, QUALITY=low, LIGHTS=12      19 frames a second
+    1280x720,  QUALITY=low, LIGHTS=12      27.6 frames a second
+  A played or timed demo is always read into memory first.
   The port's own benchmark (a quieter scene):
     1920x1080, QUALITY=low, LIGHTS=12      21 frames a second
     640x480,   QUALITY=low, LIGHTS=12      24 frames a second
     1920x1080, QUALITY=high                15 frames a second
 
-  low      Reduced texture sizes, no shadows, no special effects (blood,
-           decals, muzzle flashes, shell casings). The fastest.
-  medium   Full-size textures and shadows, effects still off.
-  high     Full textures, shadows and all the effects.
-  ultra    Doom 3's Ultra preset with all the effects, but no shadows.
+  low      Reduced texture sizes, no special effects (blood, decals,
+           muzzle flashes, shell casings). The fastest.
+  medium   Full-size textures, effects still off.
+  high     Full textures and all the effects.
+  ultra    Doom 3's Ultra preset with all the effects.
+
+Shadows are off at every quality (they cost the most). "r_shadows 1" in the
+console turns them on, and is saved. (The 15 frames a second of High above
+were measured with shadows on.)
 
 The processor (Emu68 running the game's 68k code) is the limit more than
 the GPU, so smaller screen sizes help less than you might expect.
@@ -232,10 +239,13 @@ Nothing happens when I double-click the icon
     is not assigned (Assign LIBS: should list SYS:Libs). Reboot.
   - No game data: the pak00?.pk4 files are not in Doom3/base/.
 
-A requester says Doom 3 needs ogles2.library 1.4 or newer
-  An older ogles2.library in LIBS: is found before the one in Doom3/libs/.
-  Copy Doom3/libs/ogles2.library to LIBS: (and Doom3/libs/v3dglslc too),
-  or install ogles2 1.4 from its own release.
+A requester says "Couldn't load default.cfg"
+  The game found no data: the pak00?.pk4 files are not in Doom3/base/
+  (or demo00.pk4 not in Doom3/demo/).
+
+The game seems to use another ogles2.library
+  T:doom3-out.txt names the one it got in its first line. Another program
+  had one open when the game started: quit it first.
 
 The screen stays black or the game stops at once
   The screen mode is missing: add a 32-bit mode of that size in
@@ -269,7 +279,7 @@ The Amiga freezes
   dhewm3             The game itself
   low.cfg, medium.cfg, high.cfg, ultra.cfg
                      The port's part of the four quality settings
-  libs/              ogles2.library 1.4 (Pi 4 and Pi 3) and its shader
+  libs/              ogles2.library 1.4 beta 2 (Pi 4 and Pi 3) and its shader
                      compiler v3dglslc
   shaders/           The game's shaders, compiled ahead of time
   base/              Doom 3's data goes here (pak000.pk4 - pak008.pk4)
@@ -322,7 +332,12 @@ The Amiga freezes
   - Clicks on the screens in the game (the elevator panels in Mars City)
     work: a text without a number now reads as 0.
   - New colour icons.
-  - ogles2.library 1.4 beta 1: the Raspberry Pi 3 as well as the Pi 4.
+  - ogles2.library 1.4 beta 2: the Raspberry Pi 3 as well as the Pi 4; the
+    game uses its own copy in libs/ over one in LIBS:.
+  - Demos (playdemo, timedemo) read into memory before they play: the
+    timedemo shows the game's real speed.
+  - Without game data the game says so instead of crashing.
+  - Shadows off at every quality (r_shadows 1 turns them on).
 
 0.1 (2026-10-22)
   - The first release.

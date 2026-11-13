@@ -16,6 +16,7 @@
 #include <proto/cybergraphics.h>
 #include <cybergraphx/cybergraphics.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "amiga_os.h"
 
@@ -73,6 +74,40 @@ int amiga_mkdir(const char *path)
         return 1;
     }
     return amiga_exists(path, 1);
+}
+
+static struct Library *ownOgles2;
+
+static void close_own_ogles2(void)
+{
+    if (ownOgles2) {
+        CloseLibrary(ownOgles2);
+        ownOgles2 = NULL;
+    }
+}
+
+int amiga_open_own_ogles2(char *idstring, int size)
+{
+    struct Library *before;
+    int own;
+    idstring[0] = '\0';
+    /* already in memory (another program has it open): exec gives that one to
+       every open, by path or name */
+    Forbid();
+    before = (struct Library *)FindName(&SysBase->LibList, (CONST_STRPTR)"ogles2.library");
+    Permit();
+    ownOgles2 = OpenLibrary((CONST_STRPTR)"PROGDIR:libs/ogles2.library", 0);
+    own = (ownOgles2 && !before) ? 1 : 0;
+    if (!ownOgles2) {
+        ownOgles2 = OpenLibrary((CONST_STRPTR)"ogles2.library", 0);
+        if (!ownOgles2)
+            return -1;
+    }
+    if (ownOgles2->lib_IdString)
+        strncpy(idstring, (const char *)ownOgles2->lib_IdString, size - 1);
+    idstring[size - 1] = '\0';
+    atexit(close_own_ogles2);
+    return own;
 }
 
 int amiga_rtg_mode_exists(int w, int h)
@@ -158,13 +193,21 @@ long amiga_file_time(const char *path)
 
 void amiga_message(const char *title, const char *text)
 {
+    /* a local base: on a fatal error SDL has been shut down by now, which closes
+       the global IntuitionBase and clears it (an EasyRequest through it crashed:
+       the game without any pk4, 2026-11-13) */
+    struct IntuitionBase *IntuitionBase =
+        (struct IntuitionBase *)OpenLibrary((CONST_STRPTR)"intuition.library", 36);
     struct EasyStruct es;
+    if (!IntuitionBase)
+        return;
     es.es_StructSize = sizeof(es);
     es.es_Flags = 0;
     es.es_Title = (UBYTE *)title;
     es.es_TextFormat = (UBYTE *)"%s";
     es.es_GadgetFormat = (UBYTE *)"OK";
     EasyRequest(NULL, &es, NULL, (ULONG)text);
+    CloseLibrary((struct Library *)IntuitionBase);
 }
 
 /* Emu68's free-running counter (its docs/internals/ControlRegisters.md):

@@ -70,9 +70,11 @@ cp "$HERE"/shaders/* "$R/shaders/"
 cp "$HERE/base-ReadMe.txt" "$R/base/ReadMe.txt"
 cp "$HERE/demo-ReadMe.txt" "$R/demo/ReadMe.txt"
 
-# ogles2: the library and its compiler, as its release ships them
+# ogles2: its compiler and licences as its release ships them; the library from
+# tools/get_ogles2.sh's folder (1.4-beta2, built from the ogles2pi3-beta2 branch)
 (cd "$W" && "$LHA" xq "$OGLES2_DIST/ogles2-$OGLES2.lha")
-cp "$W/ogles2/Libs/ogles2.library" "$W/ogles2/Libs/v3dglslc" "$R/libs/"
+OGLES2_LIB=${OGLES2_LIB:-$OGLES2_DIST/../ogles2/Libs/ogles2.library}
+cp "$OGLES2_LIB" "$W/ogles2/Libs/v3dglslc" "$R/libs/"
 cp "$W/ogles2/LICENSE" "$R/licences/ogles2/"
 cp -r "$W/ogles2/licences/." "$R/licences/ogles2/"
 

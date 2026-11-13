@@ -376,6 +376,15 @@ int main( int argc, char **argv ) {
 	amiga_mkdir( savePath );
 	OpenLog();
 
+	// the drawer's own ogles2.library before any in LIBS: (kept open to the end,
+	// so SDL's and OGLES2Open's opens by name get it)
+	{
+		char id[128];
+		int own = amiga_open_own_ogles2( id, sizeof( id ) );
+		Sys_Printf( "ogles2.library: %s%s\n", id[0] ? id : "(none)",
+			own > 0 ? " (the drawer's libs/)" : own == 0 ? " (already in memory or not in libs/: not the drawer's)" : "" );
+	}
+
 	unsigned long stack = amiga_stack_size();
 	if ( stack == 0 ) {
 		// the task's stack bounds are not filled in (the vamos emulator): unknown, go on

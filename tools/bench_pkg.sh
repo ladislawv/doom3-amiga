@@ -33,7 +33,7 @@ for v in "$@"; do
     case $s in *=*) b=${s#*=}; [ "$b" = game ] || [[ " ${B[*]} " == *" $b "* ]] || B+=("$b") ;; esac
 done
 OGLES2_RELEASE=$L bash tests/a1200/build_pkg.sh bench game "${B[@]}" > /dev/null
-P=~/doom3-build/m68k/pkg/bench
+P=${M:-$HOME/doom3-build/m68k}/pkg/bench
 A='+set r_swapInterval 0 +set com_preloadDemos 1'
 mv $P/dhewm3-game $P/dhewm3-a
 for v in "$@"; do

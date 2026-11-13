@@ -28,6 +28,12 @@ int amiga_list_dir(const char *dir, void (*found)(const char *name, int isdir, v
 /* 1 when a 32-bit (4 bytes a pixel) RTG screen mode of exactly w x h exists (as
    SDL's OS3_Find32BitMode picks one), 0 when not, -1 without cybergraphics.library */
 int amiga_rtg_mode_exists(int w, int h);
+/* opens the program's own libs/ogles2.library by its path and keeps it open to
+   the end, so that every later open by name (SDL, OGLES2Open, LIBS:) gets this
+   one; *idstring gets its version string. 1 when the drawer's copy is the one
+   in memory, 0 when another ogles2.library already was (another program uses
+   it) or the drawer has none, -1 when none could be opened */
+int amiga_open_own_ogles2(char *idstring, int size);
 /* free room on the volume holding `path`, in MB; -1 if unknown */
 long amiga_free_mb(const char *path);
 /* the modification date of a file in seconds since 1970; 0 if unknown */

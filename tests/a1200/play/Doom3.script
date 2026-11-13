@@ -37,17 +37,9 @@ Set d3dir `CD`
 Stack 9000000
 Avail FLUSH >NIL:
 
-; ogles2.library 1.4 or newer (the Pi 3 needs 1.4): one in LIBS: is found
-; before the one in libs/
-; (the file's version string; Version by library name would search LIBS:
-; only, not this drawer's libs/)
-If EXISTS LIBS:ogles2.library
-  Version >NIL: LIBS:ogles2.library 1 4
-  If WARN
-    RequestChoice >NIL: "Doom 3" "Doom 3 needs ogles2.library 1.4 or newer.*NAn older one in LIBS: is found first:*Ncopy the one in Doom 3's libs/ drawer to LIBS:." "OK"
-    Quit 20
-  EndIf
-EndIf
+; ogles2.library: the game opens the one in its own libs/ first, whatever LIBS:
+; holds (unless another program has an ogles2.library open at that moment;
+; T:doom3-out.txt names the one it got)
 
 ; the save directory (save/base for the full game, save/demo for the demo):
 ; the game's saved settings, and the quality files where the game finds them
