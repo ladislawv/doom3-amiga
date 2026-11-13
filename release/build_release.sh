@@ -21,7 +21,9 @@
 #                          release/src/mkicons.c from the system's defaults and
 #                          the art of release/icons/art/make_icons.py:
 #                          "mkicons DIR ART", ART holding its .d3ic files)
-#   ReadMe                 ReadMe at the repository root (@VERSION@, @DATE@, @SOURCE@ filled in)
+#   ReadMe                 ReadMe at the repository root, as it is (its version,
+#                          date and source link written in, so that GitHub shows
+#                          them; checked against VERSION below)
 set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
 REPO=$(cd "$HERE/.." && pwd)
@@ -52,6 +54,11 @@ GAME=$M/game/dhewm3
 [ -f "$D3ES_SRC/COPYING.txt" ] && [ -f "$SDL2_SRC/libSDL2-amigaos3-main/LICENSE" ] ||
     { echo "run sources.sh first (d3es and SDL2_68k for their licences)"; exit 1; }
 [ -f "$DEPS_SRC/zlib-1.3.1.tar.gz" ] || { echo "no $DEPS_SRC/zlib-1.3.1.tar.gz: run sources.sh first"; exit 1; }
+# the ReadMe names this version in its title, its archive name and its history
+for want in "Version $VERSION (" "Doom3-Amiga-$VERSION.lha"; do
+    grep -qF "$want" "$REPO/ReadMe" || { echo "ReadMe lacks \"$want\": update it for $VERSION"; exit 1; }
+done
+grep -q "^$VERSION (" "$REPO/ReadMe" || { echo "ReadMe has no history entry for $VERSION"; exit 1; }
 
 R=$OUT/Doom3
 W=$OUT/work

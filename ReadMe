@@ -2,7 +2,7 @@
                     DOOM 3 for AmigaOS 3 on the PiStorm
                     ===================================
 
-                        Version @VERSION@ (@DATE@)
+                        Version 1.0-beta2 (2026-11-13)
                         by R-Typer and Ladislawv
 
 Doom 3 (id Software, 2004) running natively on a 68k Amiga with a PiStorm:
@@ -82,7 +82,7 @@ Game data (not included)
 -------------
 
   1. Unpack the archive where you want the game, for example to Work:
-     (LhA x Doom3-Amiga-@VERSION@.lha Work:). This makes the drawer Doom3.
+     (LhA x Doom3-Amiga-1.0-beta2.lha Work:). This makes the drawer Doom3.
      It can be anywhere, on any partition.
 
   2. Copy the nine pak00?.pk4 files into Doom3/base/. On the PC they are
@@ -173,18 +173,26 @@ Doom 3 was made for PCs far faster than any Amiga, so expect a playable
 but not smooth game. Measured on an A1200 with a Pi 4 (its ARM at
 2.2 GHz):
 
-  Doom 3's own benchmark (timedemo demo1, a busy scene):
-    1920x1080, QUALITY=low, LIGHTS=12      19 frames a second
-    1280x720,  QUALITY=low, LIGHTS=12      27.6 frames a second
+  At 1280x720 (720p), the size the game starts with:
+    Doom 3's own benchmark (timedemo demo1, a busy scene),
+      QUALITY=low, LIGHTS=12               27.6 frames a second
+    Mars City, the first level, at its start, with sound,
+      the first start's settings (Low, 12 lights)
+                                           27 frames a second
+  At 1920x1080:
+    Doom 3's own benchmark, QUALITY=low, LIGHTS=12
+                                           19 frames a second
   A played or timed demo is always read into memory first.
-  The port's own benchmark (a quieter scene):
+  The port's own benchmark (a quieter scene of the free demo, an
+  earlier version of the port, without sound):
     1920x1080, QUALITY=low, LIGHTS=12      21 frames a second
     640x480,   QUALITY=low, LIGHTS=12      24 frames a second
     1920x1080, QUALITY=high                15 frames a second
 
   low      Reduced texture sizes, no special effects (blood, decals,
            muzzle flashes, shell casings). The fastest.
-  medium   Full-size textures, effects still off.
+  medium   Full-size textures, muzzle flashes and projectile lights;
+           blood, decals and shell casings still off.
   high     Full textures and all the effects.
   ultra    Doom 3's Ultra preset with all the effects.
 
@@ -226,7 +234,7 @@ Tab for the PDA); change them in Options > Controls.
   - The console: the key left of 1, below Esc.
   - Saved games and settings: Doom3/save/base/.
   - The game's last output (for problem reports): T:doom3-out.txt, until
-    the Amiga is switched off.
+    the next reset (T: is in RAM:).
 
 
 8. TROUBLESHOOTING
@@ -279,8 +287,8 @@ The Amiga freezes
   dhewm3             The game itself
   low.cfg, medium.cfg, high.cfg, ultra.cfg
                      The port's part of the four quality settings
-  libs/              ogles2.library 1.4 beta 2 (Pi 4 and Pi 3) and its shader
-                     compiler v3dglslc
+  libs/              ogles2.library 1.4 beta 2 (Pi 4 and Pi 3) and its
+                     shader compiler v3dglslc
   shaders/           The game's shaders, compiled ahead of time
   base/              Doom 3's data goes here (pak000.pk4 - pak008.pk4)
   demo/              Or the free demo's data (demo00.pk4)
@@ -296,11 +304,12 @@ The Amiga freezes
   - The game (dhewm3, d3es-multithread, and this port's changes): GNU
     General Public License version 3, with id Software's additional terms
     (licences/Doom3-GPL.txt). The source code of this version:
-    @SOURCE@
+    https://github.com/ladislawv/doom3-amiga
   - Doom 3's data is id Software's (ZeniMax) and not part of this release.
   - SDL2 (SDL2_68k by Steffen Haeuser): zlib licence (licences/SDL2.txt).
-  - ogles2.library: Hyperion MiniGL Open Source License; its shader
-    compiler v3dglslc is Mesa (MIT) (licences/ogles2/).
+  - ogles2.library: Hyperion MiniGL Open Source License (it includes
+    PiStorm3D's V3D code; its own parts are MIT); its shader compiler
+    v3dglslc is Mesa (MIT) (licences/ogles2/).
   - zlib: zlib licence (licences/zlib.txt); dlmalloc and libnix: public
     domain.
 
@@ -319,7 +328,7 @@ The Amiga freezes
 13. HISTORY
 -----------
 
-1.0-beta2 (@DATE@)
+1.0-beta2 (2026-11-13)
   - ogles2.library 1.4 beta 2; the game uses its own copy in libs/ over
     one in LIBS:.
   - Demos (playdemo, timedemo) read into memory before they play: the

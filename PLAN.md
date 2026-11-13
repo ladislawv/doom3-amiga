@@ -62,7 +62,7 @@
 
 - **Windows: `C:\- CPP\doom3`** (this folder) holds everything that is not a clone or a build:
   - `PLAN.md`, and `CLAUDE.md` (the short handbook: build order, the patch workflow, testing, rules, traps);
-  - `ReadMe` (the player's guide, shipped in the release with its `@VERSION@`, `@DATE@` and `@SOURCE@` filled in by `release/build_release.sh`);
+  - `ReadMe` (the player's guide, shipped in the release as it is: its version and date are updated by hand for each release, which `release/build_release.sh` checks);
   - `sources.sh`, `build_deps.sh`, `build_sdl2.sh`, `build_al.sh`, `build.sh`, `build_host.sh`, `run_host.sh`, `bench_host.sh`;
   - `patches/` (changes to d3es, made against the WSL clone, LF line ends; `tools/patch/reopen.sh`, `export.sh`, `checkrest.sh`);
   - `src/` (new files: the AmigaOS 3 system layer `src/sys`, the OpenAL subset `src/al`, the libnix additions `src/amiga`);
@@ -1169,7 +1169,7 @@ Requests go here only with a measurement behind them; the developer decides whet
 
 **Done (2026-11-13): release 1.0-beta2 published** (`release/VERSION`; `Doom3-Amiga-1.0-beta2.lha`, SHA-256 `6d0e9602...`, the game `bcd4b9b8` and ogles2.library 1.4-beta2 `cd24b093` as tested on the A1200 today; tag `v1.0-beta2`, a GitHub pre-release beside 1.0-beta1's). The ReadMe's history and the Aminet readme split into 1.0-beta1 and 1.0-beta2.
 
-**Done (2026-11-13): the ReadMe at the repository's root** (the developer's request). `release/ReadMe` moved to `ReadMe`, unchanged; `release/build_release.sh` fills it from there.
+**Done (2026-11-13): the ReadMe at the repository's root** (the developer's request). `release/ReadMe` moved to `ReadMe`; `release/build_release.sh` takes it from there. Then a pass for release: the version, date and source link written in (no `@VERSION@`, `@DATE@`, `@SOURCE@` left, so GitHub shows them; `build_release.sh` refuses to build when the ReadMe's title, archive name or history lacks `release/VERSION`'s version); Medium described as `medium.cfg` sets it (muzzle flashes and projectile lights on); `T:doom3-out.txt` lasts until a reset; ogles2's licence line as its `LICENSE` says (Hyperion, with MIT parts). The Aminet readme: 19 fps at 1920x1080 (it still said 17, from before the demo was preloaded), its `Short:` cut to Aminet's 40 characters, lines within 76 columns.
 
 **Next, in order:**
 0. ~~libnix's empty-string `strtod`~~ (§14, 2026-11-04): fixed; the developer clicked the `mars_city1` elevator panel with the fixed build and its doors opened. The diagnostic patch (`guiState`) is not committed: it was numbered 0029 before 0029-0031 arrived and would need renumbering.
