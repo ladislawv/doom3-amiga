@@ -319,7 +319,15 @@ The Amiga freezes
 13. HISTORY
 -----------
 
-1.0-beta1 (@DATE@)
+1.0-beta2 (@DATE@)
+  - ogles2.library 1.4 beta 2; the game uses its own copy in libs/ over
+    one in LIBS:.
+  - Demos (playdemo, timedemo) read into memory before they play: the
+    timedemo shows the game's real speed.
+  - Without game data the game says so instead of crashing.
+  - Shadows off at every quality (r_shadows 1 turns them on).
+
+1.0-beta1 (2026-11-10)
   - The first start sets 1280x720, Low quality and the frame rate shown;
     what you change in the menus or the console is kept from then on.
     The launcher's options are saved too; RESET starts afresh.
@@ -332,12 +340,7 @@ The Amiga freezes
   - Clicks on the screens in the game (the elevator panels in Mars City)
     work: a text without a number now reads as 0.
   - New colour icons.
-  - ogles2.library 1.4 beta 2: the Raspberry Pi 3 as well as the Pi 4; the
-    game uses its own copy in libs/ over one in LIBS:.
-  - Demos (playdemo, timedemo) read into memory before they play: the
-    timedemo shows the game's real speed.
-  - Without game data the game says so instead of crashing.
-  - Shadows off at every quality (r_shadows 1 turns them on).
+  - ogles2.library 1.4 beta 1: the Raspberry Pi 3 as well as the Pi 4.
 
 0.1 (2026-10-22)
   - The first release.

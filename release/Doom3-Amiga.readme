@@ -18,6 +18,12 @@ Low settings; Low, Medium, High and Ultra settings, Paula or AHI sound, any
 32-bit RTG screen size. Starts at 1280x720 with the frame rate shown; the
 settings changed in the game's menus are kept.
 
+New in 1.0-beta2: ogles2.library 1.4 beta 2, used from the game's own
+drawer over one in LIBS:; demos read into memory before they play (the
+timedemo shows the real speed: about 28 frames a second at 1280x720 Low);
+a message instead of a crash without game data; shadows off at every
+quality.
+
 New in 1.0-beta1: the settings saved and used at every start, 1280x720 by
 default, the game's speed following the frame rate, the precompressed
 textures at every quality, only the screen sizes your system has in the
