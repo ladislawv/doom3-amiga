@@ -1,0 +1,12 @@
+// amiga.sndshd - the bounce of the Amiga port's attract screen (guis/amiga/attract.gui)
+
+guisounds_amigabounce
+{
+	description 	"Gui Audio"
+
+	minDistance	4
+	maxDistance	15
+	volume 		-4
+
+	sound/amiga/bounce.wav
+}

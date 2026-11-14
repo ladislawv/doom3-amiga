@@ -17,6 +17,8 @@
 #                          ogles2 1.4-beta1's compiler made them on the A1200,
 #                          the Pi 4's; the Pi 3 compiles its own at first use; to
 #                          be made again after an ogles2 or compiler update)
+#   base/, demo/amiga.pk4  the port's own game data: src/data/amiga/ and the art
+#                          and sound tools/make_amiga_pk4.py makes (patch 0037)
 #   icons                  release/icons/ (colour icons, made on the A1200 by
 #                          release/src/mkicons.c from the system's defaults and
 #                          the art of release/icons/art/make_icons.py:
@@ -76,6 +78,9 @@ cp "$REPO"/tests/a1200/play/{low,medium,high,ultra}.cfg "$R/"
 cp "$HERE"/shaders/* "$R/shaders/"
 cp "$HERE/base-ReadMe.txt" "$R/base/ReadMe.txt"
 cp "$HERE/demo-ReadMe.txt" "$R/demo/ReadMe.txt"
+# the port's own game data, in both game folders (the demo's data replaces base/)
+python3 "$REPO/tools/make_amiga_pk4.py" "$R/base/amiga.pk4" > /dev/null
+cp "$R/base/amiga.pk4" "$R/demo/"
 
 # ogles2: its compiler and licences as its release ships them; the library from
 # tools/get_ogles2.sh's folder (1.4-beta2, built from the ogles2pi3-beta2 branch)

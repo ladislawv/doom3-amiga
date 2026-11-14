@@ -39,7 +39,8 @@ clone, never in a Windows checkout:
 5. `bash tools/build_all.sh`.
 
 New files of the port (not d3es's) live in `src/` (the AmigaOS system layer `src/sys`, the
-OpenAL subset `src/al`, the libnix additions `src/amiga`); SDL2 changes in `sdl2/patches`
+OpenAL subset `src/al`, the libnix additions `src/amiga`, the port's game data `src/data/amiga`,
+packed with its art into `amiga.pk4` by `tools/make_amiga_pk4.py`); SDL2 changes in `sdl2/patches`
 (`sdl2/PROVENANCE.md`: 0001–0002 are ogles2's, 0100 on are the port's).
 
 ## Testing on the A1200

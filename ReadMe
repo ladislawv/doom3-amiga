@@ -2,7 +2,7 @@
                     DOOM 3 for AmigaOS 3 on the PiStorm
                     ===================================
 
-                        Version 1.0-beta2 (2026-11-13)
+                        Version 1.0-beta3 (2026-11-14)
                         by R-Typer and Ladislawv
 
 Doom 3 (id Software, 2004) running natively on a 68k Amiga with a PiStorm:
@@ -82,7 +82,7 @@ Game data (not included)
 -------------
 
   1. Unpack the archive where you want the game, for example to Work:
-     (LhA x Doom3-Amiga-1.0-beta2.lha Work:). This makes the drawer Doom3.
+     (LhA x Doom3-Amiga-1.0-beta3.lha Work:). This makes the drawer Doom3.
      It can be anywhere, on any partition.
 
   2. Copy the nine pak00?.pk4 files into Doom3/base/. On the PC they are
@@ -290,8 +290,10 @@ The Amiga freezes
   libs/              ogles2.library 1.4 beta 2 (Pi 4 and Pi 3) and its
                      shader compiler v3dglslc
   shaders/           The game's shaders, compiled ahead of time
-  base/              Doom 3's data goes here (pak000.pk4 - pak008.pk4)
-  demo/              Or the free demo's data (demo00.pk4)
+  base/              Doom 3's data goes here (pak000.pk4 - pak008.pk4);
+                     amiga.pk4 in it is the port's own (keep it)
+  demo/              Or the free demo's data (demo00.pk4), beside its
+                     own amiga.pk4
   save/              Made at the first start: settings (base/dhewm.cfg)
                      and saved games
   licences/          The licences of the parts
@@ -327,6 +329,11 @@ The Amiga freezes
 
 13. HISTORY
 -----------
+
+1.0-beta3 (2026-11-14)
+  - The port's own small data file, amiga.pk4, in base/ and demo/: keep
+    it there.
+  - The ReadMe gives the speed at 1280x720 (720p) first.
 
 1.0-beta2 (2026-11-13)
   - ogles2.library 1.4 beta 2; the game uses its own copy in libs/ over

@@ -1,0 +1,94 @@
+diff --git a/neo/game/Entity.cpp b/neo/game/Entity.cpp
+index 07234344..375c1a41 100644
+--- a/neo/game/Entity.cpp
++++ b/neo/game/Entity.cpp
+@@ -3524,6 +3524,25 @@ bool idEntity::HandleGuiCommands( idEntity *entityGui, const char *cmds ) {
+ 				continue;
+ 			}
+ 
++			// the Amiga port's attract screen (Game_local.cpp, AmigaAttractScreen):
++			// the cabinet's own GUI back, activated as a new focus would
++			if ( !token.Icmp( "amigaAttractEnd" ) ) {
++				idStr next = entityGui->spawnArgs.GetString( "amiga_attract_next" );
++				if ( next.Length() ) {
++					entityGui->spawnArgs.Delete( "amiga_attract_next" );
++					entityGui->spawnArgs.Set( "gui", next );
++					AddRenderGui( next, &entityGui->renderEntity.gui[ 0 ], &entityGui->spawnArgs );
++					entityGui->UpdateVisuals();
++					if ( entityGui->renderEntity.gui[ 0 ] ) {
++						idStr activated = entityGui->renderEntity.gui[ 0 ]->Activate( true, gameLocal.time );
++						if ( activated.Length() ) {
++							HandleGuiCommands( entityGui, activated );
++						}
++					}
++				}
++				continue;
++			}
++
+ 			if ( !token.Icmp( "turkeyscore" ) ) {
+ 				if ( src.ReadToken( &token2 ) && entityGui->renderEntity.gui[0] ) {
+ 					int score = entityGui->renderEntity.gui[0]->State().GetInt( "score" );
+diff --git a/neo/game/Game_local.cpp b/neo/game/Game_local.cpp
+index 7bf2d149..06c0c523 100644
+--- a/neo/game/Game_local.cpp
++++ b/neo/game/Game_local.cpp
+@@ -3459,6 +3459,51 @@ gameState_t	idGameLocal::GameState( void ) const {
+ 	return gamestate;
+ }
+ 
++/*
++================
++AmigaAttractScreen
++
++The Amiga port's attract screen: the arcade cabinet in Mars City shows
++guis/amiga/attract.gui (from the port's amiga.pk4) in place of its own GUI
++until the player clicks it; the GUI's "amigaAttractEnd" command then puts the
++cabinet's own GUI back (idEntity::HandleGuiCommands). Nothing changes when the
++port's GUI is missing or g_amigaAttract is 0.
++================
++*/
++static idCVar g_amigaAttract( "g_amigaAttract", "1", CVAR_GAME | CVAR_BOOL, "the Mars City arcade cabinet shows the Amiga attract screen until it is clicked" );
++
++static void AmigaAttractScreen( const char *mapFileName, idDict &args ) {
++	static const struct {
++		const char *map;
++		const char *entity;
++		const char *gui;
++	} screens[] = {
++		{ "mars_city1",			"func_static_4311", "guis/marscity/sttp.gui" },
++		{ "demo_mars_city1",	"func_static_4311", "guis/marscity/sttp.gui" },
++	};
++	const char *attractGui = "guis/amiga/attract.gui";
++
++	if ( !g_amigaAttract.GetBool() ) {
++		return;
++	}
++	idStr map = mapFileName;
++	map.StripPath();
++	map.StripFileExtension();
++	for ( int i = 0; i < (int)( sizeof( screens ) / sizeof( screens[0] ) ); i++ ) {
++		if ( map.Icmp( screens[i].map ) != 0 ||
++			 idStr::Icmp( args.GetString( "name" ), screens[i].entity ) != 0 ||
++			 idStr::Icmp( args.GetString( "gui" ), screens[i].gui ) != 0 ) {
++			continue;
++		}
++		if ( fileSystem->ReadFile( attractGui, NULL, NULL ) <= 0 ) {
++			return;
++		}
++		args.Set( "amiga_attract_next", screens[i].gui );
++		args.Set( "gui", attractGui );
++		return;
++	}
++}
++
+ /*
+ ==============
+ idGameLocal::SpawnMapEntities
+@@ -3503,6 +3548,7 @@ void idGameLocal::SpawnMapEntities( void ) {
+ 	for ( i = 1 ; i < numEntities ; i++ ) {
+ 		mapEnt = mapFile->GetEntity( i );
+ 		args = mapEnt->epairs;
++		AmigaAttractScreen( mapFileName, args );
+ 
+ 		if ( !InhibitEntitySpawn( args ) ) {
+ 			// precache any media specified in the map entity

@@ -1,0 +1,40 @@
+// amiga.mtr - the materials of the Amiga port's attract screen (guis/amiga/attract.gui).
+// guis/amiga/ball.tga holds 16 frames side by side, each the ball turned a
+// sixteenth further through one red and one white checker (45 degrees), so the
+// strip loops: the table picks the frame, 32 a second, forwards or backwards.
+
+table amigaBallFrame { snap { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 } }
+
+guis/amiga/room
+{
+	{
+		forceHighQuality
+		blend		blend
+		map			guis/amiga/room.tga
+		colored
+	}
+}
+
+guis/amiga/ball_right
+{
+	{
+		forceHighQuality
+		blend		blend
+		map			guis/amiga/ball.tga
+		colored
+		scale		0.0625, 1
+		translate	amigaBallFrame[ time * -2 ], 0
+	}
+}
+
+guis/amiga/ball_left
+{
+	{
+		forceHighQuality
+		blend		blend
+		map			guis/amiga/ball.tga
+		colored
+		scale		0.0625, 1
+		translate	amigaBallFrame[ time * 2 ], 0
+	}
+}

@@ -1,0 +1,110 @@
+// attract.gui - the Amiga port's attract screen on the Mars City arcade cabinet
+// (patch 0037: AmigaAttractScreen). A red and white ball bounces in front of a
+// grid; a click on the screen ("amigaAttractEnd") gives the cabinet its own
+// game back. Art and sound are the port's own (tools/make_amiga_pk4.py).
+// The cabinet's bezel covers the GUI below about y 388: everything is above it.
+
+windowDef Desktop
+{
+	rect		0, 0, 640, 480
+	background	"guis/amiga/room"
+	matcolor	0.8, 0.8, 0.8, 1
+
+	onAction {
+		set "cmd" "amigaAttractEnd" ;
+	}
+
+	windowDef Title
+	{
+		rect		0, 6, 640, 30
+		text		"DOOM 3 FOR AMIGAOS 3"
+		font		"fonts/micro"
+		textscale	0.4
+		textalign	1
+		forecolor	0.4, 0.4, 0.4, 1
+		noevents	1
+	}
+
+	// left and right: the ball spins the way it travels
+	windowDef BallX
+	{
+		rect		80, 0, 136, 480
+		noevents	1
+
+		onTime 0 {
+			transition "rect" "80 0 136 480" "424 0 136 480" "2800" ;
+			set "BallLeft::visible" "0" ;
+			set "BallRight::visible" "1" ;
+		}
+		onTime 2800 {
+			transition "rect" "424 0 136 480" "80 0 136 480" "2800" ;
+			set "BallRight::visible" "0" ;
+			set "BallLeft::visible" "1" ;
+		}
+		onTime 5600 {
+			resetTime "0" ;
+		}
+
+		// up and down: falling with constant acceleration, rising the same way back
+		windowDef BallY
+		{
+			rect		0, 36, 136, 124
+			noevents	1
+
+			onTime 0 {
+				transition "rect" "0 36 136 124" "0 164 136 124" "520" "1" "0" ;
+			}
+			onTime 520 {
+				transition "rect" "0 164 136 124" "0 36 136 124" "520" "0" "1" ;
+				set "cmd" "play guisounds_amigabounce" ;
+			}
+			onTime 1040 {
+				resetTime "0" ;
+			}
+
+			windowDef Shadow
+			{
+				rect		22, 10, 112, 112
+				background	"guis/amiga/ball_right"
+				matcolor	0, 0, 0, 0.45
+				noevents	1
+			}
+			windowDef BallRight
+			{
+				rect		0, 0, 112, 112
+				background	"guis/amiga/ball_right"
+				matcolor	1, 1, 1, 1
+				noevents	1
+			}
+			windowDef BallLeft
+			{
+				rect		0, 0, 112, 112
+				background	"guis/amiga/ball_left"
+				matcolor	1, 1, 1, 1
+				visible		0
+				noevents	1
+			}
+		}
+	}
+
+	windowDef Play
+	{
+		rect		0, 342, 640, 36
+		text		"CLICK TO PLAY"
+		font		"fonts/bank"
+		textscale	0.45
+		textalign	1
+		forecolor	0.6, 0, 0.6, 1
+		noevents	1
+
+		onTime 0 {
+			set "forecolor" "0.6 0 0.6 1" ;
+		}
+		onTime 600 {
+			set "forecolor" "0.6 0 0.6 0" ;
+		}
+		onTime 1000 {
+			resetTime "0" ;
+		}
+	}
+}
