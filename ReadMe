@@ -2,7 +2,7 @@
                     DOOM 3 for AmigaOS 3 on the PiStorm
                     ===================================
 
-                        Version 1.0-beta3 (2026-11-14)
+                        Version 1.0-beta4 (2026-11-15)
                         by R-Typer and Ladislawv
 
 Doom 3 (id Software, 2004) running natively on a 68k Amiga with a PiStorm:
@@ -82,7 +82,7 @@ Game data (not included)
 -------------
 
   1. Unpack the archive where you want the game, for example to Work:
-     (LhA x Doom3-Amiga-1.0-beta3.lha Work:). This makes the drawer Doom3.
+     (LhA x Doom3-Amiga-1.0-beta4.lha Work:). This makes the drawer Doom3.
      It can be anywhere, on any partition.
 
   2. Copy the nine pak00?.pk4 files into Doom3/base/. On the PC they are
@@ -329,6 +329,11 @@ The Amiga freezes
 
 13. HISTORY
 -----------
+
+1.0-beta4 (2026-11-15)
+  - A full screen on Picasso96 systems that open 32-bit RTG modes only as
+    depth 24 (for example uaegfx in WinUAE): the game opened a window on
+    the Workbench there. Nothing changes on the PiStorm.
 
 1.0-beta3 (2026-11-14)
   - The port's own small data file, amiga.pk4, in base/ and demo/: keep

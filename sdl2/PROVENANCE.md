@@ -50,6 +50,15 @@
   (`SDL_Delay(1)`) between tries. ogles2's `ports/sdl2` took the same fix as
   its `0005-os3-atomics-no-spin.patch` (2026-10-22, its comments without this
   port's name); when this port takes ogles2's copies again, 0104 goes.
+- `patches/0105-os3-rtg-depth24.patch` (this port, 2026-11-15; GitHub issue #1):
+  a full screen on Picasso96 (uaegfx under WinUAE). Picasso96 opens its 32-bit RTG
+  modes only with `SA_Depth 24` and refuses `SA_Depth 32`, which both places that
+  open a screen asked for (`OS3_OpenScreen` in `SDL_os3window.c`,
+  `OS3_SetDisplayMode` in `SDL_os3video.c`); the full screen failed and SDL fell
+  back to a window on the Workbench (`OS3_SetWindowFullscreen`). Both now try
+  depth 24 when depth 32 fails, with the same mode ID, so the screen is the same
+  32-bit one; where depth 32 opens (Emu68's RTG on the PiStorm) nothing changes.
+  The same fix would suit ogles2's `ports/sdl2` (its 0002 holds the same code).
 - `ogles3/patches/0001-gles2-on-ogles2.patch`, `ogles3/patches/0002-os3-fixes-issue5.patch`
   and `ogles3/src/video/amigaos3/SDL_os3opengles2.[ch]` (2026-10-28) are copies of
   ogles3's `ports/sdl2` (the private ogles3.1 repository, to be github.com/ladislawv/ogles3)
