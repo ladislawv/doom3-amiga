@@ -86,18 +86,36 @@ static void close_own_ogles2(void)
     }
 }
 
+/* Emu68 (the PiStorm's): the only system with devicetree.resource */
+static int under_emu68(void)
+{
+    return OpenResource((CONST_STRPTR)"devicetree.resource") != NULL;
+}
+
 int amiga_open_own_ogles2(char *idstring, int size)
 {
     struct Library *before;
-    int own;
+    char choice[16];
+    int own, drawer;
     idstring[0] = '\0';
+    /* the drawer's copy is ogles2pi3, for the Raspberry Pi's V3D under Emu68;
+       elsewhere (WinUAE, another accelerator) the system's own ogles2.library
+       in LIBS: is the one that works there. D3_OGLES2=drawer or =system
+       (a Shell's Set, or SetEnv) overrides the choice. */
+    drawer = under_emu68();
+    if (GetVar((CONST_STRPTR)"D3_OGLES2", (STRPTR)choice, sizeof(choice), 0) > 0) {
+        if (!strcmp(choice, "system"))
+            drawer = 0;
+        else if (!strcmp(choice, "drawer"))
+            drawer = 1;
+    }
     /* already in memory (another program has it open): exec gives that one to
        every open, by path or name */
     Forbid();
     before = (struct Library *)FindName(&SysBase->LibList, (CONST_STRPTR)"ogles2.library");
     Permit();
-    ownOgles2 = OpenLibrary((CONST_STRPTR)"PROGDIR:libs/ogles2.library", 0);
-    own = (ownOgles2 && !before) ? 1 : 0;
+    ownOgles2 = drawer ? OpenLibrary((CONST_STRPTR)"PROGDIR:libs/ogles2.library", 0) : NULL;
+    own = !drawer ? 2 : (ownOgles2 && !before) ? 1 : 0;
     if (!ownOgles2) {
         ownOgles2 = OpenLibrary((CONST_STRPTR)"ogles2.library", 0);
         if (!ownOgles2)
@@ -106,6 +124,12 @@ int amiga_open_own_ogles2(char *idstring, int size)
     if (ownOgles2->lib_IdString)
         strncpy(idstring, (const char *)ownOgles2->lib_IdString, size - 1);
     idstring[size - 1] = '\0';
+    /* the version string ends with a line break */
+    {
+        int n = (int)strlen(idstring);
+        while (n > 0 && (idstring[n - 1] == '\n' || idstring[n - 1] == '\r'))
+            idstring[--n] = '\0';
+    }
     atexit(close_own_ogles2);
     return own;
 }

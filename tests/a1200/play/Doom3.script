@@ -37,9 +37,10 @@ Set d3dir `CD`
 Stack 9000000
 Avail FLUSH >NIL:
 
-; ogles2.library: the game opens the one in its own libs/ first, whatever LIBS:
-; holds (unless another program has an ogles2.library open at that moment;
-; T:doom3-out.txt names the one it got)
+; ogles2.library: under Emu68 the game opens the one in its own libs/ first,
+; whatever LIBS: holds (unless another program has an ogles2.library open at
+; that moment); elsewhere (WinUAE) the one in LIBS:. SetEnv D3_OGLES2 system
+; or drawer chooses. T:doom3-out.txt names the one it got.
 
 ; the save directory (save/base for the full game, save/demo for the demo):
 ; the game's saved settings, and the quality files where the game finds them

@@ -20,6 +20,9 @@ settings, Paula or AHI sound, any 32-bit RTG screen size. Starts at
 1280x720 with the frame rate shown; the settings changed in the game's
 menus are kept.
 
+New in 1.0-beta5: the included ogles2.library is used only on the
+PiStorm; elsewhere (for example WinUAE) the game uses the one in LIBS:.
+
 New in 1.0-beta4: a full screen on Picasso96 systems that open 32-bit
 RTG modes only as depth 24 (for example uaegfx in WinUAE), where the game
 opened a window on the Workbench.

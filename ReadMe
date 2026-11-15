@@ -2,7 +2,7 @@
                     DOOM 3 for AmigaOS 3 on the PiStorm
                     ===================================
 
-                        Version 1.0-beta4 (2026-11-15)
+                        Version 1.0-beta5 (2026-11-15)
                         by R-Typer and Ladislawv
 
 Doom 3 (id Software, 2004) running natively on a 68k Amiga with a PiStorm:
@@ -52,9 +52,13 @@ Software
   - Plenty of Fast RAM: tested with the 1.8 GB Emu68 gives a Pi 4.
   - About 1.6 GB free on a partition for the game's data, and 30 MB for
     this drawer.
-  - ogles2.library 1.4 beta 2 is included (libs/). The game uses this one,
-    whatever version is installed in LIBS: (unless another program has an
-    ogles2.library open at the moment the game starts).
+  - ogles2.library 1.4 beta 2 is included (libs/). On the PiStorm (under
+    Emu68) the game uses this one, whatever version is installed in LIBS:
+    (unless another program has an ogles2.library open at the moment the
+    game starts). Anywhere else, for example in WinUAE, it uses the
+    ogles2.library installed in LIBS:, since the included one works only
+    on the Raspberry Pi. To choose yourself: SetEnv D3_OGLES2 system (the
+    one in LIBS:) or SetEnv D3_OGLES2 drawer (the one in libs/).
 
 Game data (not included)
   The nine files from the "base" folder of Doom 3 1.3.1:
@@ -82,7 +86,7 @@ Game data (not included)
 -------------
 
   1. Unpack the archive where you want the game, for example to Work:
-     (LhA x Doom3-Amiga-1.0-beta4.lha Work:). This makes the drawer Doom3.
+     (LhA x Doom3-Amiga-1.0-beta5.lha Work:). This makes the drawer Doom3.
      It can be anywhere, on any partition.
 
   2. Copy the nine pak00?.pk4 files into Doom3/base/. On the PC they are
@@ -96,7 +100,8 @@ Game data (not included)
      stop while loading.
 
 Nothing is copied to your system: ogles2.library and its shader
-compiler are taken from Doom3/libs/, the game's compiled shaders from
+compiler are taken from Doom3/libs/ (on the PiStorm; section 1), the
+game's compiled shaders from
 Doom3/shaders/. Settings and saved games go to Doom3/save/.
 
 
@@ -252,8 +257,10 @@ A requester says "Couldn't load default.cfg"
   (or demo00.pk4 not in Doom3/demo/).
 
 The game seems to use another ogles2.library
-  T:doom3-out.txt names the one it got in its first line. Another program
-  had one open when the game started: quit it first.
+  T:doom3-out.txt names the one it got in its first line, and why. On the
+  PiStorm another program had one open when the game started: quit it
+  first. Without Emu68 (WinUAE) the game takes the one in LIBS: on
+  purpose (section 1).
 
 The screen stays black or the game stops at once
   The screen mode is missing: add a 32-bit mode of that size in
@@ -329,6 +336,12 @@ The Amiga freezes
 
 13. HISTORY
 -----------
+
+1.0-beta5 (2026-11-15)
+  - The included ogles2.library is used only on the PiStorm (under Emu68).
+    Elsewhere, for example in WinUAE, the game uses the ogles2.library
+    installed in LIBS:. SetEnv D3_OGLES2 system or drawer chooses
+    (section 1).
 
 1.0-beta4 (2026-11-15)
   - A full screen on Picasso96 systems that open 32-bit RTG modes only as

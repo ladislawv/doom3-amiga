@@ -1,7 +1,7 @@
 Short:        Doom 3 for AmigaOS 3 on PiStorm (Pi 4/3)
 Author:       R-Typer, Ladislawv
 Type:         game/shoot
-Version:      1.0-beta4
+Version:      1.0-beta5
 Architecture: m68k-amigaos >= 3.0
 Requires:     PiStorm, Raspberry Pi 4 (or 3), Emu68, RTG, Doom 3 1.3.1 data
 Distribution: GPLv3 (game code); Doom 3's data not included
@@ -19,6 +19,9 @@ with the Low settings, 19 at 1920x1080. Low, Medium, High and Ultra
 settings, Paula or AHI sound, any 32-bit RTG screen size. Starts at
 1280x720 with the frame rate shown; the settings changed in the game's
 menus are kept.
+
+New in 1.0-beta5: the included ogles2.library is used only on the
+PiStorm; elsewhere (for example WinUAE) the game uses the one in LIBS:.
 
 New in 1.0-beta4: a full screen on Picasso96 systems that open 32-bit
 RTG modes only as depth 24 (for example uaegfx in WinUAE), where the game
