@@ -1,22 +1,23 @@
 #!/bin/bash
 # The one ogles2 this project uses: ogles2pi3's ogles2.library (the Pi 4 and the
 # Pi 3; github.com/ladislawv/ogles2pi3). Into OGLES2_HOME (default ~/ogles2pi3-sdk):
-#   dist/ogles2-1.4-beta1.lha, dist/ogles2-1.4-beta1-sdk.lha  the published beta 1
-#       archives, from the tag v1.4-beta1 (whatever branch is checked out there),
-#       checked against the tag's SHA256SUMS: the shader compiler, the headers,
-#       the licences (release/build_release.sh takes them from here)
-#   ogles2/Libs/ogles2.library, ogles2/SDK/lib/libogles2.a  the library and its
-#       import library built from OGLES2_COMMIT (default c5d7817: the branch
-#       ogles2pi3-beta2, "1.4-beta2"); OGLES2_COMMIT= keeps beta 1's
-#   ogles2/Libs/v3dglslc, ogles2/SDK/include   beta 1's (unchanged in beta 2)
+#   dist/ogles2-<OGLES2>.lha, dist/ogles2-<OGLES2>-sdk.lha  the published
+#       archives, from the tag v<OGLES2> (default 1.4-beta3, on the branch
+#       ogles2pi3-beta; whatever branch is checked out there), checked against
+#       the tag's SHA256SUMS: the library, the shader compiler, libogles2.a, the
+#       headers, the licences (release/build_release.sh takes them from here)
+#   ogles2/Libs/ogles2.library, ogles2/SDK/lib/libogles2.a  the archive's, or
+#       built from OGLES2_COMMIT when one is given (1.0-beta2 to beta5 shipped
+#       c5d7817's build, a pre-release "1.4-beta2", with beta 1's compiler)
+#   ogles2/Libs/v3dglslc, ogles2/SDK/include   the archive's
 #   bash tools/get_ogles2.sh
 # The library's build: the commit's source (git archive, the checkout untouched)
 # in $OGLES2_HOME/src, its make with B=$OGLES2_HOME/build (ogles2pi3's own
 # Makefile; GCC 6.5 in ~/amiga-gcc-install, as it needs).
 set -eu
 HERE=$(cd "$(dirname "$0")/.." && pwd)
-OGLES2=${OGLES2:-1.4-beta1}
-OGLES2_COMMIT=${OGLES2_COMMIT-c5d7817}
+OGLES2=${OGLES2:-1.4-beta3}
+OGLES2_COMMIT=${OGLES2_COMMIT-}
 OGLES2_REPO=${OGLES2_REPO:-$HERE/../ogles2pi3}
 OUT=${OGLES2_HOME:-$HOME/ogles2pi3-sdk}
 LHA=${LHA:-$HOME/tools/bin/lha}

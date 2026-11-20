@@ -1,0 +1,76 @@
+LhA Freeware Version 2.15 68040+ 
+Copyright (c) 1991-94 by Stefan Boberg.
+Copyright (c) 1998,1999 by Jim Cooper and David Tritscher.
+Copyright (c) 2004-2011 by Sven Ottemann.
+
+›0 pExtracting from archive 'Doom3-Amiga-1.0-beta6.lha':
+ Extracting: (       0/       0)  Doom3/›K›14C       0
+›27m Extracting: (       0/    3588)  Doom3/Doom3›K›14C    3588›14C    3588
+›27m Extracting: (       0/    9867)  Doom3/Doom3.info›K›14C    9867›14C    9867
+›27m Extracting: (       0/    3863)  Doom3/Doom3.script›K›14C    3863›14C    3863
+›27m Extracting: (       0/   16397)  Doom3/ReadMe›K›14C   16397›14C   16397
+›27m Extracting: (       0/    7162)  Doom3/ReadMe.info›K›14C    7162›14C    7162
+›27m Extracting: (       0/       0)  Doom3/base/›K›14C       0
+›27m Extracting: (       0/     342)  Doom3/base/ReadMe.txt›K›14C     342›14C     342
+›27m Extracting: (       0/  282548)  Doom3/base/amiga.pk4›K›14C  131072›14C  262144›14C  282548›14C  282548
+›27m Extracting: (       0/       0)  Doom3/demo/›K›14C       0
+›27m Extracting: (       0/     317)  Doom3/demo/ReadMe.txt›K›14C     317›14C     317
+›27m Extracting: (       0/  282548)  Doom3/demo/amiga.pk4›K›14C  131072›14C  262144›14C  282548›14C  282548
+›27m Extracting: (       0/ 8040392)  Doom3/dhewm3›K›14C  131072›14C  262144›14C  393216›14C  524288›14C  655360›14C  786432›14C  917504›14C 1048576›14C 1179648›14C 1310720›14C 1441792›14C 1572864›14C 1703936›14C 1835008›14C 1966080›14C 2097152›14C 2228224›14C 2359296›14C 2490368›14C 2621440›14C 2752512›14C 2883584›14C 3014656›14C 3145728›14C 3276800›14C 3407872›14C 3538944›14C 3670016›14C 3801088›14C 3932160›14C 4063232›14C 4194304›14C 4325376›14C 4456448›14C 4587520›14C 4718592›14C 4849664›14C 4980736›14C 5111808›14C 5242880›14C 5373952›14C 5505024›14C 5636096›14C 5767168›14C 5898240›14C 6029312›14C 6160384›14C 6291456›14C 6422528›14C 6553600›14C 6684672›14C 6815744›14C 6946816›14C 7077888›14C 7208960›14C 7340032›14C 7471104›14C 7602176›14C 7733248›14C 7864320›14C 7995392›14C 8040392›14C 8040392
+›27m Extracting: (       0/     658)  Doom3/high.cfg›K›14C     658›14C     658
+›27m Extracting: (       0/       0)  Doom3/libs/›K›14C       0
+›27m Extracting: (       0/  356404)  Doom3/libs/ogles2.library›K›14C  131072›14C  262144›14C  356404›14C  356404
+›27m Extracting: (       0/19304904)  Doom3/libs/v3dglslc›K›14C  131072›14C  262144›14C  393216›14C  524288›14C  655360›14C  786432›14C  917504›14C 1048576›14C 1179648›14C 1310720›14C 1441792›14C 1572864›14C 1703936›14C 1835008›14C 1966080›14C 2097152›14C 2228224›14C 2359296›14C 2490368›14C 2621440›14C 2752512›14C 2883584›14C 3014656›14C 3145728›14C 3276800›14C 3407872›14C 3538944›14C 3670016›14C 3801088›14C 3932160›14C 4063232›14C 4194304›14C 4325376›14C 4456448›14C 4587520›14C 4718592›14C 4849664›14C 4980736›14C 5111808›14C 5242880›14C 5373952›14C 5505024›14C 5636096›14C 5767168›14C 5898240›14C 6029312›14C 6160384›14C 6291456›14C 6422528›14C 6553600›14C 6684672›14C 6815744›14C 6946816›14C 7077888›14C 7208960›14C 7340032›14C 7471104›14C 7602176›14C 7733248›14C 7864320›14C 7995392›14C 8126464›14C 8257536›14C 8388608›14C 8519680›14C 8650752›14C 8781824›14C 8912896›14C 9043968›14C 9175040›14C 9306112›14C 9437184›14C 9568256›14C 9699328›14C 9830400›14C 9961472›14C10092544›14C10223616›14C10354688›14C10485760›14C10616832›14C10747904›14C10878976›14C11010048›14C11141120›14C11272192›14C11403264›14C11534336›14C11665408›14C11796480›14C11927552›14C12058624›14C12189696›14C12320768›14C12451840›14C12582912›14C12713984›14C12845056›14C12976128›14C13107200›14C13238272›14C13369344›14C13500416›14C13631488›14C13762560›14C13893632›14C14024704›14C14155776›14C14286848›14C14417920›14C14548992›14C14680064›14C14811136›14C14942208›14C15073280›14C15204352›14C15335424›14C15466496›14C15597568›14C15728640›14C15859712›14C15990784›14C16121856›14C16252928›14C16384000›14C16515072›14C16646144›14C16777216›14C16908288›14C17039360›14C17170432›14C17301504›14C17432576›14C17563648›14C17694720›14C17825792›14C17956864›14C18087936›14C18219008›14C18350080›14C18481152›14C18612224›14C18743296›14C18874368›14C19005440›14C19136512›14C19267584›14C19304904›14C19304904
+›27m Extracting: (       0/       0)  Doom3/licences/›K›14C       0
+›27m Extracting: (       0/   35798)  Doom3/licences/Doom3-GPL.txt›K›14C   35798›14C   35798
+›27m Extracting: (       0/     850)  Doom3/licences/SDL2.txt›K›14C     850›14C     850
+›27m Extracting: (       0/       0)  Doom3/licences/ogles2/›K›14C       0
+›27m Extracting: (       0/    5703)  Doom3/licences/ogles2/LICENSE›K›14C    5703›14C    5703
+›27m Extracting: (       0/     757)  Doom3/licences/ogles2/License_MiniGL_Library.txt›K›14C     757›14C     757
+›27m Extracting: (       0/    4365)  Doom3/licences/ogles2/License_V3D_ThirdParty.txt›K›14C    4365›14C    4365
+›27m Extracting: (       0/       0)  Doom3/licences/ogles2/Mesa/›K›14C       0
+›27m Extracting: (       0/   10045)  Doom3/licences/ogles2/Mesa/Apache-2.0.txt›K›14C   10045›14C   10045
+›27m Extracting: (       0/    1649)  Doom3/licences/ogles2/Mesa/BSL-1.0.txt›K›14C    1649›14C    1649
+›27m Extracting: (       0/    1372)  Doom3/licences/ogles2/Mesa/MIT.txt›K›14C    1372›14C    1372
+›27m Extracting: (       0/     328)  Doom3/licences/ogles2/Mesa/ReadMe›K›14C     328›14C     328
+›27m Extracting: (       0/    1816)  Doom3/licences/ogles2/Mesa/license.txt›K›14C    1816›14C    1816
+›27m Extracting: (       0/    1002)  Doom3/licences/zlib.txt›K›14C    1002›14C    1002
+›27m Extracting: (       0/     978)  Doom3/low.cfg›K›14C     978›14C     978
+›27m Extracting: (       0/     732)  Doom3/medium.cfg›K›14C     732›14C     732
+›27m Extracting: (       0/       0)  Doom3/shaders/›K›14C       0
+›27m Extracting: (       0/       7)  Doom3/shaders/0dd8c2fc9ffe588d8c7ad964.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/       7)  Doom3/shaders/19366c20f4ccca19c36b11f3.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/    5436)  Doom3/shaders/1b0b17de68556c72f7699a9e.v3dp›K›14C    5436›14C    5436
+›27m Extracting: (       0/    5940)  Doom3/shaders/1c50d9fad38db4f31aa69f47.v3dp›K›14C    5940›14C    5940
+›27m Extracting: (       0/       7)  Doom3/shaders/2a29b91da9d28566550d42a6.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/       7)  Doom3/shaders/2d86ea91a93842a4db35411f.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/    5492)  Doom3/shaders/302c2b123361c8afa339e989.v3dp›K›14C    5492›14C    5492
+›27m Extracting: (       0/       7)  Doom3/shaders/36429855f595b12c0fe6d0ae.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/    5284)  Doom3/shaders/40f2ce5d962f1ed81abba814.v3dp›K›14C    5284›14C    5284
+›27m Extracting: (       0/       7)  Doom3/shaders/45da622c45c84e427beb9336.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/    6108)  Doom3/shaders/4c7c02d82f3194b9296d007c.v3dp›K›14C    6108›14C    6108
+›27m Extracting: (       0/       7)  Doom3/shaders/53473f37ad173d4936339a7a.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/    5716)  Doom3/shaders/55a1aeedca1d9cf3eecaa3ed.v3dp›K›14C    5716›14C    5716
+›27m Extracting: (       0/   10304)  Doom3/shaders/69857faeac3b989dd306640f.v3dp›K›14C   10304›14C   10304
+›27m Extracting: (       0/       7)  Doom3/shaders/94215ff1307134ac5b1f3521.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/       7)  Doom3/shaders/9a3ed4d71e493c1b9e31d3f9.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/   10640)  Doom3/shaders/9bb2368631c7baeccd38c272.v3dp›K›14C   10640›14C   10640
+›27m Extracting: (       0/       7)  Doom3/shaders/a25156b34f58919599e43ffb.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/    4392)  Doom3/shaders/a8d299ad4e3e7ad8f12d617d.v3dp›K›14C    4392›14C    4392
+›27m Extracting: (       0/    5728)  Doom3/shaders/aa3584956f991c44102c0c48.v3dp›K›14C    5728›14C    5728
+›27m Extracting: (       0/       7)  Doom3/shaders/aefcaee5b7b02a97ddc970dc.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/       7)  Doom3/shaders/b7f09677c6f0d7d0f200e16d.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/       7)  Doom3/shaders/bd5396dbb09c636ee49b3c0b.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/    6864)  Doom3/shaders/c27afcaa97e215583e38fef5.v3dp›K›14C    6864›14C    6864
+›27m Extracting: (       0/       7)  Doom3/shaders/c2e2a3fe7d0e5af95acc9525.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/       7)  Doom3/shaders/c60c726be202b2deea58c7f2.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/       7)  Doom3/shaders/d6f6a17092835643d11cdea9.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/       7)  Doom3/shaders/e251a6c9ad07c508895179f5.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/       7)  Doom3/shaders/e908f56247fa95466fd79c87.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/       7)  Doom3/shaders/fcb7830312d56dbaf0fce6a3.v3ds›K›14C       7›14C       7
+›27m Extracting: (       0/     619)  Doom3/ultra.cfg›K›14C     619›14C     619
+›27m Extracting: (       0/    7648)  Doom3.info›K›14C    7648›14C    7648
+›27m66 files extracted, all files OK.›K
+
+Operation successful.
+› p›27m

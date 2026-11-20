@@ -15,7 +15,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 SDL2_SRC=${SDL2_SRC:-$HOME/d3-sdl2}
 TC16=${TC16:-$HOME/amiga-gcc162-install}
 OGLES=${OGLES:-2}
-OGLES2_SDK=${OGLES2_SDK:-$HOME/ogles2pi3-sdk/ogles2/SDK}	# tools/get_ogles2.sh: ogles2pi3 1.4-beta1
+OGLES2_SDK=${OGLES2_SDK:-$HOME/ogles2pi3-sdk/ogles2/SDK}	# tools/get_ogles2.sh: ogles2pi3 1.4-beta3
 OGLES3_SDK=${OGLES3_SDK:-$HOME/ogles3-build/release/ogles3/SDK}	# release/build_release.sh in ogles3
 PISTORM3D_SDK=${PISTORM3D_SDK:-$HERE/../pistorm3d/SDK}
 if [ "$OGLES" = 3 ]; then O=${O:-$HOME/doom3-build/m68k/sdl2-ogles3}; else O=${O:-$HOME/doom3-build/m68k/sdl2}; fi

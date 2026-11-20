@@ -1,0 +1,60 @@
+; Run-Archive - a release archive tested as a user gets it: unpacked into a new
+; drawer, the game's data copied in, started through the launcher Doom3 (and
+; its Doom3.script) with nothing on its command line: a first start, which an
+; autoexec.cfg in its save directory ends (quit after some frames). Then the
+; drawer's own game (its libs/ and shaders/) runs the timedemo as the bench
+; package does (a timedemo from autoexec.cfg runs before the session's
+; commands exist, or, after a wait, stops its timed pass after 1 frame:
+; archive-20261120-164628, -165751). Afterwards: T:doom3-out.txt (the
+; launcher's output), the game's logs and saved settings, and the shader
+; records in T: (none, when the drawer's shaders/ served every program).
+;   Execute Run-Archive ARC=Doom3-Amiga-1.0-beta6.lha
+; DIR (default Stuff:d3test) is deleted first and, unless KEEP=1, afterwards.
+.key ARC/A,DATA,DIR,KEEP
+.def DATA "Stuff:doom3"
+.def DIR "Stuff:d3test"
+.def KEEP 0
+.bra {
+.ket }
+
+FailAt 21
+MakeDir results >NIL:
+Set pkg `CD`
+; the shader records of earlier runs out of T: (OGLES2Cache: is not assigned here)
+Delete T:#?.(v3dp|v3ds) QUIET >NIL:
+Delete T:doom3-out.txt QUIET >NIL:
+Avail FLUSH >NIL:
+If EXISTS {DIR}
+  Delete {DIR} ALL QUIET FORCE >NIL:
+EndIf
+MakeDir {DIR}
+lha x {ARC} {DIR}/ >results/unpack.txt
+List {DIR} ALL FILES LFORMAT "%P%N %L" >results/drawer.txt
+Copy {DATA}/base/pak#?.pk4 {DIR}/Doom3/base/ QUIET
+MakeDir {DIR}/Doom3/save {DIR}/Doom3/save/base >NIL:
+; 1: the launcher's first start, ended by autoexec.cfg once the menu is up
+Echo "wait 300; quit" >{DIR}/Doom3/save/base/autoexec.cfg
+Echo "started {DIR}/Doom3/Doom3"
+{DIR}/Doom3/Doom3
+Echo "launcher exit code $RC" >results/launcher.txt
+CD $pkg
+Copy T:doom3-out.txt results/ QUIET
+Copy {DIR}/Doom3/save/dhewm3log.txt results/ QUIET
+Copy {DIR}/Doom3/save/base/dhewm.cfg results/ QUIET
+Delete {DIR}/Doom3/save/base/autoexec.cfg QUIET >NIL:
+; 2: the drawer's game, from its drawer, runs the timedemo (with sound: a silent
+; one crashes) and quits
+CD {DIR}/Doom3
+Stack 9000000
+SetEnv SDL_AUDIODRIVER paula
+Echo "started {DIR}/Doom3/dhewm3 +timeDemo demo1 usecache quit"
+dhewm3 +set fs_basepath "{DIR}/Doom3" +set r_fullscreen 1 +set com_preloadDemos 1 +timeDemo demo1 usecache quit >$pkg/results/timedemo.txt
+Echo "exit code $RC" >>$pkg/results/timedemo.txt
+UnSetEnv SDL_AUDIODRIVER
+CD $pkg
+Copy {DIR}/Doom3/save/dhewm3log.txt results/timedemo.log QUIET
+List T:#?.(v3dp|v3ds) >results/T-records.txt
+If {KEEP} EQ 0
+  Delete {DIR} ALL QUIET FORCE >NIL:
+EndIf
+Search results/timedemo.txt "frames rendered" NONUM

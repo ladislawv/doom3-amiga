@@ -2,7 +2,7 @@
                     DOOM 3 for AmigaOS 3 on the PiStorm
                     ===================================
 
-                        Version 1.0-beta5 (2026-11-15)
+                        Version 1.0-beta6 (2026-11-20)
                         by R-Typer and Ladislawv
 
 Doom 3 (id Software, 2004) running natively on a 68k Amiga with a PiStorm:
@@ -52,7 +52,7 @@ Software
   - Plenty of Fast RAM: tested with the 1.8 GB Emu68 gives a Pi 4.
   - About 1.6 GB free on a partition for the game's data, and 40 MB for
     this drawer (30 MB without its source/).
-  - ogles2.library 1.4 beta 2 is included (libs/). On the PiStorm (under
+  - ogles2.library 1.4 beta 3 is included (libs/). On the PiStorm (under
     Emu68) the game uses this one, whatever version is installed in LIBS:
     (unless another program has an ogles2.library open at the moment the
     game starts). Anywhere else, for example in WinUAE, it uses the
@@ -86,7 +86,7 @@ Game data (not included)
 -------------
 
   1. Unpack the archive where you want the game, for example to Work:
-     (LhA x Doom3-Amiga-1.0-beta5.lha Work:). This makes the drawer Doom3.
+     (LhA x Doom3-Amiga-1.0-beta6.lha Work:). This makes the drawer Doom3.
      It can be anywhere, on any partition.
 
   2. Copy the nine pak00?.pk4 files into Doom3/base/. On the PC they are
@@ -294,7 +294,7 @@ The Amiga freezes
   dhewm3             The game itself
   low.cfg, medium.cfg, high.cfg, ultra.cfg
                      The port's part of the four quality settings
-  libs/              ogles2.library 1.4 beta 2 (Pi 4 and Pi 3) and its
+  libs/              ogles2.library 1.4 beta 3 (Pi 4 and Pi 3) and its
                      shader compiler v3dglslc
   shaders/           The game's shaders, compiled ahead of time
   base/              Doom 3's data goes here (pak000.pk4 - pak008.pk4);
@@ -339,6 +339,15 @@ The Amiga freezes
 
 13. HISTORY
 -----------
+
+1.0-beta6 (2026-11-20)
+  - ogles2.library 1.4 beta 3 and its shader compiler (faster 16-bit
+    textures, the Pi 4's vertical sync). The compiler included before was
+    older than its library and refused its requests on a Raspberry Pi 3,
+    which compiles the game's shaders itself.
+  - The game's complete source code in source/, and the icons' images for
+    AmigaOS 3.0 and 3.1 drawn from the port's own art (both also in
+    1.0-beta5's archive of 2026-11-20).
 
 1.0-beta5 (2026-11-15)
   - The included ogles2.library is used only on the PiStorm (under Emu68).

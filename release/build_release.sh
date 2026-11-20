@@ -2,9 +2,9 @@
 # Builds the release: the drawer ~/doom3-build/release/Doom3 (with its icon
 # Doom3.info beside it), the archive Doom3-Amiga-<version>.lha and its
 # Aminet-style readme. Run in WSL after build.sh (the game) and with ogles2's
-# Pi 3 repository (ogles2pi3) next to this one (its committed 1.4-beta1 user
-# archive, for the Pi 4 and the Pi 3, gives
-# ogles2.library, v3dglslc and their licences):
+# Pi 3 repository (ogles2pi3) next to this one (its published user archive,
+# 1.4-beta3 by default, for the Pi 4 and the Pi 3, from tools/get_ogles2.sh,
+# gives ogles2.library, v3dglslc and their licences):
 #   bash release/build_release.sh        (into ~/doom3-build/release)
 #   bash release/build_release.sh dist   (and copies the archive and readme
 #                                         into release/dist/)
@@ -18,8 +18,10 @@
 #   libs/, licences/ogles2 ogles2's release/dist/ogles2-<OGLES2>.lha
 #   shaders/               release/shaders/ (the game's 11 GLSL programs as
 #                          ogles2 1.4-beta1's compiler made them on the A1200,
-#                          the Pi 4's; the Pi 3 compiles its own at first use; to
-#                          be made again after an ogles2 or compiler update)
+#                          and 1.4-beta3's byte for byte the same (2026-11-20,
+#                          tests/a1200/shaders); the Pi 4's; the Pi 3 compiles
+#                          its own at first use; to be checked again after an
+#                          ogles2 or compiler update with tests/a1200/shaders)
 #   base/, demo/amiga.pk4  the port's own game data: src/data/amiga/ and the art
 #                          and sound tools/make_amiga_pk4.py makes (patch 0037)
 #   icons                  release/icons/ (colour icons, made on the A1200 by
@@ -41,7 +43,7 @@ SOURCE=${SOURCE:-https://github.com/ladislawv/doom3-amiga}
 TC16=${TC16:-$HOME/amiga-gcc162-install}
 M=${M:-$HOME/doom3-build/m68k}
 OUT=${OUT:-$HOME/doom3-build/release}
-OGLES2=${OGLES2:-1.4-beta1}
+OGLES2=${OGLES2:-1.4-beta3}
 OGLES2_DIST=${OGLES2_DIST:-$HOME/ogles2pi3-sdk/dist}	# tools/get_ogles2.sh: the tag v<OGLES2>'s archives
 LHA=${LHA:-$HOME/tools/bin/lha}
 D3ES_SRC=${D3ES_SRC:-$HOME/d3es}
@@ -89,7 +91,7 @@ python3 "$REPO/tools/make_amiga_pk4.py" "$R/base/amiga.pk4" > /dev/null
 cp "$R/base/amiga.pk4" "$R/demo/"
 
 # ogles2: its compiler and licences as its release ships them; the library from
-# tools/get_ogles2.sh's folder (1.4-beta2, built from the ogles2pi3-beta2 branch)
+# tools/get_ogles2.sh's folder (the same archive's, unless OGLES2_COMMIT built another)
 (cd "$W" && "$LHA" xq "$OGLES2_DIST/ogles2-$OGLES2.lha")
 OGLES2_LIB=${OGLES2_LIB:-$OGLES2_DIST/../ogles2/Libs/ogles2.library}
 cp "$OGLES2_LIB" "$W/ogles2/Libs/v3dglslc" "$R/libs/"

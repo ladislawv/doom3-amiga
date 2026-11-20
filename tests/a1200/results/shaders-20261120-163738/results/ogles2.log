@@ -1,0 +1,70 @@
+     1 ogles2.library 1.4 init
+     2 open (count 1)
+     3 open (count 2)
+     4 GPU submission lock "V3D 4.2 submit" at 0x08FFA948
+     5 device: V3D 4.2.14 (PiStorm), 8 QPUs, 64 KB VPM, clipper granularity 256
+     6 device: GPU-visible RAM (device tree memory): 0x01000000-0x3B5FFFFF
+     7 device: GPU-visible RAM (device tree memory): 0x40000000-0x79DFFFFF
+     8 device: memory region "expansion memory" 0x08000020-0x3B5FFFFF fast: the GPU reaches it
+     9 device: memory region "expansion memory" 0x01000020-0x07FFFFFF fast: the GPU reaches it
+    10 device: memory region "expansion memory" 0x41000020-0x79DFFFFF fast: the GPU reaches it
+    11 device: memory region "memory" 0x00C00020-0x00C7FFFF fast: OUTSIDE the GPU-visible RAM
+    12 device: memory region "chip memory" 0x00001020-0x001FFFFF chip: OUTSIDE the GPU-visible RAM
+    13 display: render bitmap at 0x3C7E9000, 5120 bytes a row: NOT in memory the GPU reaches
+    14 display: application window, all of its screen (no copy), 1280x720, BGRA
+    15 device: context pools for 1280x720, D32F, 21522816 bytes of GPU memory in use
+    16 aglCreateContext2: context 0x099D057C, 1280x720
+    17 compiler: CaffeineOS:Libs/v3dglslc, 19304904 bytes, id E52A1CC1
+    18 compiler: started (0 s)
+    19 compiler: shader compiled in 1340 ms
+    20 compiler: shader compiled in 40 ms
+    21 compiler: program compiled in 600 ms, T:69857faeac3b989dd306640f.v3dp
+    22 glLinkProgram: T:69857faeac3b989dd306640f.v3dp (5 variants, 3968 bytes of code)
+    23 compiler: shader compiled in 20 ms
+    24 compiler: shader compiled in 40 ms
+    25 compiler: program compiled in 480 ms, T:9bb2368631c7baeccd38c272.v3dp
+    26 glLinkProgram: T:9bb2368631c7baeccd38c272.v3dp (5 variants, 4160 bytes of code)
+    27 compiler: shader compiled in 20 ms
+    28 compiler: shader compiled in 40 ms
+    29 compiler: program compiled in 240 ms, T:aa3584956f991c44102c0c48.v3dp
+    30 glLinkProgram: T:aa3584956f991c44102c0c48.v3dp (5 variants, 1464 bytes of code)
+    31 compiler: shader compiled in 20 ms
+    32 compiler: shader compiled in 40 ms
+    33 compiler: program compiled in 240 ms, T:4c7c02d82f3194b9296d007c.v3dp
+    34 glLinkProgram: T:4c7c02d82f3194b9296d007c.v3dp (5 variants, 1720 bytes of code)
+    35 compiler: shader compiled in 20 ms
+    36 compiler: program compiled in 320 ms, T:c27afcaa97e215583e38fef5.v3dp
+    37 glLinkProgram: T:c27afcaa97e215583e38fef5.v3dp (5 variants, 2112 bytes of code)
+    38 compiler: shader compiled in 20 ms
+    39 compiler: program compiled in 240 ms, T:1c50d9fad38db4f31aa69f47.v3dp
+    40 glLinkProgram: T:1c50d9fad38db4f31aa69f47.v3dp (5 variants, 1656 bytes of code)
+    41 compiler: shader compiled in 20 ms
+    42 compiler: shader compiled in 40 ms
+    43 compiler: program compiled in 200 ms, T:40f2ce5d962f1ed81abba814.v3dp
+    44 glLinkProgram: T:40f2ce5d962f1ed81abba814.v3dp (5 variants, 1184 bytes of code)
+    45 compiler: shader compiled in 20 ms
+    46 compiler: shader compiled in 40 ms
+    47 compiler: program compiled in 240 ms, T:55a1aeedca1d9cf3eecaa3ed.v3dp
+    48 glLinkProgram: T:55a1aeedca1d9cf3eecaa3ed.v3dp (5 variants, 1376 bytes of code)
+    49 compiler: shader compiled in 20 ms
+    50 compiler: shader compiled in 40 ms
+    51 compiler: program compiled in 200 ms, T:1b0b17de68556c72f7699a9e.v3dp
+    52 glLinkProgram: T:1b0b17de68556c72f7699a9e.v3dp (5 variants, 1424 bytes of code)
+    53 compiler: shader compiled in 20 ms
+    54 compiler: program compiled in 220 ms, T:302c2b123361c8afa339e989.v3dp
+    55 glLinkProgram: T:302c2b123361c8afa339e989.v3dp (5 variants, 1488 bytes of code)
+    56 compiler: shader compiled in 20 ms
+    57 compiler: shader compiled in 40 ms
+    58 compiler: program compiled in 140 ms, T:a8d299ad4e3e7ad8f12d617d.v3dp
+    59 glLinkProgram: T:a8d299ad4e3e7ad8f12d617d.v3dp (5 variants, 1000 bytes of code)
+    60 glCopyTexSubImage2D: copies from the default framebuffer drawn by the GPU (the first: 1024x256)
+    61 job: framebuffer 0 drawn while a render runs: tile pools of its own from its next job on, so that its jobs can be queued
+    62 framebuffer 0: tile pools of its own for 1024x256
+    63 aglDestroyContext: context 0x099D057C: freeing
+    64 device: context freed, 0 bytes of GPU memory still in use
+    65 aglDestroyContext: context 0x099D057C (4354 frames, 0 dropped, 0 binning blocks added)
+    66 job: 51 jobs chained behind a running render (0 of them waited for an older one first)
+    67 timing: 4354 jobs, each on average: 11805 us of CPU work before its flush, 940 us waiting for binning, 691 us for the render
+    68 timing: and in each flush 70 us building the render list, 64 us for the CPU cache before the GPU, 3 us after
+    69 timing: 4302 swaps, 41007 us from one to the next on average, 1 us of it presenting
+    70 timing: per frame 302 draws, 6404 us in them; in all 4111 ms in glBuffer(Sub)Data, 39 ms in glTex(Sub)Image2D

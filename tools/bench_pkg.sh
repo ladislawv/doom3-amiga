@@ -19,7 +19,7 @@
 # "o3=game-ogles3:" (OGLES=3 build.sh; the package then holds ogles3.library too);
 # with a driver "name=build@driver:args".
 # Another map: edit .def MAP in the package's Run-Bench (amictl -a takes no "/").
-# ogles2.library and v3dglslc: the shipped ogles2pi3 1.4-beta1 (tools/get_ogles2.sh,
+# ogles2.library and v3dglslc: the shipped ogles2pi3 1.4-beta3 (tools/get_ogles2.sh,
 # the only ogles2 the project uses), or another from OGLES2_LIBS=<dir> for a
 # comparison; ogles3's from its release (build_pkg.sh, OGLES3_RELEASE=<dir>).
 set -e

@@ -1,0 +1,53 @@
+; Run-Shaders - the game's GLSL programs compiled with the package's ogles2
+; (libs/: ogles2.library and v3dglslc), into results/shaders/ for the
+; release's release/shaders (after an ogles2 or compiler update).
+;   Execute Run-Shaders                     (LIBS:v3dglslc already the one)
+;   Execute Run-Shaders INSTALL=1 KEEP=v3dglslc.beta1
+; ogles2.library takes the compiler in LIBS: before the program's libs/, so
+; LIBS:v3dglslc must be the package's: INSTALL=1 (a system file: the
+; developer asks for it) renames LIBS:v3dglslc to LIBS:<KEEP> (unless that
+; exists) and copies libs/v3dglslc into LIBS:. The game's records are named by
+; their sources' hash, not by the compiler, so the old ones in T: (or
+; OGLES2Cache:) would be loaded again: they are deleted first, and the
+; library flushed (its compiler stays resident until then). The game then
+; starts the free demo's timedemo (all of its programs are made at start-up)
+; with no shaders/ drawer here, and the records it wrote are copied.
+.key DATA,INSTALL,KEEP
+.def DATA "Stuff:doom3"
+.def INSTALL 0
+.def KEEP "v3dglslc.old"
+.bra {
+.ket }
+
+FailAt 21
+MakeDir results results/shaders >NIL:
+If {INSTALL} EQ 1
+  If NOT EXISTS LIBS:{KEEP}
+    Rename LIBS:v3dglslc LIBS:{KEEP}
+  EndIf
+  Copy libs/v3dglslc LIBS:v3dglslc CLONE
+EndIf
+List LIBS:v3dglslc#? libs >results/libs.txt
+Version LIBS:ogles2.library FULL >>results/libs.txt
+Version libs/ogles2.library FULL >>results/libs.txt
+
+; the records of earlier compiles: T: holds them when OGLES2Cache: is not assigned
+Delete T:#?.(v3dp|v3ds) QUIET >NIL:
+Assign OGLES2Cache: EXISTS >NIL:
+If NOT WARN
+  Echo "OGLES2Cache: is assigned: its records are kept; the game's may be loaded from there" >>results/libs.txt
+EndIf
+Avail FLUSH >NIL:
+
+Stack 9000000
+SetEnv SDL_AUDIODRIVER paula
+SetEnv OGLES2/LogFile results/ogles2.log
+dhewm3 +set fs_basepath "{DATA}" +set s_noSound 0 +set r_fullscreen 1 +set r_mode -1 +set r_customWidth 1280 +set r_customHeight 720 +set com_preloadDemos 1 +timeDemo demo1 usecache quit >results/dhewm3.txt
+Echo "exit code $RC" >>results/dhewm3.txt
+UnSetEnv OGLES2/LogFile
+UnSetEnv SDL_AUDIODRIVER
+Copy save/dhewm3log.txt results/dhewm3.log QUIET
+List T:#?.(v3dp|v3ds) >results/records.txt
+Copy T:#?.(v3dp|v3ds) results/shaders/ QUIET
+Avail FLUSH >NIL:
+Search results/dhewm3.txt "frames rendered" NONUM

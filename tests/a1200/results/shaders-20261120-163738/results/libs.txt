@@ -1,0 +1,16 @@
+Directory "LIBS:" on Friday 20-Nov-26
+v3dglslc.18oct             19007888 ----rwed 18-Oct-26 22:54:45
+v3dglslc.beta1             19302468 ----rwed 11-Nov-26 19:30:06
+v3dglslc3                  19050488 ----rwed Yesterday 22:32:17
+v3dglslc                   19304904 ----rwed Today     16:37:38
+v3dglslc.saved             19007888 ----rwed 18-Oct-26 22:54:45
+5 files - 91M bytes - 186869 blocks used
+
+Directory "libs" on Friday 20-Nov-26
+ogles2.library               356404 ----rwed Today     16:37:36
+v3dglslc                   19304904 ----rwed Today     16:37:38
+2 files - 18M bytes - 38404 blocks used
+ogles2.library 1.4 (20.11.2026.)
+1.4-beta3 PiStorm Pi 4 (V3D 4.2) and Pi 3 (VC4)
+ogles2.library 1.4 (20.11.2026.)
+1.4-beta3 PiStorm Pi 4 (V3D 4.2) and Pi 3 (VC4)

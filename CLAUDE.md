@@ -14,9 +14,9 @@ clones and builds in WSL's home:
 - `~/d3es` (the game, reset and patched by every build), `~/d3-sdl2` (SDL2_68k),
   `~/doom3-build` (output), `~/doom3-data/demo/demo00.pk4` (the free demo's data, §4).
 - Needs GCC 16.2 for m68k in `~/amiga-gcc162-install` (ogles2's toolchain: its
-  `dev/host-setup`), and **the one ogles2 the project uses: the shipped ogles2pi3 1.4-beta1**
+  `dev/host-setup`), and **the one ogles2 the project uses: the published ogles2pi3 1.4-beta3**
   (the Pi 4 and the Pi 3; `github.com/ladislawv/ogles2pi3` next to this repository).
-  `tools/get_ogles2.sh` takes its published archives from the tag `v1.4-beta1` in that
+  `tools/get_ogles2.sh` takes its published archives from the tag `v1.4-beta3` in that
   repository (not its checked-out branch, which may hold older ones) and unpacks the SDK
   into `~/ogles2pi3-sdk` (library,
   `v3dglslc`, headers, `libogles2.a`); SDL, the game, every test package and benchmark and
@@ -55,6 +55,11 @@ packed with its art into `amiga.pk4` by `tools/make_amiga_pk4.py`); SDL2 changes
     (`tools/pcsample_report.py`), `DUMP=1` the sound output dump (`tools/sndcmp.py`);
   - `play`: the game to play, until quit (`W= H= HZ= QUALITY=low|game SOUND=0|1`);
   - `map`: a screenshot WAIT frames in (`tools/map_pkg.sh`, `tools/tga2png.py`);
+  - `shaders`: the game's shaders compiled with the package's ogles2, for `release/shaders`
+    (after an ogles2 or compiler update; ogles2 takes `LIBS:v3dglslc` first: `INSTALL=1`
+    replaces it, a system file, so ask first);
+  - `archive`: a release archive unpacked into a new drawer, the data copied in, the
+    launcher's first start running the timedemo (`ARC=<the .lha in the package>`);
   - `start`, and the probes `clock-probe`, `io-probe`, `pc-sample`, `cxx-probe`.
 - The game data is on the Amiga once (`Stuff:doom3/demo`), never in packages or commits.
 - `tools/check_fpconv.py` checks the build for the float-to-int code GCC 6.5 got wrong.
