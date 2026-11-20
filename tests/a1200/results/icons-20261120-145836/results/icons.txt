@@ -1,0 +1,20 @@
+icon.library 51.4
+Doom3-tool: type 3, gadget 64x64 flags 0006 stack 8192 tool -
+  render 64x64 depth 2 data yes
+  select 64x64 depth 2 data yes
+  tooltype (W=1280)
+  tooltype (H=720)
+  tooltype (QUALITY=low)
+  tooltype (LIGHTS=12)
+  tooltype AUDIO=paula
+  tooltype (SOUND=0)
+  colour icon 64x64 palette-mapped 1 frameless 1 (error 0)
+ReadMe: type 4, gadget 64x64 flags 0006 stack 8192 tool SYS:Utilities/MultiView
+  render 64x64 depth 2 data yes
+  select 64x64 depth 2 data yes
+  colour icon 64x64 palette-mapped 1 frameless 1 (error 0)
+Doom3-drawer: type 2, gadget 64x64 flags 0006 stack 4096 tool -
+  render 64x64 depth 2 data yes
+  select 64x64 depth 2 data yes
+  drawer window 420x392
+  colour icon 64x64 palette-mapped 1 frameless 1 (error 0)

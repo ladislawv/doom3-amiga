@@ -8,6 +8,9 @@
 #   bash release/build_release.sh        (into ~/doom3-build/release)
 #   bash release/build_release.sh dist   (and copies the archive and readme
 #                                         into release/dist/)
+# The published archive is the next step's: release/build_aminet.sh dist (after
+# the tag) adds the game's source to this drawer and puts that archive into
+# release/dist/, for GitHub and Aminet alike.
 # What goes in, and from where:
 #   dhewm3                 ~/doom3-build/m68k/game/dhewm3 (build.sh)
 #   Doom3                  tests/a1200/play/src/doom3_launcher.c, built here
@@ -22,7 +25,10 @@
 #   icons                  release/icons/ (colour icons, made on the A1200 by
 #                          release/src/mkicons.c from the system's defaults and
 #                          the art of release/icons/art/make_icons.py:
-#                          "mkicons DIR ART", ART holding its .d3ic files)
+#                          "mkicons DIR ART", ART holding its .d3ic files;
+#                          then the planar images, the system's default
+#                          icons' after mkicons, made from the same art by
+#                          release/icons/planar_icons.py)
 #   ReadMe                 ReadMe at the repository root, as it is (its version,
 #                          date and source link written in, so that GitHub shows
 #                          them; checked against VERSION below)

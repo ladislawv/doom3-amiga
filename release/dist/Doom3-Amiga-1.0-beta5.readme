@@ -1,52 +1,244 @@
-Short:        Doom 3 for AmigaOS 3 on PiStorm (Pi 4/3)
-Author:       R-Typer, Ladislawv
+Short:        Doom 3, the 2004 first-person shooter
+Uploader:     rtyp3r@yahoo.com (R-Typer)
+Author:       R-Typer and Ladislawv (port); id Software (Doom 3)
 Type:         game/shoot
 Version:      1.0-beta5
-Architecture: m68k-amigaos >= 3.0
+Architecture: m68k-amigaos >= 3.0.0
 Requires:     PiStorm, Raspberry Pi 4 (or 3), Emu68, RTG, Doom 3 1.3.1 data
-Distribution: GPLv3 (game code); Doom 3's data not included
 
-Doom 3 (id Software, 2004) running natively on a 68k Amiga with a PiStorm.
-The game code runs on Emu68, the graphics are drawn by the Raspberry Pi's
-VideoCore GPU through ogles2.library 1.4 beta 2 (OpenGL ES 2.0 for
-AmigaOS 3, for the Pi 4 and the Pi 3, included). Tested on a Pi 4; not yet
-tried on a Pi 3.
-Based on dhewm3/d3es, the GPL release of Doom 3's source. Ported by R-Typer
-and Ladislawv.
+===========================================================================
+                    DOOM 3 FOR AMIGAOS 3   version 1.0-beta5
+          id Software's Doom 3 running natively on a PiStorm Amiga
+===========================================================================
 
-About 28 frames a second in Doom 3's own benchmark at 1280x720 (720p)
-with the Low settings, 19 at 1920x1080. Low, Medium, High and Ultra
-settings, Paula or AHI sound, any 32-bit RTG screen size. Starts at
-1280x720 with the frame rate shown; the settings changed in the game's
-menus are kept.
+Doom 3 (id Software, 2004) ported to AmigaOS 3. The game's code is 68k
+code and runs on Emu68, the PiStorm's 68k emulation on the Raspberry Pi;
+the graphics are drawn by the Raspberry Pi's VideoCore GPU through
+ogles2.library (OpenGL ES 2.0 for AmigaOS 3), which is included. Based
+on dhewm3/d3es, the GPL release of Doom 3's source code.
 
-New in 1.0-beta5: the included ogles2.library is used only on the
-PiStorm; elsewhere (for example WinUAE) the game uses the one in LIBS:.
+This is a beta. Please report what you find (see CONTACT), with the
+file T:doom3-out.txt: the game's messages from its last run.
 
-New in 1.0-beta4: a full screen on Picasso96 systems that open 32-bit
-RTG modes only as depth 24 (for example uaegfx in WinUAE), where the game
-opened a window on the Workbench.
+THE GAME'S DATA IS NOT INCLUDED. You need your own copy of Doom 3: the
+nine pak00?.pk4 files of version 1.3.1 (GOG.com, Steam, or a boxed copy
+with the 1.3.1 patch). The free 2004 demo's data (demo00.pk4) works too.
+Doom 3: BFG Edition does NOT work: its data is in another format.
 
-New in 1.0-beta3: the port's own small data file, amiga.pk4, in base/
-and demo/ (keep it there).
 
-New in 1.0-beta2: ogles2.library 1.4 beta 2, used from the game's own
-drawer over one in LIBS:; demos read into memory before they play (the
-timedemo shows the real speed: about 28 frames a second at 1280x720 Low);
-a message instead of a crash without game data; shadows off at every
-quality.
+SUPPORTED HARDWARE - PLEASE READ
+--------------------------------
 
-New in 1.0-beta1: the settings saved and used at every start, 1280x720 by
-default, the game's speed following the frame rate, the precompressed
-textures at every quality, only the screen sizes your system has in the
-menu, the in-game screens taking clicks, colour icons, ogles2.library 1.4
-with the Raspberry Pi 3.
+This is for an Amiga with a PiStorm running Emu68. It is not for classic
+Amigas, accelerator cards or 68k graphics cards on their own: Doom 3
+needs the Raspberry Pi's processor speed and its GPU.
 
-You need your own copy of Doom 3: the nine pak00?.pk4 files of version
-1.3.1 (GOG.com, Steam, or a boxed copy with the 1.3.1 patch). The BFG
-Edition does not work. The free 2004 demo's data works too.
+  * Tested: an A1200 with a PiStorm and a Raspberry Pi 4, Emu68
+    1.1.0-beta.1, AmigaOS 3.2.3, Picasso96.
+  * Raspberry Pi 3B/3B+: ogles2.library drives its GPU too, but Doom 3
+    has not been tried on one yet. Expect much less speed (see
+    PERFORMANCE).
+  * Elsewhere, for example WinUAE, the game uses the ogles2.library
+    installed in LIBS: (the included one drives only the Raspberry Pi's
+    GPU). A user reports it running in WinUAE with QuarkTex NG's
+    ogles2.library. Not tested by us.
 
-Unpack, copy the game's pk4 files into Doom3/base/, double-click Doom3.
-Everything else is in the ReadMe inside the archive.
 
-Source code: https://github.com/ladislawv/doom3-amiga
+FEATURES
+--------
+
+  * The complete Doom 3 single-player game, or the free demo, from your
+    own data files.
+  * Drawn by the Raspberry Pi's GPU at any 32-bit RTG screen size: 1280x720
+    by default, 1920x1080 and more.
+  * Four quality settings, Low to Ultra, from the game's own menu. The
+    settings changed in the menus and the console are saved.
+  * Sound, speech and music through Paula (the Amiga's own sound chip,
+    the default) or AHI.
+  * The game's speed follows the frame rate: the game runs as many tics
+    a second as the Amiga can draw frames, between 20 and 60.
+  * Only the screen sizes your RTG system has are offered in the menu.
+  * The in-game computer screens take mouse clicks, as on the PC.
+  * Starts from its icon or a Shell, with options as Tool Types or Shell
+    arguments. Colour icons (GlowIcons).
+  * Nothing is installed into the system: everything stays in the drawer.
+
+
+REQUIREMENTS
+------------
+
+  * An Amiga with a PiStorm and a Raspberry Pi 4 or CM4 (a Pi 3B/3B+
+    untested), running Emu68 with its VideoCore RTG driver.
+  * AmigaOS 3.x (tested on 3.2.3) with Picasso96 or CyberGraphX.
+  * A 32-bit RTG screen mode (16.7 million colours) at the size you want
+    to play at. The default is 1280x720: check that Picasso96Mode has
+    one, or start the game at another size (W= and H=).
+  * Plenty of Fast RAM: tested with the 1.8 GB Emu68 gives a Pi 4.
+  * About 1.6 GB free for the full game's data (about 500 MB for the
+    demo's), and 40 MB for the drawer (30 MB without its source/).
+  * ogles2.library 1.4 beta 2 and its shader compiler are included in the
+    drawer's libs/, and used from there on the PiStorm whatever version
+    LIBS: holds. LIBS: is not changed.
+  * AHI 6 only for AHI sound (AUDIO=ahi).
+
+
+PERFORMANCE
+-----------
+
+Doom 3 was made for PCs far faster than any Amiga: expect a playable, not
+a smooth game. Measured on an A1200 with a Raspberry Pi 4 (its ARM at
+2.2 GHz), Low quality, 12 lights:
+
+  1280x720, Doom 3's own benchmark (timedemo demo1)    about 27 fps
+  1280x720, the first level at its start, with sound   about 27 fps
+  1920x1080, Doom 3's own benchmark                    about 19 fps
+
+The benchmark replays recorded frames without the game's logic: real
+play in busy scenes is slower. The 68k code (Emu68) is the limit more
+than the GPU, so smaller screens help less than you might expect.
+Shadows are off at every quality (they cost the most); "r_shadows 1" in
+the console turns them on.
+
+A Raspberry Pi 3 is much slower (its Emu68 and its GPU), its GPU unpacks
+the compressed textures into 4 to 8 times the memory, and it has 1 GB in
+all: start with QUALITY=low W=640 H=480 there. The drawer holds the
+shaders compiled for the Pi 4; a Pi 3 compiles its own the first time
+each is needed (a short wait), then keeps them.
+
+
+INSTALLATION
+------------
+
+ 1. Unpack the archive where you want the game, for example to Work:
+       LhA x Doom3-Amiga.lha Work:
+    This makes the drawer Doom3. It can be on any partition.
+
+ 2. Copy the nine pak00?.pk4 files of Doom 3 1.3.1 into Doom3/base/ (on
+    the PC they are in the game's folder, under "base"). For the demo,
+    copy demo00.pk4 into Doom3/demo/ instead. Leave amiga.pk4, already
+    in both drawers, where it is: it is the port's own.
+
+ 3. Double-click Doom3. The first start takes a while to load; then the
+    main menu opens at 1280x720. A new game's first level takes about a
+    minute and a half to load.
+
+ From a Shell, for example:
+       Work:Doom3/Doom3 QUALITY=medium W=1920 H=1080
+
+ Options (as Shell arguments or the icon's Tool Types): W= and H= (the
+ screen size), QUALITY=low|medium|high|ultra, LIGHTS= (the most lights
+ drawn), AUDIO=paula|ahi, SOUND=0, MAP= (start in a level), RESET (the
+ first start's settings again). Everything is in the ReadMe in the
+ drawer.
+
+ Updating from an earlier version: unpack over the old drawer; your
+ data in base/ and demo/ and your settings and saved games in save/
+ stay.
+
+ To remove it: delete the Doom3 drawer and Doom3.info. Nothing was
+ copied anywhere else.
+
+
+ARCHIVE CONTENTS
+----------------
+
+  Doom3/Doom3            Starts the game (with its icon): runs Doom3.script
+  Doom3/Doom3.script     Passes the options on, then starts the game
+  Doom3/dhewm3           The game itself
+  Doom3/*.cfg            The port's part of the four quality settings
+  Doom3/libs/            ogles2.library 1.4 beta 2 (Pi 4 and Pi 3) and
+                         its shader compiler v3dglslc
+  Doom3/shaders/         The game's shaders, compiled for the Pi 4
+  Doom3/base/            For Doom 3's data; holds amiga.pk4, the port's
+                         own small data file, and a ReadMe.txt
+  Doom3/demo/            For the free demo's data instead; amiga.pk4
+  Doom3/licences/        The licences of the parts
+  Doom3/source/          The game's complete source code (GPL), packed
+                         as Doom3-Amiga-src.lha; not needed to play
+  Doom3/ReadMe           The full guide (options, quality, sound,
+                         playing, troubleshooting)
+  Doom3.info, *.info     Icons
+
+
+KNOWN LIMITATIONS
+-----------------
+
+  * Single player only: no multiplayer.
+  * The expansion "Resurrection of Evil" is not supported.
+  * Levels take a minute or two to load.
+  * Lights beyond the LIGHTS limit (12 by default) are left out, so
+    lights can pop in and out as you move; LIGHTS=0 draws them all.
+  * A timedemo with the sound off (SOUND=0) crashes: run timedemos with
+    sound.
+
+
+TECHNICAL NOTES
+---------------
+
+The game is dhewm3 (d3es-multithread) compiled for the 68k with GCC 16.2
+and libnix, with the port's changes as patches: an AmigaOS 3 system
+layer, SDL2 (SDL2_68k) for the screen and input, its own small OpenAL
+for sound, the renderer on OpenGL ES 2.0, and many changes for speed on
+Emu68. ogles2.library (OpenGL ES 2.0, with PiStorm3D's V3D code) drives
+the Raspberry Pi's GPU directly; the game's shaders are compiled on the
+Amiga by its compiler v3dglslc (Mesa's), or shipped compiled.
+
+
+HISTORY
+-------
+
+  1.0-beta5  The included ogles2.library is used only on the PiStorm;
+             elsewhere (WinUAE) the one installed in LIBS:.
+             SetEnv D3_OGLES2 system or drawer chooses.
+  1.0-beta4  A full screen on Picasso96 systems that open 32-bit RTG
+             modes only as depth 24 (uaegfx in WinUAE), where the game
+             opened a window on the Workbench.
+  1.0-beta3  The port's own small data file amiga.pk4 in base/ and demo/.
+  1.0-beta2  ogles2.library 1.4 beta 2 from the drawer over one in LIBS:;
+             demos read into memory before they play; a message instead
+             of a crash without game data; shadows off at every quality.
+  1.0-beta1  The settings saved and used at every start; 1280x720 by
+             default; the game's speed following the frame rate; only
+             the screen sizes the system has in the menu; clickable
+             in-game screens; colour icons; the Raspberry Pi 3.
+
+
+SOURCE CODE AND LICENCES
+------------------------
+
+  * The game (Doom 3's GPL source, dhewm3, d3es-multithread and this
+    port's changes): GNU General Public License version 3 with id
+    Software's additional terms (licences/Doom3-GPL.txt in the drawer).
+    The complete source code of this version is in this archive, as
+    Doom3/source/Doom3-Amiga-src.lha, and on GitHub, with its history:
+    https://github.com/ladislawv/doom3-amiga
+  * SDL2_68k: zlib licence. zlib: zlib licence. dlmalloc and libnix:
+    public domain.
+  * ogles2.library: Hyperion MiniGL Open Source License (its own parts
+    MIT); its shader compiler v3dglslc: Mesa (MIT). In licences/ogles2/.
+  * Doom 3's game data is id Software's (ZeniMax Media) and is not part
+    of this archive.
+
+DOOM is a trademark of id Software LLC, a ZeniMax Media company. This is
+an unofficial port, not affiliated with or endorsed by id Software,
+ZeniMax Media or Bethesda Softworks.
+
+
+CREDITS
+-------
+
+  Doom 3                     id Software (its source code under the GPL)
+  dhewm3                     Daniel Gibson and contributors
+  d3wasm                     Gabriel Cuvillier
+  d3es-multithread           Emile Belanger
+  SDL2_68k                   Steffen "MagicSN" Haeuser
+  Emu68                      Michal Schulz
+  PiStorm                    Claude Schwarz and contributors
+  ogles2.library, the port   R-Typer and Ladislawv
+
+
+CONTACT
+-------
+
+Problems and suggestions: https://github.com/ladislawv/doom3-amiga/issues
+(with T:doom3-out.txt, what you were doing, and your settings).

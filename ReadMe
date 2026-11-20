@@ -50,8 +50,8 @@ Software
     with 32-bit depth (16.7 million colours), or play at another size
     (section 4).
   - Plenty of Fast RAM: tested with the 1.8 GB Emu68 gives a Pi 4.
-  - About 1.6 GB free on a partition for the game's data, and 30 MB for
-    this drawer.
+  - About 1.6 GB free on a partition for the game's data, and 40 MB for
+    this drawer (30 MB without its source/).
   - ogles2.library 1.4 beta 2 is included (libs/). On the PiStorm (under
     Emu68) the game uses this one, whatever version is installed in LIBS:
     (unless another program has an ogles2.library open at the moment the
@@ -304,6 +304,8 @@ The Amiga freezes
   save/              Made at the first start: settings (base/dhewm.cfg)
                      and saved games
   licences/          The licences of the parts
+  source/            The game's complete source code, packed
+                     (Doom3-Amiga-src.lha); not needed to play
   ReadMe             This text
 
 
@@ -312,7 +314,8 @@ The Amiga freezes
 
   - The game (dhewm3, d3es-multithread, and this port's changes): GNU
     General Public License version 3, with id Software's additional terms
-    (licences/Doom3-GPL.txt). The source code of this version:
+    (licences/Doom3-GPL.txt). The complete source code of this version
+    is in source/Doom3-Amiga-src.lha, and on GitHub, with its history:
     https://github.com/ladislawv/doom3-amiga
   - Doom 3's data is id Software's (ZeniMax) and not part of this release.
   - SDL2 (SDL2_68k by Steffen Haeuser): zlib licence (licences/SDL2.txt).

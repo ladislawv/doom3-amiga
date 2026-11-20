@@ -9,8 +9,10 @@
  * Each starts from the system's default icon of its kind. With ART, a directory
  * holding game.d3ic, readme.d3ic and drawer.d3ic (release/icons/art/
  * make_icons.py), their pictures replace the default ones as colour icons
- * (GlowIcons: icon.library 44, OS 3.5 and later; the default planar image
- * stays for older systems), frameless.
+ * (GlowIcons: icon.library 44, OS 3.5 and later), frameless. The default
+ * icon's planar image stays: it is the system's (Workbench material, not to
+ * be distributed), so release/icons/planar_icons.py replaces it on the PC
+ * with the same art afterwards.
  * Doom 3 for AmigaOS 3, by R-Typer and Ladislawv. GPLv3, as the rest of the port.
  */
 #include <stdio.h>
