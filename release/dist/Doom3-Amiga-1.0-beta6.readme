@@ -2,12 +2,12 @@ Short:        Doom 3, the 2004 first-person shooter
 Uploader:     rtyp3r@yahoo.com (R-Typer)
 Author:       R-Typer and Ladislawv (port); id Software (Doom 3)
 Type:         game/shoot
-Version:      1.0-beta5
+Version:      1.0-beta6
 Architecture: m68k-amigaos >= 3.0.0
 Requires:     PiStorm, Raspberry Pi 4 (or 3), Emu68, RTG, Doom 3 1.3.1 data
 
 ===========================================================================
-                    DOOM 3 FOR AMIGAOS 3   version 1.0-beta5
+                    DOOM 3 FOR AMIGAOS 3   version 1.0-beta6
           id Software's Doom 3 running natively on a PiStorm Amiga
 ===========================================================================
 
@@ -76,7 +76,7 @@ REQUIREMENTS
   * Plenty of Fast RAM: tested with the 1.8 GB Emu68 gives a Pi 4.
   * About 1.6 GB free for the full game's data (about 500 MB for the
     demo's), and 40 MB for the drawer (30 MB without its source/).
-  * ogles2.library 1.4 beta 2 and its shader compiler are included in the
+  * ogles2.library 1.4 beta 3 and its shader compiler are included in the
     drawer's libs/, and used from there on the PiStorm whatever version
     LIBS: holds. LIBS: is not changed.
   * AHI 6 only for AHI sound (AUDIO=ahi).
@@ -146,7 +146,7 @@ ARCHIVE CONTENTS
   Doom3/Doom3.script     Passes the options on, then starts the game
   Doom3/dhewm3           The game itself
   Doom3/*.cfg            The port's part of the four quality settings
-  Doom3/libs/            ogles2.library 1.4 beta 2 (Pi 4 and Pi 3) and
+  Doom3/libs/            ogles2.library 1.4 beta 3 (Pi 4 and Pi 3) and
                          its shader compiler v3dglslc
   Doom3/shaders/         The game's shaders, compiled for the Pi 4
   Doom3/base/            For Doom 3's data; holds amiga.pk4, the port's
@@ -187,6 +187,10 @@ Amiga by its compiler v3dglslc (Mesa's), or shipped compiled.
 HISTORY
 -------
 
+  1.0-beta6  ogles2.library 1.4 beta 3 and its shader compiler: the
+             one included before refused a Raspberry Pi 3's requests.
+             The game's source code in source/; the icons' images for
+             AmigaOS 3.0 and 3.1 drawn from the port's own art.
   1.0-beta5  The included ogles2.library is used only on the PiStorm;
              elsewhere (WinUAE) the one installed in LIBS:.
              SetEnv D3_OGLES2 system or drawer chooses.
