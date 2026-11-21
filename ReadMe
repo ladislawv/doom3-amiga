@@ -3,7 +3,7 @@
                     ===================================
 
                         Version 1.0-beta6 (2026-11-20)
-                        by R-Typer and Ladislawv
+       by Aleksandar Vojnic (R-Typer) and Ladislav Vojnic (ladislawv)
 
 Doom 3 (id Software, 2004) running natively on a 68k Amiga with a PiStorm:
 the game code runs on Emu68, and the graphics are drawn by the Raspberry
@@ -334,7 +334,8 @@ The Amiga freezes
     d3es-multithread by Emile Belanger.
   - SDL2_68k by Steffen "MagicSN" Haeuser.
   - Emu68 by Michal Schulz; PiStorm by Claude Schwarz and contributors.
-  - ogles2.library, and this port, by R-Typer and Ladislawv
+  - ogles2.library, and this port, by Aleksandar Vojnic (R-Typer) and
+    Ladislav Vojnic (ladislawv).
 
 
 13. HISTORY

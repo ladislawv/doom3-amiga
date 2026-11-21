@@ -13,7 +13,8 @@
  * icon's planar image stays: it is the system's (Workbench material, not to
  * be distributed), so release/icons/planar_icons.py replaces it on the PC
  * with the same art afterwards.
- * Doom 3 for AmigaOS 3, by R-Typer and Ladislawv. GPLv3, as the rest of the port.
+ * Doom 3 for AmigaOS 3, by Aleksandar Vojnic (R-Typer) and Ladislav Vojnic
+ * (ladislawv). GPLv3, as the rest of the port.
  */
 #include <stdio.h>
 #include <string.h>

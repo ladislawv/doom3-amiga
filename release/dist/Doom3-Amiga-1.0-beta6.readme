@@ -1,6 +1,6 @@
 Short:        Doom 3, the 2004 first-person shooter
-Uploader:     rtyp3r@yahoo.com (R-Typer)
-Author:       R-Typer and Ladislawv (port); id Software (Doom 3)
+Uploader:     rtyp3r@yahoo.com (Aleksandar Vojnic)
+Author:       Aleksandar Vojnic (R-Typer), Ladislav Vojnic (ladislawv)
 Type:         game/shoot
 Version:      1.0-beta6
 Architecture: m68k-amigaos >= 3.0.0
@@ -238,7 +238,8 @@ CREDITS
   SDL2_68k                   Steffen "MagicSN" Haeuser
   Emu68                      Michal Schulz
   PiStorm                    Claude Schwarz and contributors
-  ogles2.library, the port   R-Typer and Ladislawv
+  ogles2.library, the port   Aleksandar Vojnic (R-Typer) and
+                             Ladislav Vojnic (ladislawv)
 
 
 CONTACT

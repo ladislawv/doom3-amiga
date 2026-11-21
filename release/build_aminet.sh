@@ -60,7 +60,8 @@ D3ES_COMMIT=$(grep -o 'D3ES_COMMIT=[0-9a-f]*' "$REPO/sources.sh" | head -1 | cut
 LASTPATCH=$(ls "$REPO/patches" | tail -1 | cut -c1-4)
 LASTSDL=$(ls "$REPO/sdl2/patches" | tail -1 | cut -c1-4)
 cat > "$P/$N/SOURCE.txt" <<TXT
-Doom 3 for AmigaOS 3 on the PiStorm, $VERSION, by R-Typer and Ladislawv:
+Doom 3 for AmigaOS 3 on the PiStorm, $VERSION, by Aleksandar Vojnic
+(R-Typer) and Ladislav Vojnic (ladislawv):
 the complete source of the release's game (dhewm3), GPLv3 with id
 Software's additional terms (d3es/COPYING.txt).
 
